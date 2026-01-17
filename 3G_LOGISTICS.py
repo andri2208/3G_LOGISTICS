@@ -119,13 +119,30 @@ with tab3:
         # Filter Data
         d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
         
-        # Kalkulasi
+        # --- KALKULASI AMAN ---
+        # Menginisialisasi nilai default agar tidak NameError
+        h_val = 0.0
+        b_val = 0.0
+        total_float = 0.0
+
         try:
-            h_val = float(d.get('Harga', 0))
-            b_val = float(d.get('Berat', 0))
+            # Mengambil data dan membersihkan dari karakter non-angka jika ada
+            raw_harga = d.get('Harga', 0)
+            raw_berat = d.get('Berat', 0)
+            
+            # Konversi paksa ke angka
+            h_val = float(pd.to_numeric(raw_harga, errors='coerce'))
+            b_val = float(pd.to_numeric(raw_berat, errors='coerce'))
+            
+            # Jika hasil konversi adalah NaN (bukan angka), ubah ke 0
+            if pd.isna(h_val): h_val = 0.0
+            if pd.isna(b_val): b_val = 0.0
+            
             total_float = h_val * b_val
-        except:
-            total_float = 0
+        except Exception as e:
+            st.warning(f"Ada kendala perhitungan: {e}")
+            h_val, b_val, total_float = 0.0, 0.0, 0.0
+            
 
         # --- TEMPLATE INVOICE ---
         st.markdown(f"""
@@ -209,3 +226,4 @@ with tab3:
         """, unsafe_allow_html=True)
     else:
         st.info("Database kosong, silakan isi data terlebih dahulu.")
+
