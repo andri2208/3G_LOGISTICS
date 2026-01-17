@@ -83,14 +83,14 @@ with tab1:
             }])
             
             try:
-                # Update ke Google Sheets
+                # Update menggunakan koneksi tanpa menyebutkan URL di sini (URL diambil dari Secrets)
                 df_gabung = pd.concat([st.session_state.df, data_baru], ignore_index=True)
-                conn.update(spreadsheet=URL_SHEET, data=df_gabung)
+                conn.update(data=df_gabung) # Cukup panggil data=df_gabung
                 st.session_state.df = df_gabung
                 st.success("✅ Data Berhasil Masuk ke Google Sheets!")
                 st.rerun()
             except Exception as e:
-                st.error(f"Gagal simpan: Silakan pastikan Google Sheets sudah di-set 'Editor' untuk 'Anyone with the link'")
+                st.error("Gagal simpan: Pastikan 'Secrets' di Streamlit Cloud sudah diisi link Google Sheets.")
 
 with tab2:
     st.subheader("📋 Riwayat Pengiriman (Cloud)")
@@ -176,4 +176,5 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.info("Belum ada data pengiriman.")
+
 
