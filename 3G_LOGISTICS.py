@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --- PASTE URL WEB APP DARI GOOGLE APPS SCRIPT DI SINI ---
-URL_SCRIPT_GOOGLE = "ISI_DENGAN_URL_DARI_APPS_SCRIPT_ANDA"
+URL_SCRIPT_GOOGLE = "ISI_DENGAN_URL_DARI_APPS_SCRIPFT_ANDA"
 
 # --- FUNGSI MUAT DATA (READ ONLY) ---
 # Menggunakan link CSV untuk tampilan database yang ringan
@@ -51,7 +51,7 @@ col_logo, col_text = st.columns([1, 5])
 with col_logo:
     st.image("3G.png", width=150) # Sesuaikan ukuran logo di sini
 with col_text:
-    st.title("PT. GAMA GEMAH GEMILANG - Management System")
+    st.title("PT. GAMA GEMAH GEMILANG")
 
 if 'df' not in st.session_state:
     st.session_state.df = muat_data()
@@ -202,6 +202,7 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.warning("Database kosong. Silakan isi data terlebih dahulu.")
+
 
 
 
