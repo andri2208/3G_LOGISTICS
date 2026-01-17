@@ -13,7 +13,7 @@ except:
 # 2. Sidebar - Menampilkan Logo di bagian atas menu
 with st.sidebar:
     if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADER INVOICE.png", width=150)
+        st.image("HEADER INVOICE.png", width=200)
     else:
         st.write("🚚 **3G LOGISTICS**")
     
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
