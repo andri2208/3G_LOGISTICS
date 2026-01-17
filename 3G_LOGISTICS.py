@@ -9,7 +9,7 @@ import os
 # Pastikan file "LOGO INVOICE.png" sudah ada di folder yang sama di GitHub
 st.set_page_config(
     page_title="3G LOGISTICS - System", 
-    page_icon="3G.png", # Ini akan mengganti icon tab browser
+    page_icon="LOGO INVOICE.png", # Ini akan mengganti icon tab browser
     layout="wide"
 )
 
@@ -202,6 +202,7 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.warning("Database kosong. Silakan isi data terlebih dahulu.")
+
 
 
 
