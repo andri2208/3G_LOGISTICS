@@ -75,7 +75,7 @@ with tab1:
             
             try:
                 # Mengirim data ke Google Sheets melalui Apps Script
-                response = requests.post(https://script.google.com/macros/s/AKfycbz-bMYzT2f_WYvuM-2-Mo5D6KhPrwRwQMN9JhIC1dotbHtfGE9RNHMrSYNNxnvbitPr/exec, json=data_json)
+                response = requests.post("https://script.google.com/macros/s/AKfycbz-bMYzT2f_WYvuM-2-Mo5D6KhPrwRwQMN9JhIC1dotbHtfGE9RNHMrSYNNxnvbitPr/exec", json=data_json)
                 if response.status_code == 200:
                     st.success("✅ DATA BERHASIL DISIMPAN KE GOOGLE SHEETS!")
                     st.session_state.df = muat_data() # Refresh data
@@ -98,3 +98,4 @@ with tab3:
     if not st.session_state.df.empty:
         resi_sel = st.selectbox("Pilih Nomor Resi", st.session_state.df["Resi"].unique())
         # ... (Kode invoice Anda di sini)
+
