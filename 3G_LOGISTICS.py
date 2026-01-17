@@ -88,21 +88,19 @@ with tab1:
             harga = st.number_input("Harga Satuan", min_value=0, step=1000)
             berat = st.number_input("Berat (Kg)", min_value=0.0, step=0.1)
         
-        if st.form_submit_button("🚀 SIMPAN DATA"):
-            if not resi or not customer:
-                st.error("Resi dan Customer tidak boleh kosong!")
-            else:
-                payload = {
-                    "Tanggal": tgl.strftime('%d-%b-%y'),
-                    "Resi": str(resi),
-                    "Pengirim": str(customer),
-                    "Produk": str(produk),
-                    "Origin": str(origin),
-                    "Destination": str(dest),
-                    "Kolli": int(kolli),
-                    "Harga": int(harga),
-                    "Berat": float(berat)
-                }
+        # --- BAGIAN SIMPAN DATA (TAB 1) ---
+if st.form_submit_button("🚀 SIMPAN DATA"):
+    payload = {
+        "Tanggal": tgl.strftime('%d-%b-%y'),
+        "Resi": str(resi),
+        "Pengirim": str(customer),
+        "Produk": str(produk),
+        "Origin": str(origin),
+        "Destination": str(dest),
+        "Kolli": str(kolli), # Kirim sebagai string agar tidak terformat otomatis
+        "Harga": str(harga), # Kirim sebagai string murni
+        "Berat": str(berat)  # Kirim sebagai string murni
+    }
                 try:
                     resp = requests.post(APPS_SCRIPT_URL, json=payload)
                     if resp.status_code == 200:
@@ -130,20 +128,19 @@ with tab3:
         if pilih_resi:
             d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
             
-            # --- LOGIKA PERBAIKAN HARGA (MENGATASI 4000 JADI 40) ---
-            # Kita ambil nilai Harga, buang semua karakter non-angka (titik/koma)
-            raw_h = str(d.get('Harga', '0'))
-            # Menghapus bagian desimal jika Google Sheets mengirim ".00"
-            if '.' in raw_h:
-                raw_h = raw_h.split('.')[0]
-            # Ambil hanya digitnya saja
-            clean_h = "".join(filter(str.isdigit, raw_h))
-            
-            h_val = float(clean_h) if clean_h else 0.0
-            b_val = float(pd.to_numeric(d.get('Berat', 0), errors='coerce'))
-            if pd.isna(b_val): b_val = 0.0
-            
-            total_float = h_val * b_val
+           # --- LOGIKA HARGA (ANTI GESER & ANTI DESIMAL) ---
+def clean_number(value):
+    if value is None or str(value).lower() == 'nan':
+        return 0.0
+    # Buang semua karakter kecuali angka (titik dan koma dibuang)
+    # Ini memastikan 4.000 atau 4,000 kembali menjadi 4000
+    res = "".join(filter(str.isdigit, str(value).split('.')[0]))
+    return float(res) if res else 0.0
+
+# Ambil data sesuai nama kolom di Google Sheets Anda
+h_val = clean_number(d.get('Harga', 0))
+b_val = pd.to_numeric(d.get('Berat', 0), errors='coerce')
+total_float = h_val * b_val
 
             # Tampilan Invoice
             st.markdown(f"""
@@ -211,3 +208,4 @@ with tab3:
             st.button("🖨️ Cetak Invoice (Ctrl+P)", on_click=None)
     else:
         st.warning("Data tidak ditemukan atau kolom 'Resi' tidak ada.")
+
