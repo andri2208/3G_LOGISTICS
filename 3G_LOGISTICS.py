@@ -119,29 +119,26 @@ with tab3:
         # Filter Data
         d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
         
-        # --- KALKULASI AMAN ---
-        # Menginisialisasi nilai default agar tidak NameError
-        h_val = 0.0
-        b_val = 0.0
-        total_float = 0.0
+        # --- KALKULASI ANTI-ERROR ---
+try:
+    # Ambil data dari kolom
+    raw_h = str(d.get('Harga', '0'))
+    raw_b = str(d.get('Berat', '0'))
 
-        try:
-            # Mengambil data dan membersihkan dari karakter non-angka jika ada
-            raw_harga = d.get('Harga', 0)
-            raw_berat = d.get('Berat', 0)
-            
-            # Konversi paksa ke angka
-            h_val = float(pd.to_numeric(raw_harga, errors='coerce'))
-            b_val = float(pd.to_numeric(raw_berat, errors='coerce'))
-            
-            # Jika hasil konversi adalah NaN (bukan angka), ubah ke 0
-            if pd.isna(h_val): h_val = 0.0
-            if pd.isna(b_val): b_val = 0.0
-            
-            total_float = h_val * b_val
-        except Exception as e:
-            st.warning(f"Ada kendala perhitungan: {e}")
-            h_val, b_val, total_float = 0.0, 0.0, 0.0
+    # Bersihkan karakter seperti titik, koma, atau spasi (misal 4.000 -> 4000)
+    # Ini mencegah 4000 dibaca sebagai 4.0
+    clean_h = "".join(filter(str.isdigit, raw_h.split('.')[0])) 
+    
+    h_val = float(clean_h) if clean_h else 0.0
+    b_val = float(pd.to_numeric(raw_b, errors='coerce'))
+    
+    if pd.isna(b_val): b_val = 0.0
+    
+    total_float = h_val * b_val
+except Exception as e:
+    st.error(f"Gagal menghitung: {e}")
+    h_val, total_float = 0.0, 0.0
+    
             
 
         # --- TEMPLATE INVOICE ---
@@ -226,5 +223,6 @@ with tab3:
         """, unsafe_allow_html=True)
     else:
         st.info("Database kosong, silakan isi data terlebih dahulu.")
+
 
 
