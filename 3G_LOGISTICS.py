@@ -5,8 +5,12 @@ from datetime import datetime
 import base64
 import os
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="3G LOGISTICS - System", layout="wide")
+# Pastikan file "LOGO INVOICE.png" sudah ada di folder yang sama di GitHub
+st.set_page_config(
+    page_title="3G LOGISTICS - System", 
+    page_icon="LOGO INVOICE.png", # Ini akan mengganti icon tab browser
+    layout="wide"
+)
 
 # --- PASTE URL WEB APP DARI GOOGLE APPS SCRIPT DI SINI ---
 URL_SCRIPT_GOOGLE = "ISI_DENGAN_URL_DARI_APPS_SCRIPT_ANDA"
@@ -41,8 +45,12 @@ def get_image_base64(path):
             return base64.b64encode(img_file.read()).decode()
     return ""
 
-# --- APLIKASI UTAMA ---
-st.title("🚚 3G LOGISTICS - Management System")
+# Menampilkan Logo dan Judul berdampingan
+col_logo, col_text = st.columns([1, 5])
+with col_logo:
+    st.image("LOGO INVOICE.png", width=100) # Sesuaikan ukuran logo di sini
+with col_text:
+    st.title("PT. GAMA GEMAH GEMILANG - Management System")
 
 if 'df' not in st.session_state:
     st.session_state.df = muat_data()
@@ -193,3 +201,4 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.warning("Database kosong. Silakan isi data terlebih dahulu.")
+
