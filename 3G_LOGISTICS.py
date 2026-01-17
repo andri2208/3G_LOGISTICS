@@ -15,7 +15,7 @@ with st.sidebar:
     if os.path.exists("HEADER INVOICE.png"):
         st.image("HEADER INVOICE.png", width=500)
     else:
-        st.write("🚚 **3G LOGISTICS**")
+        st.write("")
     
     st.divider()
     menu = st.selectbox("Pilih Menu", ["Cek Tarif", "Tracking Resi", "Tentang Kami"])
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
