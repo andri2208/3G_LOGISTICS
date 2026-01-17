@@ -80,18 +80,18 @@ with tab1:
             harga = st.number_input("Harga Satuan", min_value=0, step=1000)
             berat = st.number_input("Berat (Kg)", min_value=0.0, step=0.1)
         
-        if st.form_submit_button("Simpan ke Google Sheets"):
-            payload = {
-                "Tanggal": tgl.strftime('%d-%b-%y'),
-                "Resi": resi,
-                "Pengirim": pengirim,
-                "Produk": produk,
-                "Origin": origin,
-                "Destination": dest,
-                "Kolli": int(kolli),
-                "Harga": int(harga),
-                "Berat": float(berat)
-            }
+       if st.form_submit_button("Simpan ke Google Sheets"):
+    payload = {
+        "Tanggal": tgl.strftime('%d-%b-%y'),
+        "Resi": str(resi),
+        "Pengirim": str(pengirim),
+        "Produk": str(produk),
+        "Origin": str(origin),
+        "Destination": str(dest),
+        "Kolli": int(kolli),
+        "Harga": int(harga), # Pastikan ini Integer murni
+        "Berat": float(berat)
+    }
             try:
                 # Mengirim data ke Apps Script
                 resp = requests.post("https://script.google.com/macros/s/AKfycbzfUoRYoJzuMg3KsbXUObTdHQOu9vBWvh38lTiao2PktjxIS4-6JG5OrWU52klEOiLU/exec", json=payload)
@@ -226,4 +226,5 @@ with tab3:
         """, unsafe_allow_html=True)
     else:
         st.info("Database kosong, silakan isi data terlebih dahulu.")
+
 
