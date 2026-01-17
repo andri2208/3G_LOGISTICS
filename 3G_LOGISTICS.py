@@ -1,3 +1,4 @@
+import requests # Tambahkan ini di bagian paling atas kode
 import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
@@ -74,24 +75,25 @@ with tab1:
             harga_satuan = st.number_input("Harga Satuan (Rp)", min_value=0, value=0)
         
         if st.form_submit_button("Simpan Data"):
-            total = berat * harga_satuan
-            data_baru = pd.DataFrame([{
+            url_script = "PASTE_URL_WEB_APP_DARI_APPS_SCRIPT_DI_SINI"
+            
+            data_json = {
                 "Tanggal": datetime.now().strftime("%d-%b-%y"),
                 "Resi": resi, "Pengirim": pengirim, "Penerima": penerima,
                 "Produk": produk, "Origin": origin, "Destination": destination,
-                "Kolli": kolli, "Berat (kg)": berat, "Harga Satuan": harga_satuan, "Total Biaya": total
-            }])
+                "Kolli": kolli, "Berat": berat, "Harga": harga_satuan, "Total": berat * harga_satuan
+            }
             
             try:
-                # Update menggunakan koneksi tanpa menyebutkan URL di sini (URL diambil dari Secrets)
-                df_gabung = pd.concat([st.session_state.df, data_baru], ignore_index=True)
-                conn.update(data=df_gabung) # Cukup panggil data=df_gabung
-                st.session_state.df = df_gabung
-                st.success("✅ Data Berhasil Masuk ke Google Sheets!")
-                st.rerun()
+                response = requests.post(url_script, json=data_json)
+                if response.text == "Success":
+                    st.success("✅ DATA BERHASIL DISIMPAN KE CLOUD!")
+                    st.rerun()
+                else:
+                    st.error("Gagal terhubung ke Google Sheets.")
             except Exception as e:
-                st.error("Gagal simpan: Pastikan 'Secrets' di Streamlit Cloud sudah diisi link Google Sheets.")
-
+                st.error(f"Error: {e}")
+                
 with tab2:
     st.subheader("📋 Riwayat Pengiriman (Cloud)")
     if st.button("🔄 Refresh Data"):
@@ -176,6 +178,7 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.info("Belum ada data pengiriman.")
+
 
 
 
