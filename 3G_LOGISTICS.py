@@ -5,9 +5,10 @@ from datetime import datetime
 import os
 from fpdf import FPDF
 
-# --- 1. KONFIGURASI API & HALAMAN ---
-# GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
-API_URL = st.secrets["API_URL"]
+# --- 1. KONFIGURASI ---
+# Pastikan URL Web App Apps Script kamu sudah benar
+API_URL = "https://script.google.com/macros/s/AKfycbzV9hmyRqF5JErjh7aILmUTWbwVchR8a9MrKbZSzUE8FTuP2uYVlYEadxILqav8wbPn/exec" 
+
 try:
     from PIL import Image
     favicon = Image.open("FAVICON.png")
@@ -15,136 +16,116 @@ try:
 except:
     st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚", layout="wide")
 
-# --- 2. FUNGSI PENDUKUNG ---
-
-def ambil_data_cloud():
-    try:
-        response = requests.get(API_URL)
-        if response.status_code == 200:
-            data = response.json()
-            return pd.DataFrame(data[1:], columns=data[0])
-    except:
-        return pd.DataFrame()
-
-def buat_pdf(data):
+# --- 2. FUNGSI CETAK PDF SESUAI CONTOH ---
+def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
     
-    # Header Invoice (Banner)
-    if os.path.exists("HEADER INVOICE.png"):
-        pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
-        pdf.ln(40)
-    else:
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(190, 10, "INVOICE PENGIRIMAN - 3G LOGISTICS", ln=True, align='C')
-        pdf.ln(10)
-
-    # Isi Detail
-    pdf.set_font("Arial", size=12)
-    pdf.cell(190, 10, f"Tanggal: {data['waktu']}", ln=True)
-    pdf.cell(190, 10, f"No. Resi  : {data['resi']}", ln=True)
+    # Header Perusahaan
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(190, 7, "PT. GAMA GEMAH GEMILANG", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.multi_cell(140, 5, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik, Jawa Timur. Telp 031-79973432")
     pdf.ln(5)
     
-    # Tabel
-    pdf.set_fill_color(200, 220, 255)
-    pdf.cell(95, 10, "Penerima", 1, 0, 'C', True)
-    pdf.cell(95, 10, "Layanan", 1, 1, 'C', True)
+    # Judul Invoice & Info Customer
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(100, 7, f"CUSTOMER: {data['penerima'].upper()}", 0)
+    pdf.cell(90, 7, "INVOICE", 0, 1, 'R')
+    pdf.set_font("Arial", size=10)
+    pdf.cell(100, 7, "", 0)
+    pdf.cell(90, 7, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
+    pdf.ln(5)
     
-    pdf.cell(95, 10, data['penerima'], 1, 0, 'C')
-    pdf.cell(95, 10, data['layanan'], 1, 1, 'C')
+    # Tabel Header
+    pdf.set_font("Arial", 'B', 8)
+    pdf.set_fill_color(230, 230, 230)
+    pdf.cell(25, 10, "Date of Load", 1, 0, 'C', True)
+    pdf.cell(50, 10, "Product Description", 1, 0, 'C', True)
+    pdf.cell(20, 10, "Origin", 1, 0, 'C', True)
+    pdf.cell(20, 10, "Destination", 1, 0, 'C', True)
+    pdf.cell(25, 10, "Harga/Kg", 1, 0, 'C', True)
+    pdf.cell(20, 10, "Weight", 1, 0, 'C', True)
+    pdf.cell(30, 10, "Total", 1, 1, 'C', True)
     
+    # Tabel Isi
+    pdf.set_font("Arial", size=8)
+    pdf.cell(25, 10, data['waktu_tgl'], 1, 0, 'C')
+    pdf.cell(50, 10, data['deskripsi'].upper(), 1, 0, 'C')
+    pdf.cell(20, 10, data['asal'].upper(), 1, 0, 'C')
+    pdf.cell(20, 10, data['tujuan'].upper(), 1, 0, 'C')
+    pdf.cell(25, 10, f"Rp {data['harga']:,.0f}", 1, 0, 'C')
+    pdf.cell(20, 10, f"{data['berat']} Kg", 1, 0, 'C')
+    pdf.cell(30, 10, f"Rp {data['total']:,.0f}", 1, 1, 'C')
+    
+    pdf.ln(5)
+    # Total Bayar
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(140, 10, "YANG HARUS DI BAYAR", 0, 0, 'R')
+    pdf.cell(50, 10, f"Rp {data['total']:,.0f}", 1, 1, 'C', True)
+    
+    # Informasi Pembayaran
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 9)
+    pdf.cell(190, 5, "TRANSFER TO :", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(190, 5, "Bank Central Asia (BCA)", ln=True)
+    pdf.cell(190, 5, "6720422334", ln=True)
+    pdf.cell(190, 5, "A/N ADITYA GAMA SAPUTRI", ln=True)
+    
+    # Tanda Tangan
+    pdf.ln(10)
+    pdf.cell(130, 5, "", 0)
+    pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
     pdf.ln(15)
-    pdf.set_font("Arial", 'I', 10)
-    pdf.multi_cell(190, 8, "Terima kasih telah menggunakan jasa PT. GAMA GEMAH GEMILANG. Paket Anda akan segera kami proses.")
-
-    # Stempel/Tanda Tangan
-    if os.path.exists("STEMPEL TANDA TANGAN.png"):
-        pdf.image("STEMPEL TANDA TANGAN.png", x=140, y=pdf.get_y() + 5, w=40)
+    pdf.set_font("Arial", 'B', 9)
+    pdf.cell(130, 5, "", 0)
+    pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
+    pdf.cell(130, 5, "", 0)
+    pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 3. TAMPILAN UTAMA ---
-
+# --- 3. MENU UTAMA ---
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-with st.sidebar:
-    if os.path.exists("FAVICON.png"):
-        st.image("FAVICON.png", width=120)
-    st.title("3G LOGISTICS")
-    st.write("PT. GAMA GEMAH GEMILANG")
-    st.divider()
-    menu = st.radio("Menu Utama", ["🏠 Dashboard", "📝 Input Paket", "🔍 Lacak Resi"])
+menu = st.sidebar.radio("Navigasi", ["🏠 Dashboard", "📝 Buat Invoice Baru"])
 
-# --- 4. LOGIKA MENU ---
-
-if menu == "🏠 Dashboard":
-    st.subheader("Data Pengiriman Real-time")
-    df = ambil_data_cloud()
-    if not df.empty:
-        st.dataframe(df, use_container_width=True)
-        if st.button("🔄 Refresh Data"):
-            st.rerun()
-    else:
-        st.info("Belum ada data di Google Sheets.")
-
-elif menu == "📝 Input Paket":
-    st.subheader("Form Input Pengiriman Baru")
-    with st.form("input_form", clear_on_submit=False):
-        c1, c2 = st.columns(2)
-        with c1:
-            resi = st.text_input("No. Resi", value=f"3G-{datetime.now().strftime('%d%H%M')}")
-            penerima = st.text_input("Nama Penerima")
-        with c2:
-            layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
-            status = "Booking"
+if menu == "📝 Buat Invoice Baru":
+    st.subheader("Form Input Invoice PT. GAMA GEMAH GEMILANG")
+    with st.form("invoice_form"):
+        penerima = st.text_input("Nama Customer (Penerima)")
+        deskripsi = st.text_input("Deskripsi Barang (Contoh: Alat Tambang)")
         
-        submitted = st.form_submit_button("Simpan & Buat Invoice")
+        col1, col2 = st.columns(2)
+        with col1:
+            asal = st.text_input("Origin (Asal)")
+            harga = st.number_input("Harga per Kg", min_value=0, value=8500)
+        with col2:
+            tujuan = st.text_input("Destination (Tujuan)")
+            berat = st.number_input("Weight (Kg)", min_value=0, value=1)
+            
+        submit = st.form_submit_button("Simpan & Cetak PDF")
         
-        if submitted:
-            if not penerima:
-                st.error("Nama penerima tidak boleh kosong!")
-            else:
-                payload = {
-                    "waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "resi": resi,
-                    "penerima": penerima,
-                    "layanan": layanan,
-                    "status": status
-                }
-                
-                # Kirim ke Google Sheets
-                try:
-                    res = requests.post(API_URL, json=payload)
-                    if res.text == "Success":
-                        st.success(f"Berhasil! Data Resi {resi} tersimpan.")
-                        
-                        # Generate PDF
-                        pdf_data = buat_pdf(payload)
-                        st.download_button(
-                            label="📥 Download Invoice (PDF)",
-                            data=pdf_data,
-                            file_name=f"Invoice_{resi}.pdf",
-                            mime="application/pdf"
-                        )
-                    else:
-                        st.error("Gagal menyimpan ke Google Sheets.")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-elif menu == "🔍 Lacak Resi":
-    st.subheader("Tracking Paket")
-    cari = st.text_input("Masukkan No. Resi")
-    if st.button("Cari"):
-        df = ambil_data_cloud()
-        if not df.empty:
-            hasil = df[df['Resi'].astype(str) == cari]
-            if not hasil.empty:
-                st.success(f"Status Saat Ini: **{hasil.iloc[0]['Status']}**")
-                st.table(hasil)
-            else:
-                st.error("Nomor resi tidak ditemukan.")
-
-st.divider()
-st.caption("© 2026 PT. GAMA GEMAH GEMILANG | 3G LOGISTICS")
-
+        if submit:
+            total_bayar = harga * berat
+            tgl_skrg = datetime.now().strftime("%d-%b-%y")
+            
+            payload = {
+                "waktu_tgl": tgl_skrg,
+                "penerima": penerima,
+                "deskripsi": deskripsi,
+                "asal": asal,
+                "tujuan": tujuan,
+                "harga": harga,
+                "berat": berat,
+                "total": total_bayar
+            }
+            
+            # Simpan ke Google Sheets (Opsional)
+            requests.post(API_URL, json=payload)
+            
+            st.success("Invoice Berhasil Dibuat!")
+            pdf_out = buat_pdf_custom(payload)
+            st.download_button(label="📥 Download Invoice PDF", data=pdf_out, file_name=f"Invoice_{penerima}.pdf", mime="application/pdf")
