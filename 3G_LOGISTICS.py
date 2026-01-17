@@ -141,109 +141,32 @@ with tab3:
                 total_float = 0
                 harga_float = 0
 
-           # Tampilan Invoice HTML yang sudah dirapikan
-st.markdown(f"""
-<div style="border: 2px solid #1a3d8d; padding: 40px; background-color: white; color: black; font-family: 'Arial', sans-serif; border-radius: 10px;">
-    <table style="width:100%; border:none; margin-bottom: 10px;">
-        <tr>
-            <td style="width:25%; border:none; vertical-align: middle;">
-                <img src="data:image/png;base64,{logo}" style="width:160px;">
-            </td>
-            <td style="border:none; text-align:left; vertical-align: middle; padding-left: 20px;">
-                <h2 style="margin:0; color: #1a3d8d; font-size: 26px;">PT. GAMA GEMAH GEMILANG</h2>
-                <p style="font-size:12px; margin:2px 0; color: #555;">
-                    Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan,<br>
-                    Menganti, Gresik, Jawa Timur. <br>
-                    <strong>Telp:</strong> 031-79973432 | <strong>Email:</strong> finance@3glogistics.com
-                </p>
-            </td>
-            <td style="width:25%; border:none; text-align:right; vertical-align: top;">
-                <h1 style="margin:0; color: #d62828; font-size: 28px; letter-spacing: 2px;">INVOICE</h1>
-                <p style="margin:0; font-weight: bold;">#{d['Resi']}</p>
-            </td>
-        </tr>
-    </table>
+         # --- TAMPILAN HEADER DASHBOARD YANG PRESISI ---
+logo_base64 = get_image_base64("3G.png")
 
-    <div style="border-top: 3px solid #1a3d8d; margin-bottom: 20px;"></div>
+# --- BAGIAN HEADER DI DALAM INVOICE HTML ---
+<table style="width:100%; border:none; border-collapse: collapse; margin-bottom: 10px;">
+    <tr>
+        <td style="width:120px; border:none; padding: 0; vertical-align: middle;">
+            <img src="data:image/png;base64,{logo}" style="width:110px; display: block;">
+        </td>
+        <td style="border:none; padding-left: 20px; vertical-align: middle; text-align: left;">
+            <h2 style="margin:0; color: #1a3d8d; font-size: 24px; line-height: 1.2;">PT. GAMA GEMAH GEMILANG</h2>
+            <p style="font-size:11px; margin:2px 0; color: #444; line-height: 1.4;">
+                Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, <br>
+                Gresik, Jawa Timur. Telp: 031-79973432 | Email: finance@3glogistics.com
+            </p>
+        </td>
+        <td style="border:none; vertical-align: middle; text-align: right;">
+            <h1 style="margin:0; color: #d62828; font-size: 32px; font-family: Arial Narrow, sans-serif;">INVOICE</h1>
+            <p style="margin:0; font-weight: bold; font-size: 14px;">#{d['Resi']}</p>
+        </td>
+    </tr>
+</table>
+<div style="border-top: 3px solid #1a3d8d; margin-top: 10px; margin-bottom: 20px;"></div> 
+    unsafe_allow_html=True
+)
 
-    <table style="width:100%; border:none; margin-bottom: 20px;">
-        <tr>
-            <td style="border:none; width: 50%;">
-                <p style="margin:0; color: #777; text-transform: uppercase; font-size: 12px;">Ditujukan Kepada:</p>
-                <h3 style="margin:5px 0;">{str(d['Pengirim']).upper()}</h3>
-            </td>
-            <td style="border:none; text-align:right; width: 50%;">
-                <p style="margin:0;"><strong>Tanggal Pengiriman:</strong> {d['Tanggal']}</p>
-                <p style="margin:0;"><strong>Metode:</strong> Darat / Laut</p>
-            </td>
-        </tr>
-    </table>
-
-    <table style="width:100%; border-collapse: collapse; text-align: center; border: 1px solid #ddd;">
-        <thead>
-            <tr style="background-color: #1a3d8d; color: white;">
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Deskripsi Barang</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Origin</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Destination</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Kolli</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Berat</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Harga Satuan</th>
-                <th style="border: 1px solid #1a3d8d; padding:12px;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td style="border: 1px solid #ddd; padding:15px; text-align: left;">{d['Produk']}</td>
-                <td style="border: 1px solid #ddd; padding:15px;">{d['Origin']}</td>
-                <td style="border: 1px solid #ddd; padding:15px;">{d['Destination']}</td>
-                <td style="border: 1px solid #ddd; padding:15px;">{v_kolli}</td>
-                <td style="border: 1px solid #ddd; padding:15px;">{v_berat} Kg</td>
-                <td style="border: 1px solid #ddd; padding:15px;">Rp {harga_float:,.0f}</td>
-                <td style="border: 1px solid #ddd; padding:15px; font-weight: bold;">Rp {total_float:,.0f}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div style="margin-top: 20px; text-align: right;">
-        <table style="float: right; width: 40%; border-collapse: collapse;">
-            <tr style="background-color: #f9f9f9;">
-                <td style="padding: 10px; border: 1px solid #ddd;"><strong>TOTAL TAGIHAN</strong></td>
-                <td style="padding: 10px; border: 1px solid #ddd; font-size: 18px; color: #d62828; font-weight: bold;">Rp {total_float:,.0f}</td>
-            </tr>
-        </table>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div style="margin-top: -10px; padding: 10px; background-color: #f2f2f2; border-radius: 5px; border-left: 5px solid #d62828;">
-        <p style="margin:0; font-style: italic;"><strong>Terbilang:</strong> {terbilang(total_float)} Rupiah</p>
-    </div>
-
-    <br>
-
-    <table style="width:100%; border:none; margin-top: 30px;">
-        <tr>
-            <td style="width:55%; border:none; vertical-align: top; font-size: 13px;">
-                <div style="color: #1a3d8d; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #1a3d8d; display: inline-block;">INFORMASI PEMBAYARAN</div>
-                <br>Bank Central Asia (BCA)<br>
-                Nomor Rekening: <strong>6720422334</strong><br>
-                Atas Nama: <strong>ADITYA GAMA SAPUTRI</strong><br>
-                <p style="font-size: 11px; color: #666; margin-top: 10px;">
-                    * Mohon sertakan nomor resi saat melakukan transfer.<br>
-                    * Konfirmasi pembayaran ke Finance: 082179799200
-                </p>
-            </td>
-            <td style="text-align: center; border:none; position: relative; width: 45%;">
-                <p style="margin-bottom: 80px;">Gresik, {d['Tanggal']}<br>Hormat Kami,</p>
-                <div style="position: relative; display: inline-block;">
-                    <img src="data:image/png;base64,{stempel}" style="width:220px; opacity: 0.9;">
-                    <img src="data:image/png;base64,{ttd}" style="width:130px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;">
-                </div>
-                <p style="margin-top: 10px; font-weight: bold; text-decoration: underline;">PT. GAMA GEMAH GEMILANG</p>
-            </td>
-        </tr>
-    </table>
-</div>
-""", unsafe_allow_html=True)
 
 
 
