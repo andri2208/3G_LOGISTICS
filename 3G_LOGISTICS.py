@@ -9,12 +9,13 @@ from streamlit_gsheets import GSheetsConnection
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="3G LOGISTICS - System", page_icon="3G.png", layout="wide")
 
-# Tambahkan CSS khusus untuk perbaikan tampilan dan fungsi cetak
+# CSS untuk mode cetak agar rapi saat Ctrl+P
 st.markdown("""
     <style>
     @media print {
         header, .stSidebar, .stTabs [data-baseweb="tab-list"], .stActionButton, button { display: none !important; }
         .main .block-container { padding: 0 !important; }
+        .stMarkdown { border: none !important; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -42,7 +43,7 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return str(int(n))
 
-# Load Assets
+# Load Gambar (Pastikan file ada di folder yang sama)
 logo_base = get_image_base64("3G.png")
 stempel_base = get_image_base64("STEMPEL.png")
 ttd_base = get_image_base64("TTD.png")
@@ -85,29 +86,31 @@ with tab1:
             origin = st.text_input("Origin")
             dest = st.text_input("Destination")
             kolli = st.number_input("Kolli", min_value=1, step=1)
-            harga = st.number_input("Harga Satuan", min_value=0, step=1000)
+            harga = st.number_input("Harga Satuan", min_value=0, step=100)
             berat = st.number_input("Berat (Kg)", min_value=0.0, step=0.1)
         
-        # --- BAGIAN SIMPAN DATA (TAB 1) ---
-if st.form_submit_button("🚀 SIMPAN DATA"):
-    payload = {
-        "Tanggal": tgl.strftime('%d-%b-%y'),
-        "Resi": str(resi),
-        "Pengirim": str(customer),
-        "Produk": str(produk),
-        "Origin": str(origin),
-        "Destination": str(dest),
-        "Kolli": str(kolli), # Kirim sebagai string agar tidak terformat otomatis
-        "Harga": str(harga), # Kirim sebagai string murni
-        "Berat": str(berat)  # Kirim sebagai string murni
-    }
+        if st.form_submit_button("🚀 SIMPAN DATA"):
+            if not resi or not customer:
+                st.error("Resi dan Customer tidak boleh kosong!")
+            else:
+                payload = {
+                    "Tanggal": tgl.strftime('%d-%b-%y'),
+                    "Resi": str(resi),
+                    "Pengirim": str(customer),
+                    "Produk": str(produk),
+                    "Origin": str(origin),
+                    "Destination": str(dest),
+                    "Kolli": str(int(kolli)),
+                    "Harga": str(int(harga)),
+                    "Berat": str(float(berat))
+                }
                 try:
                     resp = requests.post(APPS_SCRIPT_URL, json=payload)
                     if resp.status_code == 200:
                         st.success(f"✅ Data Resi {resi} Berhasil Tersimpan!")
                         st.cache_data.clear()
                     else:
-                        st.error("Gagal mengirim ke Google Sheets.")
+                        st.error("Gagal mengirim ke Google Sheets. Cek Apps Script.")
                 except Exception as e:
                     st.error(f"Koneksi Error: {e}")
 
@@ -123,28 +126,24 @@ with tab3:
     df_inv = fetch_data()
     if not df_inv.empty and 'Resi' in df_inv.columns:
         resi_list = df_inv['Resi'].dropna().unique()
-        pilih_resi = st.selectbox("Pilih Nomor Resi untuk Invoice", resi_list)
+        pilih_resi = st.selectbox("Pilih Nomor Resi", resi_list)
         
         if pilih_resi:
             d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
             
-           # --- LOGIKA HARGA (ANTI GESER & ANTI DESIMAL) ---
-def clean_number(value):
-    if value is None or str(value).lower() == 'nan':
-        return 0.0
-    # Buang semua karakter kecuali angka (titik dan koma dibuang)
-    # Ini memastikan 4.000 atau 4,000 kembali menjadi 4000
-    res = "".join(filter(str.isdigit, str(value).split('.')[0]))
-    return float(res) if res else 0.0
+            # --- LOGIKA HARGA ANTI-ERROR (4000 TETAP 4000) ---
+            def bersihkan_angka(val):
+                s = str(val).split('.')[0] # Buang desimal jika ada
+                res = "".join(filter(str.isdigit, s)) # Ambil hanya angka
+                return float(res) if res else 0.0
 
-# Ambil data sesuai nama kolom di Google Sheets Anda
-h_val = clean_number(d.get('Harga', 0))
-b_val = pd.to_numeric(d.get('Berat', 0), errors='coerce')
-total_float = h_val * b_val
+            h_val = bersihkan_angka(d.get('Harga', 0))
+            b_val = pd.to_numeric(d.get('Berat', 0), errors='coerce')
+            total_float = h_val * b_val
 
-            # Tampilan Invoice
+            # Tampilan HTML Invoice
             st.markdown(f"""
-            <div style="border: 1px solid #000; padding: 30px; background-color: white; color: black; font-family: 'Arial', sans-serif;">
+            <div style="border: 1px solid #000; padding: 30px; background-color: white; color: black; font-family: Arial, sans-serif;">
                 <table style="width:100%; border:none;">
                     <tr>
                         <td style="width:100px; border:none;"><img src="data:image/png;base64,{logo_base}" width="100"></td>
@@ -161,20 +160,20 @@ total_float = h_val * b_val
                 </table>
                 <hr style="border-top: 3px solid #1a3d8d; margin: 15px 0;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <div><strong>KEPADA:</strong><br>{str(d.get('Pengirim','-')).upper()}</div>
+                    <div><strong>DITUJUKAN KEPADA:</strong><br>{str(d.get('Pengirim','-')).upper()}</div>
                     <div style="text-align:right;"><strong>TANGGAL:</strong> {d.get('Tanggal','-')}</div>
                 </div>
-                <table style="width:100%; border-collapse: collapse; border: 1px solid black;">
-                    <tr style="background-color: #1a3d8d; color: white; text-align: center;">
-                        <th style="border: 1px solid black; padding: 8px;">DESKRIPSI BARANG</th>
-                        <th style="border: 1px solid black;">ORIGIN</th>
-                        <th style="border: 1px solid black;">DEST</th>
-                        <th style="border: 1px solid black;">KOLLI</th>
-                        <th style="border: 1px solid black;">BERAT</th>
-                        <th style="border: 1px solid black;">HARGA</th>
-                        <th style="border: 1px solid black;">TOTAL</th>
+                <table style="width:100%; border-collapse: collapse; border: 1px solid black; text-align: center;">
+                    <tr style="background-color: #1a3d8d; color: white;">
+                        <th style="border: 1px solid black; padding: 8px;">Deskripsi Barang</th>
+                        <th style="border: 1px solid black;">Origin</th>
+                        <th style="border: 1px solid black;">Dest</th>
+                        <th style="border: 1px solid black;">Kolli</th>
+                        <th style="border: 1px solid black;">Berat</th>
+                        <th style="border: 1px solid black;">Harga</th>
+                        <th style="border: 1px solid black;">Total</th>
                     </tr>
-                    <tr style="text-align: center;">
+                    <tr>
                         <td style="border: 1px solid black; padding: 12px; text-align: left;">{d.get('Produk','-')}</td>
                         <td style="border: 1px solid black;">{d.get('Origin','-')}</td>
                         <td style="border: 1px solid black;">{d.get('Destination','-')}</td>
@@ -186,26 +185,4 @@ total_float = h_val * b_val
                 </table>
                 <div style="text-align: right; margin-top: 15px;">
                     <h3 style="margin:0; color: #d62828;">TOTAL: Rp {total_float:,.0f}</h3>
-                    <p style="margin:5px 0;"><i>Terbilang: {terbilang(total_float)} Rupiah</i></p>
-                </div>
-                <table style="width:100%; margin-top: 30px;">
-                    <tr>
-                        <td style="border:none; font-size:12px; vertical-align: top;">
-                            <strong>PEMBAYARAN TRANSFER:</strong><br>Bank BCA: 6720422334<br>A/N: ADITYA GAMA SAPUTRI
-                        </td>
-                        <td style="border:none; text-align: center;">
-                            Gresik, {d.get('Tanggal','-')}<br><strong>PT. GAMA GEMAH GEMILANG</strong><br><br>
-                            <div style="position: relative; display: inline-block; height: 100px;">
-                                <img src="data:image/png;base64,{stempel_base}" width="130">
-                                <img src="data:image/png;base64,{ttd_base}" width="90" style="position: absolute; top: 10px; left: 20px;">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.button("🖨️ Cetak Invoice (Ctrl+P)", on_click=None)
-    else:
-        st.warning("Data tidak ditemukan atau kolom 'Resi' tidak ada.")
-
+                    <p style="margin
