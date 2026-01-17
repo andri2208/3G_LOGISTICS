@@ -51,29 +51,34 @@ with t1:
             brt = st.number_input("Berat (Kg)", min_value=0.0)
         
         if st.form_submit_button("SIMPAN"):
-            row = pd.DataFrame([{'Resi':resi,'Tgl':tgl.strftime('%d-%b-%y'),'Cust':cust,'Item':item,'Asal':asal,'Tuju':tuju,'Koli':koli,'Hrg':hrg,'Brt':brt}])
-            st.session_state.db = pd.concat([st.session_state.db, row], ignore_index=True)
-            st.success("Tersimpan!")
+            if resi and cust:
+                row = pd.DataFrame([{'Resi':resi,'Tgl':tgl.strftime('%d-%b-%y'),'Cust':cust,'Item':item,'Asal':asal,'Tuju':tuju,'Koli':koli,'Hrg':hrg,'Brt':brt}])
+                st.session_state.db = pd.concat([st.session_state.db, row], ignore_index=True)
+                st.success("Tersimpan!")
+            else:
+                st.error("No Resi dan Customer tidak boleh kosong!")
 
 with t2:
     if not st.session_state.db.empty:
         pilih = st.selectbox("Pilih Resi", st.session_state.db['Resi'].unique())
         d = st.session_state.db[st.session_state.db['Resi'] == pilih].iloc[0]
-        total = d['Hrg'] * d['Brt']
         
-        # Load Gambar Sesuai Nama File Anda
+        # Perhitungan & Pencegahan Error
+        total = float(d['Hrg']) * float(d['Brt'])
+        cust_name = str(d['Cust']).upper() if d['Cust'] else ""
+        
+        # Load Gambar
         h_img = get_image_base64("HEADER-INVOCE.PNG")
         f_img = get_image_base64("STEMPEL-TANDA-TANGAN.PNG")
 
-        # DISINI KUNCI DESAINNYA
         invoice_html = f"""
         <div style="background:white; color:black; padding:20px; font-family:Arial; width:800px; margin:auto; border:1px solid #eee;">
             <img src="data:image/png;base64,{h_img}" style="width:100%;">
             <div style="text-align:right; margin-top:10px;">
-                <h1 style="color:red; margin:0;">INVOICE</h1>
+                <h1 style="color:red; margin:0; font-size:30px;">INVOICE</h1>
                 <p>DATE: {d['Tgl']}</p>
             </div>
-            <p><b>CUSTOMER: {d['Cust'].upper()}</b></p>
+            <p><b>CUSTOMER: {cust_name}</b></p>
             <table style="width:100%; border-collapse:collapse; border:1px solid black; text-align:center; font-size:12px;">
                 <tr style="background:#f2f2f2;">
                     <th style="border:1px solid black; padding:8px;">Product Description</th>
@@ -93,20 +98,20 @@ with t2:
                 </tr>
             </table>
             <div style="text-align:right; margin-top:20px;">
-                <h3 style="margin:0;">YANG HARUS DIBAYAR: <span style="color:red;">Rp {total:,.0f}</span></h3>
+                <h3 style="margin:0;">YANG HARUS DIBAYAR: <span style="color:red; font-size:22px;">Rp {total:,.0f}</span></h3>
                 <p style="font-size:12px;"><i>Terbilang: {terbilang(total)} Rupiah</i></p>
             </div>
-            <table style="width:100%; margin-top:30px;">
+            <table style="width:100%; margin-top:30px; font-size:13px;">
                 <tr>
-                    <td style="font-size:12px;">Bank BCA | 6720422334 | A/N ADITYA GAMA SAPUTRI</td>
+                    <td style="width:60%;"><b>TRANSFER TO :</b><br>Bank BCA | 6720422334 | A/N ADITYA GAMA SAPUTRI</td>
                     <td style="text-align:center;">
                         Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b><br>
                         <img src="data:image/png;base64,{f_img}" width="180"><br>
-                        <b>KELVINITO JAYADI</b>
+                        <b>KELVINITO JAYADI</b><br>DIREKTUR
                     </td>
                 </tr>
             </table>
         </div>
         """
-        # INI PERINTAH WAJIB AGAR TIDAK MUNCUL KODE
+        # Render desain
         st.markdown(invoice_html, unsafe_allow_html=True)
