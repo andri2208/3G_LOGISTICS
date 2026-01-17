@@ -131,18 +131,19 @@ with tab3:
         if pilih_resi:
             d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
             
-            # --- LOGIKA HARGA ANTI-ERROR (4000 TETAP 4000) ---
+            # --- LOGIKA HARGA ANTI-ERROR ---
             def bersihkan_angka(val):
-                s = str(val).split('.')[0] # Buang desimal jika ada
-                res = "".join(filter(str.isdigit, s)) # Ambil hanya angka
+                s = str(val).split('.')[0]
+                res = "".join(filter(str.isdigit, s))
                 return float(res) if res else 0.0
 
             h_val = bersihkan_angka(d.get('Harga', 0))
             b_val = pd.to_numeric(d.get('Berat', 0), errors='coerce')
-            total_float = h_val * b_val
+            total_float = h_val * (float(b_val) if not pd.isna(b_val) else 0.0)
 
-            # Tampilan HTML Invoice
-            st.markdown(f"""
+            # --- HTML INVOICE (DIPERBAIKI) ---
+            # Menggunakan f-string dengan double curly braces {{ }} untuk CSS agar tidak SyntaxError
+            invoice_html = f"""
             <div style="border: 1px solid #000; padding: 30px; background-color: white; color: black; font-family: Arial, sans-serif;">
                 <table style="width:100%; border:none;">
                     <tr>
@@ -185,4 +186,25 @@ with tab3:
                 </table>
                 <div style="text-align: right; margin-top: 15px;">
                     <h3 style="margin:0; color: #d62828;">TOTAL: Rp {total_float:,.0f}</h3>
-                    <p style="margin
+                    <p style="margin:5px 0;"><i>Terbilang: {terbilang(total_float)} Rupiah</i></p>
+                </div>
+                <table style="width:100%; margin-top: 30px;">
+                    <tr>
+                        <td style="border:none; font-size:12px; vertical-align: top;">
+                            <strong>PEMBAYARAN TRANSFER:</strong><br>Bank BCA: 6720422334<br>A/N: ADITYA GAMA SAPUTRI
+                        </td>
+                        <td style="border:none; text-align: center;">
+                            Gresik, {d.get('Tanggal','-')}<br><strong>PT. GAMA GEMAH GEMILANG</strong><br><br>
+                            <div style="position: relative; display: inline-block; height: 100px;">
+                                <img src="data:image/png;base64,{stempel_base}" width="130">
+                                <img src="data:image/png;base64,{ttd_base}" width="90" style="position: absolute; top: 10px; left: 20px;">
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            """
+            st.markdown(invoice_html, unsafe_allow_html=True)
+            st.info("Gunakan Ctrl+P untuk mencetak.")
+    else:
+        st.warning("Silakan isi data terlebih dahulu.")
