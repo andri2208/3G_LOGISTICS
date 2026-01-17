@@ -9,7 +9,7 @@ from streamlit_gsheets import GSheetsConnection
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="3G LOGISTICS - System", page_icon="3G.png", layout="wide")
 
-# --- 2. URL CONFIG (WAJIB DIISI) ---
+# --- 2. URL CONFIG (SESUAIKAN DENGAN MILIK ANDA) ---
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXgo5VKAEzx3WhjB4RIq91oG-N5dKA3sAHGCTNaUOj_f6CGRDHSe12UOL9aZYCuKk_/exec"
 
@@ -43,7 +43,7 @@ def fetch_data():
     try:
         # ttl=0 agar data selalu update setelah simpan
         df = conn.read(spreadsheet=SPREADSHEET_URL, ttl=0)
-        df.columns = df.columns.str.strip() # Bersihkan spasi nama kolom
+        df.columns = df.columns.str.strip() 
         return df
     except:
         return pd.DataFrame()
@@ -94,12 +94,12 @@ with tab1:
                     "Berat": float(berat)
                 }
                 try:
-                    resp = requests.post("https://script.google.com/macros/s/AKfycbzXgo5VKAEzx3WhjB4RIq91oG-N5dKA3sAHGCTNaUOj_f6CGRDHSe12UOL9aZYCuKk_/exec", json=payload)
+                    resp = requests.post(APPS_SCRIPT_URL, json=payload)
                     if resp.status_code == 200:
                         st.success(f"✅ Data Resi {resi} Berhasil Disimpan!")
                         st.cache_data.clear()
                     else:
-                        st.error("Gagal mengirim data. Cek Apps Script Anda.")
+                        st.error("Gagal mengirim data ke Apps Script.")
                 except Exception as e:
                     st.error(f"Koneksi Error: {e}")
 
@@ -119,7 +119,6 @@ with tab3:
             d = df_inv[df_inv['Resi'] == pilih_resi].iloc[0]
             
             # --- LOGIKA HARGA (ANTI 4000 JADI 40) ---
-            # Mengambil angka murni, membuang desimal jika terbaca sebagai ribuan
             raw_h = str(d.get('Harga', '0')).split('.')[0]
             clean_h = "".join(filter(str.isdigit, raw_h))
             h_val = float(clean_h) if clean_h else 0.0
