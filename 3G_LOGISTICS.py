@@ -2,18 +2,21 @@ import streamlit as st
 import pandas as pd
 import base64
 import os
+from datetime import datetime
 
-# 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G LOGISTICS", layout="wide")
+# --- 1. SETTING HALAMAN ---
+st.set_page_config(page_title="3G LOGISTICS SYSTEM", layout="wide")
 
-# 2. FUNGSI UNTUK GAMBAR & TERBILANG
+# --- 2. FUNGSI PENDUKUNG ---
 def get_image_base64(path):
+    """Membaca gambar agar bisa muncul di Streamlit Cloud"""
     if os.path.exists(path):
         with open(path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
     return ""
 
 def terbilang(n):
+    """Fungsi otomatis mengubah angka menjadi teks (Dua juta...)"""
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
     if n < 12: return bilangan[int(n)]
     elif n < 20: return terbilang(n - 10) + " Belas"
@@ -25,106 +28,153 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return str(n)
 
-# 3. DATABASE SESSION (Agar data tidak hilang saat pindah tab)
-if 'db_3g' not in st.session_state:
-    st.session_state.db_3g = pd.DataFrame(columns=['Resi','Tgl','Customer','Barang','Asal','Tujuan','Harga','Berat'])
+# --- 3. DATABASE SEMENTARA (SESSION STATE) ---
+if 'data_logistik' not in st.session_state:
+    st.session_state.data_logistik = pd.DataFrame(columns=[
+        'No_Resi', 'Tanggal', 'Customer', 'Deskripsi', 'Origin', 'Destination', 'Kolli', 'Harga', 'Weight'
+    ])
 
-# 4. TAMPILAN TAB
-tab1, tab2 = st.tabs(["📝 INPUT DATA", "🖨️ CETAK INVOICE"])
+# --- 4. NAVIGASI TAB ---
+st.title("🚚 3G LOGISTICS - INTERNAL DASHBOARD")
+tab_input, tab_cetak = st.tabs(["📝 INPUT DATA BARU", "🖨️ CETAK INVOICE"])
 
-# --- TAB INPUT ---
-with tab1:
-    st.subheader("Form Input Invoice")
-    with st.form("input_form", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1:
-            resi = st.text_input("No Resi", value="INV/2025/001")
-            tgl = st.text_input("Tanggal", value="29-Des-25")
-            cust = st.text_input("Nama Customer", value="BAPAK ANDI")
-            item = st.text_area("Deskripsi Barang", value="SATU SET ALAT TAMBANG")
-        with c2:
-            asal = st.text_input("Origin", value="SBY")
-            tuju = st.text_input("Destination", value="MEDAN")
-            hrg = st.number_input("Harga Satuan", value=8500)
-            brt = st.number_input("Berat (Kg)", value=290.0)
+# --- TAB 1: INPUT DATA ---
+with tab_input:
+    st.subheader("Form Input Pengiriman")
+    with st.form("form_entry", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            no_resi = st.text_input("Nomor Resi / Invoice", placeholder="Contoh: INV/29/12/25")
+            tgl_load = st.date_input("Tanggal Muat (Date of Load)")
+            customer = st.text_input("Nama Customer", placeholder="Contoh: BAPAK ANDI")
+            barang = st.text_area("Product Description", placeholder="Contoh: SATU SET ALAT TAMBANG")
         
-        if st.form_submit_button("Simpan Data"):
-            new_row = pd.DataFrame([{'Resi':resi,'Tgl':tgl,'Customer':cust,'Barang':item,'Asal':asal,'Tujuan':tuju,'Harga':hrg,'Berat':brt}])
-            st.session_state.db_3g = pd.concat([st.session_state.db_3g, new_row], ignore_index=True)
-            st.success("Data Tersimpan!")
+        with col2:
+            asal = st.text_input("Origin (Asal)", placeholder="Contoh: SBY")
+            tujuan = st.text_input("Destination (Tujuan)", placeholder="Contoh: MEDAN")
+            kolli = st.number_input("Jumlah KOLLI", min_value=1, step=1)
+            harga = st.number_input("Harga Satuan (Rp)", min_value=0, step=100)
+            berat = st.number_input("Weight (Kg)", min_value=0.0, step=0.1)
+        
+        submit = st.form_submit_button("Simpan Data ke Sistem ✅")
+        
+        if submit:
+            if no_resi and customer:
+                # Simpan data ke session state
+                data_baru = pd.DataFrame([{
+                    'No_Resi': no_resi,
+                    'Tanggal': tgl_load.strftime('%d-%b-%y'),
+                    'Customer': customer.upper(),
+                    'Deskripsi': barang.upper(),
+                    'Origin': asal.upper(),
+                    'Destination': tujuan.upper(),
+                    'Kolli': kolli,
+                    'Harga': harga,
+                    'Weight': berat
+                }])
+                st.session_state.data_logistik = pd.concat([st.session_state.data_logistik, data_baru], ignore_index=True)
+                st.success(f"Data {no_resi} berhasil disimpan! Buka Tab 'Cetak Invoice' untuk melihat.")
+            else:
+                st.error("Mohon isi Nomor Resi dan Nama Customer.")
 
-# --- TAB CETAK ---
-with tab2:
-    if st.session_state.db_3g.empty:
-        st.warning("Belum ada data.")
+# --- TAB 2: CETAK INVOICE ---
+with tab_cetak:
+    if st.session_state.data_logistik.empty:
+        st.warning("Data masih kosong. Silakan input data di Tab 1.")
     else:
-        pilih = st.selectbox("Pilih Resi", st.session_state.db_3g['Resi'].unique())
-        d = st.session_state.db_3g[st.session_state.db_3g['Resi'] == pilih].iloc[0]
-        total = d['Harga'] * d['Berat']
+        st.subheader("Preview Invoice")
+        resi_pilihan = st.selectbox("Pilih Resi yang akan Dicetak", st.session_state.data_logistik['No_Resi'].unique())
         
-        # Load Gambar (Logo, TTD, Stempel)
+        # Ambil detail data yang dipilih
+        d = st.session_state.data_logistik[st.session_state.data_logistik['No_Resi'] == resi_pilihan].iloc[0]
+        total_bayar = d['Harga'] * d['Weight']
+
+        # Load Gambar (PASTIKAN FILE INI SUDAH DI UPLOAD)
         logo = get_image_base64("3G.png")
         ttd = get_image_base64("TANDA TANGAN.png")
         stempel = get_image_base64("STEMPEL DAN NAMA.png")
 
-        # HTML INVOICE (Sesuai PDF)
+        # STRUKTUR HTML (PERSIS PDF)
         invoice_html = f"""
-        <div style="background: white; color: black; padding: 40px; border: 1px solid #ddd; font-family: Arial; width: 800px; margin: auto;">
+        <div style="background-color: white; color: black; padding: 40px; border: 1px solid #ddd; font-family: Arial, sans-serif; width: 850px; margin: auto;">
             <table style="width: 100%;">
                 <tr>
-                    <td style="width: 140px;"><img src="data:image/png;base64,{logo}" width="130"></td>
+                    <td style="width: 130px;"><img src="data:image/png;base64,{logo}" width="120"></td>
                     <td style="vertical-align: middle;">
-                        <h2 style="margin:0; color:#1a3d8d;">PT. GAMA GEMAH GEMILANG</h2>
-                        <p style="font-size:11px; margin:0;">Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik.<br>Telp 031-79973432</p>
+                        <h2 style="margin:0; color:#1a3d8d; font-size: 24px;">PT. GAMA GEMAH GEMILANG</h2>
+                        <p style="font-size:11px; margin:0; line-height: 1.2;">
+                            Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik.<br>
+                            Jawa Timur. Telp 031-79973432
+                        </p>
                     </td>
-                    <td style="text-align:right; vertical-align:top;">
-                        <h1 style="margin:0; color:red;">INVOICE</h1>
-                        <p><b>DATE: {d['Tgl']}</b></p>
+                    <td style="text-align:right; vertical-align: top;">
+                        <h1 style="margin:0; color:red; font-size: 32px;">INVOICE</h1>
+                        <p style="margin:0;"><b>DATE: {d['Tanggal']}</b></p>
                     </td>
                 </tr>
             </table>
+
             <hr style="border: 2px solid #1a3d8d; margin: 20px 0;">
-            <p style="font-size:16px;"><b>CUSTOMER: {str(d['Customer']).upper()}</b></p>
+            <p style="font-size: 16px; margin-bottom: 10px;"><b>CUSTOMER: {d['Customer']}</b></p>
+
             <table style="width: 100%; border-collapse: collapse; border: 1px solid black; text-align: center; font-size: 12px;">
-                <tr style="background: #f2f2f2;">
-                    <th style="border: 1px solid black; padding: 10px;">Date of Load</th>
-                    <th style="border: 1px solid black;">Product Description</th>
-                    <th style="border: 1px solid black;">Origin</th>
-                    <th style="border: 1px solid black;">Destination</th>
-                    <th style="border: 1px solid black;">HARGA</th>
-                    <th style="border: 1px solid black;">WEIGHT</th>
-                    <th style="border: 1px solid black;">TOTAL</th>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid black; padding: 15px;">{d['Tgl']}</td>
-                    <td style="border: 1px solid black; text-align: left; padding-left: 10px;">{d['Barang']}</td>
-                    <td style="border: 1px solid black;">{d['Asal']}</td>
-                    <td style="border: 1px solid black;">{d['Tujuan']}</td>
-                    <td style="border: 1px solid black;">Rp {d['Harga']:,}</td>
-                    <td style="border: 1px solid black;">{d['Berat']} Kg</td>
-                    <td style="border: 1px solid black; font-weight: bold;">Rp {total:,.0f}</td>
-                </tr>
+                <thead style="background-color: #f2f2f2;">
+                    <tr>
+                        <th style="border: 1px solid black; padding: 10px;">Date of Load</th>
+                        <th style="border: 1px solid black;">Product Description</th>
+                        <th style="border: 1px solid black;">Origin</th>
+                        <th style="border: 1px solid black;">Destination</th>
+                        <th style="border: 1px solid black;">KOLLI</th>
+                        <th style="border: 1px solid black;">HARGA</th>
+                        <th style="border: 1px solid black;">WEIGHT</th>
+                        <th style="border: 1px solid black;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 20px;">{d['Tanggal']}</td>
+                        <td style="border: 1px solid black; text-align: left; padding-left: 10px;">{d['Deskripsi']}</td>
+                        <td style="border: 1px solid black;">{d['Origin']}</td>
+                        <td style="border: 1px solid black;">{d['Destination']}</td>
+                        <td style="border: 1px solid black;">{d['Kolli']}</td>
+                        <td style="border: 1px solid black;">Rp {d['Harga']:,}</td>
+                        <td style="border: 1px solid black;">{d['Weight']} Kg</td>
+                        <td style="border: 1px solid black; font-weight: bold;">Rp {total_bayar:,.0f}</td>
+                    </tr>
+                </tbody>
             </table>
+
             <div style="text-align: right; margin-top: 25px;">
-                <h3 style="margin:0;">YANG HARUS DI BAYAR: <span style="color:red;">Rp {total:,.0f}</span></h3>
-                <p><i>Terbilang: {terbilang(total)} Rupiah</i></p>
+                <h3 style="margin:0;">YANG HARUS DI BAYAR: <span style="color:red; font-size: 22px;">Rp {total_bayar:,.0f}</span></h3>
+                <p style="font-size: 14px; margin-top: 5px;"><i>Terbilang: {terbilang(total_bayar)} Rupiah</i></p>
             </div>
-            <table style="width: 100%; margin-top: 40px;">
+
+            <table style="width: 100%; margin-top: 40px; font-size: 13px;">
                 <tr>
-                    <td style="width: 60%; vertical-align: top; font-size: 12px;">
-                        <b>TRANSFER TO :</b><br>Bank BCA | No Rek: 6720422334 [cite: 14]<br>A/N ADITYA GAMA SAPUTRI [cite: 15]<br>
-                        <small>NB: Konfirmasi ke Finance 082179799200 [cite: 16]</small>
+                    <td style="width: 60%; vertical-align: top;">
+                        <b>TRANSFER TO :</b><br>
+                        Bank Central Asia (BCA)<br>
+                        6720422334<br>
+                        A/N ADITYA GAMA SAPUTRI<br><br>
+                        <small style="color: grey;">NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</small>
                     </td>
                     <td style="text-align: center; vertical-align: top;">
-                        Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b> [cite: 18]<br>
-                        <div style="position: relative; height: 100px; width: 180px; margin: auto;">
-                            <img src="data:image/png;base64,{ttd}" style="position: absolute; width: 90px; left: 45px; top: 15px; z-index: 1;">
-                            <img src="data:image/png;base64,{stempel}" style="position: absolute; width: 150px; left: 15px; top: -5px; z-index: 2; opacity: 0.8;">
+                        Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b><br>
+                        
+                        <div style="position: relative; height: 120px; width: 200px; margin: auto;">
+                            <img src="data:image/png;base64,{ttd}" 
+                                 style="position: absolute; width: 100px; left: 50px; top: 15px; z-index: 1;">
+                            
+                            <img src="data:image/png;base64,{stempel}" 
+                                 style="position: absolute; width: 150px; left: 25px; top: -5px; z-index: 2; opacity: 0.85;">
                         </div>
-                        <br><b>KELVINITO JAYADI</b> [cite: 19]<br>DIREKTUR [cite: 20]
+
+                        <br><b>KELVINITO JAYADI</b><br>DIREKTUR
                     </td>
                 </tr>
             </table>
         </div>
         """
+        
+        # MENAMPILKAN HASILNYA
         st.markdown(invoice_html, unsafe_allow_html=True)
