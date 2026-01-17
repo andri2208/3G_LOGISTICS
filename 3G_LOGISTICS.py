@@ -34,8 +34,8 @@ if 'db' not in st.session_state:
 
 # --- 5. NAVIGASI (DENGAN HEADER GAMBAR) ---
 # Menampilkan gambar header sebagai pengganti judul teks
-if os.path.exists("HEADER-INVOICE.PNG"):
-    st.image("HEADER-INVOICE.PNG", use_container_width=True)
+if os.path.exists("HEADER INVOICE.PNG"):
+    st.image("HEADER INVOICE.PNG", use_container_width=True)
 else:
     st.title("3G LOGISTICS SYSTEM") # Cadangan jika file gambar tidak ditemukan
 
@@ -89,8 +89,8 @@ with tab2:
         total_rp = float(d['Harga']) * float(d['Berat'])
         
         # Load Gambar
-        h_img = get_image_base64("HEADER-INVOCE.PNG")
-        f_img = get_image_base64("STEMPEL-TANDA-TANGAN.PNG")
+        h_img = get_image_base64("HEADER INVOCE.PNG")
+        f_img = get_image_base64("STEMPEL TANDA TANGAN.PNG")
 
         # HTML INVOICE (Memanggil nama kolom yang sudah diperbaiki)
         invoice_html = f"""
@@ -136,4 +136,5 @@ with tab2:
         </div>
         """
         st.markdown(invoice_html, unsafe_allow_html=True)
+
 
