@@ -1,64 +1,90 @@
 import streamlit as st
 from PIL import Image
 import os
+import pandas as pd
+from datetime import datetime
 
-# 1. Konfigurasi Halaman & Favicon (Ikon Tab Browser)
+# 1. Konfigurasi Halaman & Favicon
 try:
     favicon = Image.open("FAVICON.png")
-    st.set_page_config(page_title="3G LOGISTICS", page_icon=favicon, layout="centered")
+    st.set_page_config(page_title="3G LOGISTICS", page_icon=favicon, layout="wide")
 except:
-    st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚")
+    st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚", layout="wide")
 
-# 2. Menampilkan Header Invoice di bagian paling atas
+# 2. Menampilkan Header Banner
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 else:
     st.title("🚚 3G LOGISTICS")
 
-# 3. Sidebar dengan Logo
+# 3. Sidebar Navigasi
 with st.sidebar:
     if os.path.exists("FAVICON.png"):
-        st.image("FAVICON.png", width=100)
-    st.title("Menu Utama")
-    menu = st.radio("Pilih Layanan:", ["Cek Tarif", "Tracking Resi", "Kontak"])
+        st.image("FAVICON.png", width=120)
+    st.title("Sistem Logistik")
+    st.write("PT. GAMA GEMAH GEMILANG")
+    st.divider()
+    menu = st.radio("Pilih Menu:", ["Dashboard", "Cek Tarif", "Input Pengiriman", "Lacak Resi"])
 
-# --- Database Tarif (Bisa kamu tambah sesuai kebutuhan) ---
-TARIF_KOTA = {
-    "JAKARTA": {"BANDUNG": 15000, "SURABAYA": 35000, "MEDAN": 50000},
-    "BANDUNG": {"JAKARTA": 15000, "SURABAYA": 30000, "MEDAN": 55000},
-}
+# Inisialisasi Database Sederhana di Memory (Session State)
+if 'database_logistik' not in st.session_state:
+    st.session_state.database_logistik = []
 
-# 4. Logika Menu
-if menu == "Cek Tarif":
-    st.subheader("📊 Estimasi Biaya Pengiriman")
-    
+# --- LOGIKA MENU ---
+
+if menu == "Dashboard":
+    st.subheader("🏠 Ringkasan Pengiriman")
+    if st.session_state.database_logistik:
+        df = pd.DataFrame(st.session_state.database_logistik)
+        st.table(df)
+    else:
+        st.info("Belum ada data pengiriman hari ini.")
+
+elif menu == "Cek Tarif":
+    st.subheader("📊 Estimasi Biaya")
     col1, col2 = st.columns(2)
     with col1:
-        asal = st.selectbox("Kota Asal", list(TARIF_KOTA.keys())).upper()
+        asal = st.text_input("Dari Kota (Asal)")
     with col2:
-        tujuan = st.selectbox("Kota Tujuan", ["JAKARTA", "BANDUNG", "SURABAYA", "MEDAN"]).upper()
+        tujuan = st.text_input("Ke Kota (Tujuan)")
+    berat = st.number_input("Berat (Kg)", min_value=1)
     
-    berat = st.number_input("Berat Paket (Kg)", min_value=1, value=1)
-    
-    if st.button("Cek Harga"):
-        harga = TARIF_KOTA.get(asal, {}).get(tujuan, 0)
-        if harga > 0:
-            total = harga * berat
-            st.success(f"### Total Biaya: Rp {total:,.0f}")
-            st.caption(f"Tarif dasar: Rp {harga:,.0f}/Kg")
-        else:
-            st.error("Rute pengiriman belum tersedia.")
+    if st.button("Hitung Harga"):
+        # Contoh logika hitung: 15.000 per kg
+        total = berat * 15000
+        st.success(f"Estimasi Biaya ke {tujuan}: **Rp {total:,.0f}**")
 
-elif menu == "Tracking Resi":
-    st.subheader("🔍 Lacak Posisi Paket")
-    resi = st.text_input("Masukkan Nomor Resi (Contoh: 3G001)")
-    if st.button("Lacak"):
-        if resi:
-            st.info(f"Paket dengan resi **{resi}** sedang dalam proses pengantaran.")
-        else:
-            st.warning("Silakan masukkan nomor resi.")
+elif menu == "Input Pengiriman":
+    st.subheader("📝 Form Input Paket Baru")
+    with st.form("input_form"):
+        resi = st.text_input("Nomor Resi", value=f"3G-{datetime.now().strftime('%d%H%M%S')}")
+        nama_penerima = st.text_input("Nama Penerima")
+        alamat = st.text_area("Alamat Lengkap")
+        layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
+        
+        submitted = st.form_submit_button("Simpan Data")
+        if submitted:
+            data_baru = {
+                "Waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "Resi": resi,
+                "Penerima": nama_penerima,
+                "Layanan": layanan,
+                "Status": "Sedang Diproses"
+            }
+            st.session_state.database_logistik.append(data_baru)
+            st.success(f"Data Resi {resi} berhasil disimpan!")
 
-else:
-    st.subheader("📞 Kontak Kami")
-    st.write("PT. GAMA GEMAH GEMILANG")
-    st.write("Hubungi kami untuk kerja sama logistik lebih lanjut.")
+elif menu == "Lacak Resi":
+    st.subheader("🔍 Tracking System")
+    cari_resi = st.text_input("Masukkan No. Resi")
+    if st.button("Cari"):
+        # Mencari di database session
+        hasil = [item for item in st.session_state.database_logistik if item["Resi"] == cari_resi]
+        if hasil:
+            st.json(hasil[0])
+        else:
+            st.error("Nomor resi tidak ditemukan dalam sistem.")
+
+# Footer
+st.divider()
+st.caption("© 2026 PT. GAMA GEMAH GEMILANG - 3G LOGISTICS System")
