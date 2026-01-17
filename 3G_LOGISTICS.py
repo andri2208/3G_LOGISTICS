@@ -32,9 +32,16 @@ if 'db' not in st.session_state:
     # Kita gunakan nama kolom yang jelas: No_Resi, Tanggal, Customer, Barang, Origin, Destination, Harga, Berat
     st.session_state.db = pd.DataFrame(columns=['No_Resi','Tanggal','Customer','Barang','Origin','Destination','Harga','Berat'])
 
-# --- 5. NAVIGASI ---
-st.title("3G LOGISTICS SYSTEM")
-tab1, tab2 = st.tabs(["INPUT DATA", "CETAK INVOICE"])
+# --- 5. NAVIGASI (DENGAN HEADER GAMBAR) ---
+# Menampilkan gambar header sebagai pengganti judul teks
+if os.path.exists("HEADER-INVOICE.PNG"):
+    st.image("HEADER-INVOICE.PNG", use_container_width=True)
+else:
+    st.title("3G LOGISTICS SYSTEM") # Cadangan jika file gambar tidak ditemukan
+
+# Navigasi Tab
+tab1, tab2 = st.tabs(["📝 INPUT DATA", "🖨️ CETAK INVOICE"])
+
 
 # --- TAB INPUT ---
 with tab1:
@@ -129,3 +136,4 @@ with tab2:
         </div>
         """
         st.markdown(invoice_html, unsafe_allow_html=True)
+
