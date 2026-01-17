@@ -94,89 +94,84 @@ with tab2:
 with tab3:
     df_inv = fetch_data()
     if not df_inv.empty and 'Resi' in df_inv.columns:
-        pilih = st.selectbox("Pilih No Resi untuk Dicetak", df_inv['Resi'].dropna().unique())
+        pilih = st.selectbox("Pilih No Resi", df_inv['Resi'].dropna().unique())
         d = df_inv[df_inv['Resi'] == pilih].iloc[0]
         
-        # Perhitungan angka
+        # --- PERHITUNGAN ---
         h_raw = str(d.get('Harga', '0')).split('.')[0]
         h_fix = int("".join(filter(str.isdigit, h_raw))) if any(c.isdigit() for c in h_raw) else 0
         b_val = float(pd.to_numeric(d.get('Berat', 0), errors='coerce'))
         total = h_fix * b_val
 
-        # Menyiapkan Gambar (Pastikan file ini ada di folder yang sama)
+        # --- LOAD GAMBAR ---
         logo_base = get_image_base64("3G.png")
         ttd_base = get_image_base64("TANDA TANGAN.png")
         stempel_base = get_image_base64("STEMPEL DAN NAMA.png")
 
-        invoice_html = f"""
-        <div style="background-color: white; color: black; padding: 40px; border: 1px solid #eee; font-family: 'Arial', sans-serif; width: 850px; margin: auto;">
+        # --- HTML INVOICE (Variabel didefinisikan di sini) ---
+        html_cetak = f"""
+        <div style="background-color: white; color: black; padding: 30px; border: 1px solid #eee; font-family: Arial;">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 150px;"><img src="data:image/png;base64,{logo_base}" width="130"></td>
+                    <td>
+                        <h2 style="margin:0; color:#1a3d8d;">PT. GAMA GEMAH GEMILANG</h2>
+                        <p style="font-size:11px;">Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik.<br>Telp 031-79973432</p>
+                    </td>
+                    <td style="text-align:right;">
+                        <h1 style="margin:0; color:red;">INVOICE</h1>
+                        <p><b>DATE: {d.get('Tanggal','')}</b></p>
+                    </td>
+                </tr>
+            </table>
+            <hr style="border:2px solid #1a3d8d;">
+            <p><b>CUSTOMER: {str(d.get('Pengirim','')).upper()}</b></p>
             
-            <table style="width: 100%; border: none;">
+            <table style="width:100%; border-collapse:collapse; border:1px solid black; text-align:center; font-size:12px;">
+                <tr style="background-color:#f2f2f2;">
+                    <th style="border:1px solid black; padding:8px;">Date of Load</th>
+                    <th style="border:1px solid black;">Product Description</th>
+                    <th style="border:1px solid black;">Origin</th>
+                    <th style="border:1px solid black;">Destination</th>
+                    <th style="border:1px solid black;">KOLLI</th>
+                    <th style="border:1px solid black;">HARGA</th>
+                    <th style="border:1px solid black;">WEIGHT</th>
+                    <th style="border:1px solid black;">TOTAL</th>
+                </tr>
                 <tr>
-                    <td style="width: 150px;"><img src="data:image/png;base64,{logo_base}" width="140"></td>
-                    <td style="vertical-align: middle;">
-                        <h2 style="margin: 0; color: #1a3d8d; font-size: 24px;">PT. GAMA GEMAH GEMILANG</h2>
-                        <p style="font-size: 11px; margin: 5px 0;">Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik.<br>Telp 031-79973432 | Email: finance@3glogistics.com</p>
-                    </td>
-                    <td style="text-align: right; vertical-align: top;">
-                        <h1 style="margin: 0; color: #d62828; font-size: 35px;">INVOICE</h1>
-                        <p style="margin: 5px 0;"><b>DATE: {d.get('Tanggal','')}</b></p>
-                    </td>
+                    <td style="border:1px solid black; padding:15px;">{d.get('Tanggal','')}</td>
+                    <td style="border:1px solid black; text-align:left; padding-left:5px;">{d.get('Produk','')}</td>
+                    <td style="border:1px solid black;">{d.get('Origin','')}</td>
+                    <td style="border:1px solid black;">{d.get('Destination','')}</td>
+                    <td style="border:1px solid black;">{d.get('Kolli',0)}</td>
+                    <td style="border:1px solid black;">Rp {h_fix:,}</td>
+                    <td style="border:1px solid black;">{b_val} Kg</td>
+                    <td style="border:1px solid black; font-weight:bold;">Rp {total:,.0f}</td>
                 </tr>
             </table>
 
-            <hr style="border: 2px solid #1a3d8d; margin: 20px 0;">
-            <p style="font-size: 14px; margin-bottom: 20px;"><b>CUSTOMER: {str(d.get('Pengirim','')).upper()}</b></p>
-
-            <table style="width: 100%; border-collapse: collapse; border: 1px solid black; text-align: center; font-size: 12px;">
-                <tr style="background-color: #f2f2f2;">
-                    <th style="border: 1px solid black; padding: 10px;">Date of Load</th>
-                    <th style="border: 1px solid black;">Product Description</th>
-                    <th style="border: 1px solid black;">Origin</th>
-                    <th style="border: 1px solid black;">Destination</th>
-                    <th style="border: 1px solid black;">KOLLI</th>
-                    <th style="border: 1px solid black;">HARGA</th>
-                    <th style="border: 1px solid black;">WEIGHT</th>
-                    <th style="border: 1px solid black;">TOTAL</th>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid black; padding: 20px;">{d.get('Tanggal','')}</td>
-                    <td style="border: 1px solid black; text-align: left; padding-left: 10px;">{d.get('Produk','')}</td>
-                    <td style="border: 1px solid black;">{d.get('Origin','')}</td>
-                    <td style="border: 1px solid black;">{d.get('Destination','')}</td>
-                    <td style="border: 1px solid black;">{d.get('Kolli',0)}</td>
-                    <td style="border: 1px solid black;">Rp {h_fix:,}</td>
-                    <td style="border: 1px solid black;">{b_val} Kg</td>
-                    <td style="border: 1px solid black; font-weight: bold;">Rp {total:,.0f}</td>
-                </tr>
-            </table>
-
-            <div style="text-align: right; margin-top: 20px;">
-                <h3 style="margin: 0;">YANG HARUS DI BAYAR: <span style="color: #d62828;">Rp {total:,.0f}</span></h3>
-                <p style="font-size: 12px;"><i>Terbilang: {terbilang(total)} Rupiah</i></p>
+            <div style="text-align:right; margin-top:20px;">
+                <h3>YANG HARUS DI BAYAR: <span style="color:red;">Rp {total:,.0f}</span></h3>
+                <p><i>Terbilang: {terbilang(total)} Rupiah</i></p>
             </div>
 
-            <table style="width: 100%; margin-top: 50px; font-size: 13px;">
+            <table style="width:100%; margin-top:30px;">
                 <tr>
-                    <td style="width: 60%;">
-                        <b>TRANSFER TO :</b><br>Bank BCA | No Rek: 6720422334<br>A/N ADITYA GAMA SAPUTRI<br><br>
-                        <small>NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</small>
+                    <td style="width:60%; font-size:12px;">
+                        <b>TRANSFER TO :</b><br>Bank BCA | No Rek: 6720422334<br>A/N ADITYA GAMA SAPUTRI
                     </td>
-                    <td style="text-align: center; vertical-align: top;">
-                        Gresik, {d.get('Tanggal','')}<br>Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b><br>
-                        
-                        <div style="position: relative; height: 120px; width: 200px; margin: auto;">
-                            <img src="data:image/png;base64,{ttd_base}" 
-                                 style="position: absolute; width: 120px; left: 40px; top: 10px; z-index: 1;">
-                            
-                            <img src="data:image/png;base64,{stempel_base}" 
-                                 style="position: absolute; width: 160px; left: 20px; top: -10px; z-index: 2; opacity: 0.8;">
+                    <td style="text-align:center; position:relative;">
+                        Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b><br>
+                        <div style="position:relative; height:100px; margin-top:10px;">
+                            <img src="data:image/png;base64,{ttd_base}" style="position:absolute; width:100px; left:50%; transform:translateX(-50%); z-index:1;">
+                            <img src="data:image/png;base64,{stempel_base}" style="position:absolute; width:150px; left:50%; transform:translateX(-50%); top:-10px; z-index:2; opacity:0.8;">
                         </div>
-
                         <br><b>KELVINITO JAYADI</b><br>DIREKTUR
                     </td>
                 </tr>
             </table>
         </div>
         """
-st.markdown(variabel_html_invoice, unsafe_allow_html=True)
+        
+        # --- PEMANGGILAN (Pastikan variabelnya sama: html_cetak) ---
+        st.markdown(html_cetak, unsafe_allow_html=True)
