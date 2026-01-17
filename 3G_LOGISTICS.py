@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from datetime import datetime
 
-# 1. Konfigurasi Halaman
+# 1. Konfigurasi Halaman & Favicon
 try:
     favicon = Image.open("FAVICON.png")
     st.set_page_config(page_title="3G LOGISTICS", page_icon=favicon, layout="wide")
@@ -15,66 +15,76 @@ except:
 # 2. Banner Header
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
+else:
+    st.title("🚚 3G LOGISTICS")
 
-# 3. Koneksi ke Google Sheets
-# Masukkan URL Google Sheet kamu di sini
-URL_SHEET = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
-
+# 3. Koneksi Database Google Sheets
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Fungsi mengambil data
-def get_data():
-    return conn.read(spreadsheet=URL_SHEET, usecols=[0,1,2,3,4])
+def muat_data():
+    # Mengambil data terbaru dari Google Sheets
+    return conn.read(spreadsheet=SHEET_URL, ttl="0s") # ttl=0 agar data selalu paling baru
 
 # 4. Sidebar Navigasi
 with st.sidebar:
     if os.path.exists("FAVICON.png"):
         st.image("FAVICON.png", width=120)
-    menu = st.radio("Pilih Menu:", ["Dashboard", "Input Pengiriman", "Lacak Resi"])
+    st.title("PT. GAMA GEMAH GEMILANG")
+    st.divider()
+    menu = st.radio("Pilih Menu:", ["🏠 Dashboard", "📝 Input Paket", "🔍 Lacak Resi"])
 
-# 5. Logika Menu
-if menu == "Dashboard":
-    st.subheader("🏠 Data Pengiriman Real-time")
-    df = get_data()
-    st.dataframe(df, use_container_width=True)
+# 5. Logika Aplikasi
+if menu == "🏠 Dashboard":
+    st.subheader("Data Pengiriman Terkini")
+    df = muat_data()
+    if not df.empty:
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("Belum ada data di Google Sheets.")
 
-elif menu == "Input Pengiriman":
-    st.subheader("📝 Input Paket Baru")
-    with st.form("input_form"):
-        resi = st.text_input("Nomor Resi", value=f"3G-{datetime.now().strftime('%d%H%M')}")
-        nama = st.text_input("Nama Penerima")
-        layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
-        status = "Sedang Diproses"
+elif menu == "📝 Input Paket":
+    st.subheader("Input Data Pengiriman Baru")
+    with st.form("form_logistik"):
+        col1, col2 = st.columns(2)
+        with col1:
+            resi = st.text_input("Nomor Resi", value=f"3G-{datetime.now().strftime('%d%H%M')}")
+            penerima = st.text_input("Nama Penerima")
+        with col2:
+            layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
+            status = st.selectbox("Status Awal", ["Booking", "Pick Up", "In Transit"])
         
-        submitted = st.form_submit_button("Simpan ke Cloud")
+        submit = st.form_submit_button("Simpan ke Database Cloud")
         
-        if submitted:
-            # Ambil data lama, tambah data baru
-            df_lama = get_data()
+        if submit:
+            # Ambil data lama
+            df_lama = muat_data()
+            # Buat data baru
             data_baru = pd.DataFrame([{
                 "Waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "Resi": resi,
-                "Penerima": nama,
+                "Penerima": penerima,
                 "Layanan": layanan,
                 "Status": status
             }])
+            # Gabungkan
             df_final = pd.concat([df_lama, data_baru], ignore_index=True)
-            
-            # Update ke Google Sheets
-            conn.update(spreadsheet=URL_SHEET, data=df_final)
-            st.success("Data berhasil tersimpan di Google Sheets!")
+            # Update ke Cloud
+            conn.update(spreadsheet=SHEET_URL, data=df_final)
+            st.success(f"Berhasil! Resi {resi} telah tersimpan di Google Sheets.")
 
-elif menu == "Lacak Resi":
-    st.subheader("🔍 Tracking")
-    cari = st.text_input("Masukkan No. Resi")
-    if st.button("Cari"):
-        df = get_data()
-        hasil = df[df['Resi'] == cari]
+elif menu == "🔍 Lacak Resi":
+    st.subheader("Lacak Posisi Paket")
+    cari_resi = st.text_input("Masukkan Nomor Resi")
+    if st.button("Cari Sekarang"):
+        df = muat_data()
+        hasil = df[df['Resi'].astype(str) == cari_resi]
+        
         if not hasil.empty:
-            st.success(f"Status Paket: {hasil.iloc[0]['Status']}")
-            st.write(hasil)
+            st.success(f"Status Saat Ini: **{hasil.iloc[0]['Status']}**")
+            st.table(hasil)
         else:
-            st.error("Resi tidak ditemukan.")
+            st.error("Nomor resi tidak ditemukan. Pastikan penulisan benar.")
 
 st.divider()
-st.caption("© 2026 3G LOGISTICS - Sistem Terintegrasi Cloud")
+st.caption("© 2026 3G LOGISTICS | Powered by Streamlit & Google Cloud")
