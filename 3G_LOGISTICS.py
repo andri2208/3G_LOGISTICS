@@ -94,91 +94,47 @@ with tab3:
         pilih = st.selectbox("Pilih No Resi", df_inv['Resi'].dropna().unique())
         d = df_inv[df_inv['Resi'] == pilih].iloc[0]
         
-        # Logika Perbaikan Angka (Anti-40)
+        # Logika Perbaikan Angka agar tetap 8.000 (bukan 80)
         h_raw = str(d.get('Harga', '0')).split('.')[0]
         h_fix = int("".join(filter(str.isdigit, h_raw))) if any(c.isdigit() for c in h_raw) else 0
         b_val = float(pd.to_numeric(d.get('Berat', 0), errors='coerce'))
         total = h_fix * b_val
 
-        # --- HTML INVOICE DENGAN LOGO BESAR & SEJAJAR ---
-        st.markdown(f"""
-        <div style="background-color: white; color: black; padding: 40px; border: 1px solid #eee; font-family: Arial, sans-serif;">
-            <table style="width: 100%; border: none; border-collapse: collapse;">
+        # SIMPAN HTML KE DALAM VARIABEL
+        invoice_body = f"""
+        <hr style="border: none; border-top: 3px solid #1a3d8d; margin-top: 15px; margin-bottom: 25px;">
+        <p style="margin-bottom: 20px; font-size: 16px;"><b>CUSTOMER: {str(d.get('Pengirim','')).upper()}</b></p>
+        <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; border: 1px solid black;">
+            <thead style="background-color: #f2f2f2;">
                 <tr>
-                    <td style="width: 160px; vertical-align: middle;">
-                        <img src="data:image/png;base64,{logo_base}" width="150">
-                    </td>
-                    <td style="vertical-align: middle; padding-left: 20px;">
-                        <h1 style="margin: 0; color: #1a3d8d; font-size: 28px; font-weight: bold; line-height: 1;">PT. GAMA GEMAH GEMILANG</h1>
-                        <p style="font-size: 12px; margin: 5px 0 0 0; color: #333;">
-                            Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik, Jawa Timur.<br>
-                            Telp 031-79973432 | Email: finance@3glogistics.com
-                        </p>
-                    </td>
-                    <td style="text-align: right; vertical-align: top; width: 200px;">
-                        <h1 style="margin: 0; color: #d62828; font-size: 38px; font-weight: bold;">INVOICE</h1>
-                        <p style="margin: 5px 0; font-size: 14px;"><b>DATE: {d.get('Tanggal','')}</b></p>
-                    </td>
+                    <th style="border: 1px solid black; padding: 12px;">Date of Load</th>
+                    <th style="border: 1px solid black; padding: 12px;">Product Description</th>
+                    <th style="border: 1px solid black; padding: 12px;">Origin</th>
+                    <th style="border: 1px solid black; padding: 12px;">Destination</th>
+                    <th style="border: 1px solid black; padding: 12px;">KOLLI</th>
+                    <th style="border: 1px solid black; padding: 12px;">HARGA</th>
+                    <th style="border: 1px solid black; padding: 12px;">WEIGHT</th>
+                    <th style="border: 1px solid black; padding: 12px;">TOTAL</th>
                 </tr>
-            </table>
-            
-            <hr style="border: none; border-top: 3px solid #1a3d8d; margin-top: 15px; margin-bottom: 25px;">
-            
-            <p style="margin-bottom: 20px; font-size: 16px;"><b>CUSTOMER: {str(d.get('Pengirim','')).upper()}</b></p>
-            
-            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; border: 1px solid black;">
-                <thead style="background-color: #f2f2f2;">
-                    <tr>
-                        <th style="border: 1px solid black; padding: 12px;">Date of Load</th>
-                        <th style="border: 1px solid black; padding: 12px;">Product Description</th>
-                        <th style="border: 1px solid black; padding: 12px;">Origin</th>
-                        <th style="border: 1px solid black; padding: 12px;">Destination</th>
-                        <th style="border: 1px solid black; padding: 12px;">KOLLI</th>
-                        <th style="border: 1px solid black; padding: 12px;">HARGA</th>
-                        <th style="border: 1px solid black; padding: 12px;">WEIGHT</th>
-                        <th style="border: 1px solid black; padding: 12px;">TOTAL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 15px;">{d.get('Tanggal','')}</td>
-                        <td style="border: 1px solid black; padding: 15px; text-align: left;">{d.get('Produk','')}</td>
-                        <td style="border: 1px solid black; padding: 15px;">{d.get('Origin','')}</td>
-                        <td style="border: 1px solid black; padding: 15px;">{d.get('Destination','')}</td>
-                        <td style="border: 1px solid black; padding: 15px;">{d.get('Kolli',0)}</td>
-                        <td style="border: 1px solid black; padding: 15px;">Rp {h_fix:,}</td>
-                        <td style="border: 1px solid black; padding: 15px;">{b_val} Kg</td>
-                        <td style="border: 1px solid black; padding: 15px; font-weight: bold;">Rp {total:,.0f}</td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div style="text-align: right; margin-top: 25px;">
-                <h3 style="margin: 0; font-size: 22px;">YANG HARUS DI BAYAR: <span style="color: #d62828;">Rp {total:,.0f}</span></h3>
-                <p style="margin: 5px 0; font-size: 15px;"><i>Terbilang: {terbilang(total)} Rupiah</i></p>
-            </div>
-            
-            <table style="width: 100%; margin-top: 50px; font-size: 14px;">
+            </thead>
+            <tbody>
                 <tr>
-                    <td style="width: 60%; vertical-align: top;">
-                        <b>TRANSFER TO :</b><br>
-                        Bank Central Asia (BCA)<br>
-                        No Rek: 6720422334<br>
-                        A/N ADITYA GAMA SAPUTRI<br>
-                        <br>
-                        <span style="font-size: 11px; color: #555;"><i>NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</i></span>
-                    </td>
-                    <td style="text-align: center; vertical-align: top;">
-                        Gresik, {d.get('Tanggal','')}<br>
-                        Sincerely,<br>
-                        <b>PT. GAMA GEMAH GEMILANG</b><br>
-                        <br><br><br><br>
-                        <b>KELVINITO JAYADI</b><br>
-                        DIREKTUR
-                    </td>
+                    <td style="border: 1px solid black; padding: 15px;">{d.get('Tanggal','')}</td>
+                    <td style="border: 1px solid black; padding: 15px; text-align: left;">{d.get('Produk','')}</td>
+                    <td style="border: 1px solid black; padding: 15px;">{d.get('Origin','')}</td>
+                    <td style="border: 1px solid black; padding: 15px;">{d.get('Destination','')}</td>
+                    <td style="border: 1px solid black; padding: 15px;">{d.get('Kolli',0)}</td>
+                    <td style="border: 1px solid black; padding: 15px;">Rp {h_fix:,}</td>
+                    <td style="border: 1px solid black; padding: 15px;">{b_val} Kg</td>
+                    <td style="border: 1px solid black; padding: 15px; font-weight: bold;">Rp {total:,.0f}</td>
                 </tr>
-            </table>
+            </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 25px;">
+            <h3 style="margin: 0; font-size: 22px;">YANG HARUS DI BAYAR: <span style="color: #d62828;">Rp {total:,.0f}</span></h3>
+            <p style="margin: 5px 0; font-size: 15px;"><i>Terbilang: {terbilang(total)} Rupiah</i></p>
         </div>
-        """, unsafe_allow_html=True)
-        
-        st.button("🖨️ Cetak Invoice / Simpan PDF", on_click=None)
+        """
+
+        # PASTIKAN MENGGUNAKAN unsafe_allow_html=True UNTUK MENAMPILKAN TABEL
+        st.markdown(invoice_body, unsafe_allow_html=True)
