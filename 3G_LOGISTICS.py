@@ -7,7 +7,7 @@ from datetime import datetime
 # --- 1. SETTING HALAMAN ---
 st.set_page_config(page_title="3G LOGISTICS", layout="wide")
 
-# --- 2. FUNGSI LOAD GAMBAR (PENTING) ---
+# --- 2. FUNGSI LOAD GAMBAR ---
 def get_image_base64(path):
     if os.path.exists(path):
         with open(path, "rb") as img_file:
@@ -27,79 +27,94 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return str(n)
 
-# --- 4. DATABASE SESSION ---
+# --- 4. DATABASE SESSION (Pastikan Nama Kolom Konsisten) ---
 if 'db' not in st.session_state:
-    st.session_state.db = pd.DataFrame(columns=['Resi','Tgl','Cust','Item','Asal','Tuju','Koli','Hrg','Brt'])
+    # Kita gunakan nama kolom yang jelas: No_Resi, Tanggal, Customer, Barang, Origin, Destination, Harga, Berat
+    st.session_state.db = pd.DataFrame(columns=['No_Resi','Tanggal','Customer','Barang','Origin','Destination','Harga','Berat'])
 
 # --- 5. NAVIGASI ---
 st.title("3G LOGISTICS SYSTEM")
-t1, t2 = st.tabs(["INPUT DATA", "CETAK INVOICE"])
+tab1, tab2 = st.tabs(["INPUT DATA", "CETAK INVOICE"])
 
-with t1:
+# --- TAB INPUT ---
+with tab1:
     with st.form("f1", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1:
-            resi = st.text_input("No Resi")
-            tgl = st.date_input("Tanggal", value=datetime.now())
-            cust = st.text_input("Customer")
-            item = st.text_area("Deskripsi Barang")
+            in_resi = st.text_input("No Resi")
+            in_tgl = st.date_input("Tanggal", value=datetime.now())
+            in_cust = st.text_input("Customer")
+            in_barang = st.text_area("Deskripsi Barang")
         with c2:
-            asal = st.text_input("Origin", value="SBY")
-            tuju = st.text_input("Destination", value="MEDAN")
-            koli = st.number_input("Kolli", min_value=1)
-            hrg = st.number_input("Harga", min_value=0)
-            brt = st.number_input("Berat (Kg)", min_value=0.0)
+            in_asal = st.text_input("Origin", value="SBY")
+            in_tujuan = st.text_input("Destination", value="MEDAN")
+            in_harga = st.number_input("Harga", min_value=0)
+            in_berat = st.number_input("Berat (Kg)", min_value=0.0)
         
-        if st.form_submit_button("SIMPAN"):
-            if resi and cust:
-                row = pd.DataFrame([{'Resi':resi,'Tgl':tgl.strftime('%d-%b-%y'),'Cust':cust,'Item':item,'Asal':asal,'Tuju':tuju,'Koli':koli,'Hrg':hrg,'Brt':brt}])
+        if st.form_submit_button("SIMPAN DATA ✅"):
+            if in_resi and in_cust:
+                # Memasukkan data dengan nama kolom yang PASTI sama dengan database
+                row = pd.DataFrame([{
+                    'No_Resi': in_resi,
+                    'Tanggal': in_tgl.strftime('%d-%b-%y'),
+                    'Customer': in_cust,
+                    'Barang': in_barang,
+                    'Origin': in_asal,
+                    'Destination': in_tujuan,
+                    'Harga': in_harga,
+                    'Berat': in_berat
+                }])
                 st.session_state.db = pd.concat([st.session_state.db, row], ignore_index=True)
-                st.success("Tersimpan!")
+                st.success(f"Data {in_resi} Berhasil Disimpan!")
             else:
-                st.error("No Resi dan Customer tidak boleh kosong!")
+                st.error("Nomor Resi dan Customer wajib diisi!")
 
-with t2:
-    if not st.session_state.db.empty:
-        pilih = st.selectbox("Pilih Resi", st.session_state.db['Resi'].unique())
-        d = st.session_state.db[st.session_state.db['Resi'] == pilih].iloc[0]
+# --- TAB CETAK ---
+with tab2:
+    if st.session_state.db.empty:
+        st.warning("Data kosong. Harap input data terlebih dahulu.")
+    else:
+        pilih_resi = st.selectbox("Pilih No Resi", st.session_state.db['No_Resi'].unique())
+        # Ambil baris data
+        d = st.session_state.db[st.session_state.db['No_Resi'] == pilih_resi].iloc[0]
         
-        # Perhitungan & Pencegahan Error
-        total = float(d['Hrg']) * float(d['Brt'])
-        cust_name = str(d['Cust']).upper() if d['Cust'] else ""
+        # Perhitungan
+        total_rp = float(d['Harga']) * float(d['Berat'])
         
         # Load Gambar
         h_img = get_image_base64("HEADER-INVOCE.PNG")
         f_img = get_image_base64("STEMPEL-TANDA-TANGAN.PNG")
 
+        # HTML INVOICE (Memanggil nama kolom yang sudah diperbaiki)
         invoice_html = f"""
         <div style="background:white; color:black; padding:20px; font-family:Arial; width:800px; margin:auto; border:1px solid #eee;">
             <img src="data:image/png;base64,{h_img}" style="width:100%;">
             <div style="text-align:right; margin-top:10px;">
-                <h1 style="color:red; margin:0; font-size:30px;">INVOICE</h1>
-                <p>DATE: {d['Tgl']}</p>
+                <h1 style="color:red; margin:0; font-size:35px;">INVOICE</h1>
+                <p>DATE: {d['Tanggal']}</p>
             </div>
-            <p><b>CUSTOMER: {cust_name}</b></p>
+            <p><b>CUSTOMER: {str(d['Customer']).upper()}</b></p>
             <table style="width:100%; border-collapse:collapse; border:1px solid black; text-align:center; font-size:12px;">
                 <tr style="background:#f2f2f2;">
                     <th style="border:1px solid black; padding:8px;">Product Description</th>
                     <th style="border:1px solid black;">Origin</th>
-                    <th style="border:1px solid black;">Dest</th>
+                    <th style="border:1px solid black;">Destination</th>
                     <th style="border:1px solid black;">Harga</th>
                     <th style="border:1px solid black;">Weight</th>
                     <th style="border:1px solid black;">Total</th>
                 </tr>
                 <tr>
-                    <td style="border:1px solid black; padding:15px; text-align:left;">{d['Item']}</td>
-                    <td style="border:1px solid black;">{d['Asal']}</td>
-                    <td style="border:1px solid black;">{d['Tuju']}</td>
-                    <td style="border:1px solid black;">Rp {d['Hrg']:,}</td>
-                    <td style="border:1px solid black;">{d['Brt']} Kg</td>
-                    <td style="border:1px solid black;"><b>Rp {total:,.0f}</b></td>
+                    <td style="border:1px solid black; padding:15px; text-align:left;">{d['Barang']}</td>
+                    <td style="border:1px solid black;">{d['Origin']}</td>
+                    <td style="border:1px solid black;">{d['Destination']}</td>
+                    <td style="border:1px solid black;">Rp {d['Harga']:,}</td>
+                    <td style="border:1px solid black;">{d['Berat']} Kg</td>
+                    <td style="border:1px solid black;"><b>Rp {total_rp:,.0f}</b></td>
                 </tr>
             </table>
             <div style="text-align:right; margin-top:20px;">
-                <h3 style="margin:0;">YANG HARUS DIBAYAR: <span style="color:red; font-size:22px;">Rp {total:,.0f}</span></h3>
-                <p style="font-size:12px;"><i>Terbilang: {terbilang(total)} Rupiah</i></p>
+                <h3 style="margin:0;">YANG HARUS DIBAYAR: <span style="color:red; font-size:22px;">Rp {total_rp:,.0f}</span></h3>
+                <p style="font-size:12px;"><i>Terbilang: {terbilang(total_rp)} Rupiah</i></p>
             </div>
             <table style="width:100%; margin-top:30px; font-size:13px;">
                 <tr>
@@ -113,5 +128,4 @@ with t2:
             </table>
         </div>
         """
-        # Render desain
         st.markdown(invoice_html, unsafe_allow_html=True)
