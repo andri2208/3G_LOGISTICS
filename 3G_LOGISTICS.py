@@ -5,17 +5,22 @@ from datetime import datetime
 import os
 from fpdf import FPDF
 
-# --- 1. KONFIGURASI ---
-API_URL = "https://script.google.com/macros/s/AKfycbzV9hmyRqF5JErjh7aILmUTWbwVchR8a9MrKbZSzUE8FTuP2uYVlYEadxILqav8wbPn/exec" 
+# --- KONFIGURASI ---
+API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec" 
 
-try:
-    from PIL import Image
-    favicon = Image.open("FAVICON.png")
-    st.set_page_config(page_title="3G LOGISTICS", page_icon=favicon, layout="wide")
-except:
-    st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚", layout="wide")
+# Fungsi bantu untuk angka menjadi teks (Terbilang)
+def terbilang(n):
+    bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
+    if n < 12: return bilangan[int(n)]
+    elif n < 20: return terbilang(n - 10) + " Belas"
+    elif n < 100: return terbilang(n // 10) + " Puluh " + terbilang(n % 10)
+    elif n < 200: return "Seratus " + terbilang(n - 100)
+    elif n < 1000: return terbilang(n // 100) + " Ratus " + terbilang(n % 100)
+    elif n < 2000: return "Seribu " + terbilang(n - 1000)
+    elif n < 1000000: return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
+    elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
+    return ""
 
-# --- 2. FUNGSI CETAK PDF (SESUAI DOKUMEN ) ---
 def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
@@ -23,47 +28,48 @@ def buat_pdf_custom(data):
     # Header Perusahaan [cite: 1, 2]
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(190, 7, "PT. GAMA GEMAH GEMILANG", ln=True)
+    pdf.set_font("Arial", size=8)
+    pdf.multi_cell(130, 4, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik, Jawa Timur. Telp 031-79973432")
+    pdf.ln(5)
+    
+    # Info Customer [cite: 3, 4, 5]
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(100, 6, f"CUSTOMER: {data['penerima'].upper()}", 0)
+    pdf.cell(90, 6, "INVOICE", 0, 1, 'R')
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(140, 5, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik, Jawa Timur. Telp 031-79973432")
+    pdf.cell(100, 6, "", 0)
+    pdf.cell(90, 6, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
     pdf.ln(5)
     
-    # Info Customer & Judul [cite: 3, 4, 5]
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(100, 7, f"CUSTOMER: {data['penerima'].upper()}", 0)
-    pdf.cell(90, 7, "INVOICE", 0, 1, 'R')
-    pdf.set_font("Arial", size=10)
-    pdf.cell(100, 7, "", 0)
-    pdf.cell(90, 7, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
-    pdf.ln(5)
-    
-    # Header Tabel [cite: 6]
+    # Tabel Header 
     pdf.set_font("Arial", 'B', 8)
     pdf.set_fill_color(230, 230, 230)
-    pdf.cell(25, 10, "Date of Load", 1, 0, 'C', True)
-    pdf.cell(50, 10, "Product Description", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Origin", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Destination", 1, 0, 'C', True)
-    pdf.cell(25, 10, "Harga/Kg", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Weight", 1, 0, 'C', True)
-    pdf.cell(30, 10, "Total", 1, 1, 'C', True)
+    headers = ["Date of Load", "Product Description", "Origin", "Destination", "Harga", "Weight", "Total"]
+    widths = [25, 55, 20, 20, 20, 20, 30]
+    for i in range(len(headers)):
+        pdf.cell(widths[i], 10, headers[i], 1, 0, 'C', True)
+    pdf.ln()
     
-    # Isi Tabel [cite: 6]
+    # Tabel Isi 
     pdf.set_font("Arial", size=8)
     pdf.cell(25, 10, data['waktu_tgl'], 1, 0, 'C')
-    pdf.cell(50, 10, data['deskripsi'].upper(), 1, 0, 'C')
+    pdf.cell(55, 10, data['deskripsi'].upper(), 1, 0, 'C')
     pdf.cell(20, 10, data['asal'].upper(), 1, 0, 'C')
     pdf.cell(20, 10, data['tujuan'].upper(), 1, 0, 'C')
-    pdf.cell(25, 10, f"Rp {data['harga']:,.0f}", 1, 0, 'C')
+    pdf.cell(20, 10, f"{data['harga']:,.0f}", 1, 0, 'C')
     pdf.cell(20, 10, f"{data['berat']} Kg", 1, 0, 'C')
     pdf.cell(30, 10, f"Rp {data['total']:,.0f}", 1, 1, 'C')
     
-    # Total Bayar [cite: 7, 8, 9]
+    # Total & Terbilang [cite: 9, 10, 11]
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(140, 10, "YANG HARUS DI BAYAR", 0, 0, 'R')
     pdf.cell(50, 10, f"Rp {data['total']:,.0f}", 1, 1, 'C', True)
     
-    # Info Pembayaran [cite: 12, 13, 14, 15]
+    pdf.set_font("Arial", 'I', 9)
+    pdf.cell(190, 10, f"Terbilang: {terbilang(data['total'])} Rupiah", ln=True)
+
+    # Info Bank [cite: 12, 13, 14, 15]
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "TRANSFER TO :", ln=True)
@@ -72,7 +78,7 @@ def buat_pdf_custom(data):
     pdf.cell(190, 5, "6720422334", ln=True)
     pdf.cell(190, 5, "A/N ADITYA GAMA SAPUTRI", ln=True)
     
-    # Penutup & Tanda Tangan [cite: 17, 18, 19, 20]
+    # Tanda Tangan [cite: 17, 18, 19, 20]
     pdf.ln(10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
@@ -85,57 +91,33 @@ def buat_pdf_custom(data):
 
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 3. LOGIKA MENU ---
-if os.path.exists("HEADER INVOICE.png"):
-    st.image("HEADER INVOICE.png", use_container_width=True)
+# --- ANTARMUKA STREAMLIT ---
+st.title("Sistem Invoice PT. GAMA GEMAH GEMILANG")
 
-menu = st.sidebar.radio("Navigasi", ["🏠 Dashboard", "📝 Buat Invoice Baru"])
+if 'inv_data' not in st.session_state: st.session_state.inv_data = None
 
-if menu == "📝 Buat Invoice Baru":
-    st.subheader("Form Input Invoice PT. GAMA GEMAH GEMILANG")
+with st.form("form_inv"):
+    cust = st.text_input("Customer Name")
+    desc = st.text_input("Product Description")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: ori = st.text_input("Origin")
+    with c2: dest = st.text_input("Destination")
+    with c3: hrg = st.number_input("Harga", value=8500)
+    with c4: wgt = st.number_input("Weight (Kg)", value=1)
     
-    # Gunakan Session State untuk menyimpan data sementara agar bisa diunduh di luar form
-    if 'invoice_data' not in st.session_state:
-        st.session_state.invoice_data = None
+    if st.form_submit_button("Proses Invoice"):
+        st.session_state.inv_data = {
+            "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
+            "penerima": cust,
+            "deskripsi": desc,
+            "asal": ori,
+            "tujuan": dest,
+            "harga": hrg,
+            "berat": wgt,
+            "total": hrg * wgt
+        }
+        requests.post(API_URL, json=st.session_state.inv_data)
 
-    with st.form("invoice_form"):
-        penerima = st.text_input("Nama Customer")
-        deskripsi = st.text_input("Deskripsi Barang")
-        col1, col2 = st.columns(2)
-        with col1:
-            asal = st.text_input("Origin")
-            harga = st.number_input("Harga/Kg", min_value=0, value=8500)
-        with col2:
-            tujuan = st.text_input("Destination")
-            berat = st.number_input("Weight (Kg)", min_value=0, value=1)
-            
-        submit = st.form_submit_button("Proses Data")
-        
-        if submit:
-            tgl_skrg = datetime.now().strftime("%d-%b-%y")
-            st.session_state.invoice_data = {
-                "waktu_tgl": tgl_skrg,
-                "penerima": penerima,
-                "deskripsi": deskripsi,
-                "asal": asal,
-                "tujuan": tujuan,
-                "harga": harga,
-                "berat": berat,
-                "total": harga * berat
-            }
-            # Kirim ke Cloud
-            try:
-                requests.post(API_URL, json=st.session_state.invoice_data)
-            except:
-                pass
-
-    # TOMBOL DOWNLOAD DI LUAR FORM
-    if st.session_state.invoice_data:
-        st.success("Data berhasil diproses! Silakan unduh PDF di bawah.")
-        pdf_out = buat_pdf_custom(st.session_state.invoice_data)
-        st.download_button(
-            label="📥 Download Invoice PDF", 
-            data=pdf_out, 
-            file_name=f"Invoice_{st.session_state.invoice_data['penerima']}.pdf", 
-            mime="application/pdf"
-        )
+if st.session_state.inv_data:
+    pdf = buat_pdf_custom(st.session_state.inv_data)
+    st.download_button("📥 Download Invoice PDF", pdf, f"Invoice_{st.session_state.inv_data['penerima']}.pdf", "application/pdf")
