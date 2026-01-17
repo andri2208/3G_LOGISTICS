@@ -4,19 +4,19 @@ import base64
 import os
 from datetime import datetime
 
-# --- 1. KONFIGURASI HALAMAN ---
+# --- 1. SETTING HALAMAN ---
 st.set_page_config(page_title="3G LOGISTICS SYSTEM", layout="wide")
 
-# --- 2. FUNGSI PENDUKUNG (UTILITIES) ---
+# --- 2. FUNGSI PENDUKUNG ---
 def get_image_base64(path):
-    """Mengonversi gambar lokal ke base64 agar bisa tampil di browser"""
+    """Mengonversi gambar lokal agar dapat ditampilkan dalam HTML Streamlit."""
     if os.path.exists(path):
         with open(path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
     return ""
 
 def terbilang(n):
-    """Fungsi otomatis untuk mengubah angka menjadi teks rupiah"""
+    """Mengonversi angka menjadi teks rupiah secara otomatis."""
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
     if n < 12: return bilangan[int(n)]
     elif n < 20: return terbilang(n - 10) + " Belas"
@@ -28,80 +28,66 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return str(n)
 
-# --- 3. DATABASE DALAM APLIKASI (SESSION STATE) ---
-# Ini menjaga agar data yang diinput tidak hilang saat pindah tab
-if 'db_invoice' not in st.session_state:
-    st.session_state.db_invoice = pd.DataFrame(columns=[
-        'No_Resi', 'Tanggal', 'Customer', 'Deskripsi', 'Origin', 'Destination', 'Kolli', 'Harga', 'Berat'
+# --- 3. DATABASE SESSION ---
+if 'db' not in st.session_state:
+    st.session_state.db = pd.DataFrame(columns=[
+        'Resi', 'Tanggal', 'Customer', 'Deskripsi', 'Origin', 'Destination', 'Kolli', 'Harga', 'Berat'
     ])
 
 # --- 4. NAVIGASI ANTARMUKA ---
-st.title("🚚 3G LOGISTICS - SYSTEM V3.0")
-tab_input, tab_cetak = st.tabs(["📝 INPUT DATA BARU", "🖨️ CETAK INVOICE"])
+st.title("🚚 3G LOGISTICS - INTERNAL SYSTEM")
+tab1, tab2 = st.tabs(["📝 INPUT DATA", "🖨️ CETAK INVOICE"])
 
-# --- TAB 1: INPUT DATA ---
-with tab_input:
-    st.subheader("Form Entry Pengiriman")
+# --- TAB 1: HALAMAN INPUT DATA ---
+with tab1:
+    st.subheader("Form Input Pengiriman")
     with st.form("form_entry", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
-            no_resi = st.text_input("Nomor Resi / Invoice", placeholder="Contoh: INV/29/12/25")
-            tgl = st.date_input("Tanggal Muat", value=datetime.now())
-            customer = st.text_input("Nama Customer", placeholder="BAPAK ANDI")
-            barang = st.text_area("Deskripsi Barang", placeholder="SATU SET ALAT TAMBANG")
-        
+            no_resi = st.text_input("Nomor Resi", value="0001")
+            tgl_muat = st.date_input("Tanggal Load", value=datetime.now())
+            nama_cust = st.text_input("Customer", value="BAPAK ANDI")
+            desc_barang = st.text_area("Deskripsi Produk", value="SATU SET ALAT TAMBANG")
         with col2:
-            asal = st.text_input("Origin (Asal)", value="SBY")
-            tujuan = st.text_input("Destination (Tujuan)", value="MEDAN")
-            koli = st.number_input("Jumlah Kolli", min_value=1, step=1)
-            hrga = st.number_input("Harga Satuan (Rp)", min_value=0, step=100)
-            brt = st.number_input("Berat Total (Kg)", min_value=0.0, step=0.1)
+            asal = st.text_input("Origin", value="SBY")
+            tujuan = st.text_input("Destination", value="MEDAN")
+            qty = st.number_input("KOLLI", min_value=1, step=1)
+            price = st.number_input("Harga Satuan (Rp)", value=8500)
+            weight = st.number_input("Weight (Kg)", value=290.0)
         
-        simpan = st.form_submit_button("SIMPAN DATA ✅")
-        
-        if simpan:
-            if no_resi and customer:
-                new_data = pd.DataFrame([{
-                    'No_Resi': no_resi,
-                    'Tanggal': tgl.strftime('%d-%b-%y'),
-                    'Customer': customer.upper(),
-                    'Deskripsi': barang.upper(),
-                    'Origin': asal.upper(),
-                    'Destination': tujuan.upper(),
-                    'Kolli': koli,
-                    'Harga': hrga,
-                    'Berat': brt
-                }])
-                st.session_state.db_invoice = pd.concat([st.session_state.db_invoice, new_data], ignore_index=True)
-                st.success(f"Data {no_resi} Berhasil Disimpan!")
-            else:
-                st.error("Gagal! Nomor Resi dan Customer wajib diisi.")
+        if st.form_submit_button("Simpan Data ✅"):
+            new_row = pd.DataFrame([{
+                'Resi': no_resi, 'Tanggal': tgl_muat.strftime('%d-%b-%y'),
+                'Customer': nama_cust.upper(), 'Deskripsi': desc_barang.upper(),
+                'Origin': asal.upper(), 'Destination': tujuan.upper(),
+                'Kolli': qty, 'Harga': price, 'Berat': weight
+            }])
+            st.session_state.db = pd.concat([st.session_state.db, new_row], ignore_index=True)
+            st.success(f"Data Resi {no_resi} Berhasil Disimpan!")
 
-# --- TAB 2: CETAK INVOICE ---
-with tab_cetak:
-    if st.session_state.db_invoice.empty:
-        st.warning("Belum ada data. Silakan isi form di Tab Input terlebih dahulu.")
+# --- TAB 2: HALAMAN CETAK INVOICE ---
+with tab2:
+    if st.session_state.db.empty:
+        st.warning("Silakan isi data di Tab Input terlebih dahulu.")
     else:
         st.subheader("Preview Invoice")
-        pilihan = st.selectbox("Pilih Nomor Resi", st.session_state.db_invoice['No_Resi'].unique())
-        
-        # Ambil data dari database berdasarkan pilihan
-        d = st.session_state.db_invoice[st.session_state.db_invoice['No_Resi'] == pilihan].iloc[0]
-        total_harga = d['Harga'] * d['Berat']
-        
-        # Load Gambar (PASTIKAN NAMA FILE SAMA DENGAN DI GITHUB)
+        pilih_resi = st.selectbox("Pilih Nomor Resi", st.session_state.db['Resi'].unique())
+        d = st.session_state.db[st.session_state.db['Resi'] == pilih_resi].iloc[0]
+        total_tagihan = d['Harga'] * d['Berat']
+
+        # Load Aset Gambar Baru
         header_base64 = get_image_base64("HEADER-INVOCE.PNG")
         ttd_stempel_base64 = get_image_base64("STEMPEL-TANDA-TANGAN.PNG")
 
-        # STRUKTUR DESAIN INVOICE (HTML & CSS)
+        # STRUKTUR HTML (Identik dengan PDF Bapak Andi)
         invoice_html = f"""
         <div style="background-color: white; color: black; padding: 25px; border: 1px solid #ddd; font-family: Arial; width: 800px; margin: auto;">
             
-            <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+            <div style="width: 100%; text-align: center; margin-bottom: 15px;">
                 <img src="data:image/png;base64,{header_base64}" style="width: 100%;">
             </div>
 
-            <div style="text-align: right; margin-bottom: 20px;">
+            <div style="text-align: right; margin-bottom: 10px;">
                 <h1 style="color: red; margin: 0; font-size: 32px; font-weight: bold;">INVOICE</h1>
                 <p style="margin: 0; font-size: 14px;"><b>DATE: {d['Tanggal']}</b></p>
             </div>
@@ -130,19 +116,19 @@ with tab_cetak:
                         <td style="border: 1px solid black;">{d['Kolli']}</td>
                         <td style="border: 1px solid black;">Rp {d['Harga']:,}</td>
                         <td style="border: 1px solid black;">{d['Berat']} Kg</td>
-                        <td style="border: 1px solid black; font-weight: bold;">Rp {total_harga:,.0f}</td>
+                        <td style="border: 1px solid black; font-weight: bold;">Rp {total_tagihan:,.0f}</td>
                     </tr>
                 </tbody>
             </table>
 
             <div style="text-align: right; margin-top: 25px;">
-                <h3 style="margin:0;">YANG HARUS DI BAYAR: <span style="color: red; font-size: 24px;">Rp {total_harga:,.0f}</span></h3>
-                <p style="font-size: 14px; margin-top: 5px;"><i>Terbilang: {terbilang(total_harga)} Rupiah</i></p>
+                <h3 style="margin:0;">YANG HARUS DI BAYAR: <span style="color: red; font-size: 24px;">Rp {total_tagihan:,.0f}</span></h3>
+                <p style="font-size: 14px; margin-top: 5px;"><i>Terbilang: {terbilang(total_tagihan)} Rupiah</i></p>
             </div>
 
             <table style="width: 100%; margin-top: 40px; font-size: 13px;">
                 <tr>
-                    <td style="width: 60%; vertical-align: top;">
+                    <td style="width: 55%; vertical-align: top;">
                         <b>TRANSFER TO :</b><br>
                         Bank Central Asia (BCA)<br>
                         No Rek: 6720422334<br>
@@ -151,11 +137,9 @@ with tab_cetak:
                     </td>
                     <td style="text-align: center; vertical-align: top;">
                         Sincerely,<br><b>PT. GAMA GEMAH GEMILANG</b><br>
-                        
                         <div style="margin-top: 10px;">
                             <img src="data:image/png;base64,{ttd_stempel_base64}" width="180">
                         </div>
-
                         <b>KELVINITO JAYADI</b><br>DIREKTUR
                     </td>
                 </tr>
@@ -163,5 +147,5 @@ with tab_cetak:
         </div>
         """
         
-        # MENAMPILKAN HTML KE STREAMLIT (KUNCI AGAR TIDAK MUNCUL KODE)
+        # BARIS PENTING: Render HTML agar tidak muncul sebagai kode teks
         st.markdown(invoice_html, unsafe_allow_html=True)
