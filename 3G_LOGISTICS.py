@@ -77,6 +77,74 @@ elif menu == "📝 Input Paket Baru":
             except Exception as e:
                 st.error(f"Terjadi kesalahan: {e}")
 
+from fpdf import FPDF
+import base64
+
+# --- FUNGSI BUAT PDF ---
+def buat_pdf(data):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Header - Gunakan gambar HEADER INVOICE jika ada
+    if os.path.exists("HEADER INVOICE.png"):
+        pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
+        pdf.ln(40) # Kasih jarak setelah gambar
+    else:
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(190, 10, "INVOICE PENGIRIMAN - 3G LOGISTICS", ln=True, align='C')
+        pdf.ln(10)
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(190, 10, f"Tanggal: {data['waktu']}", ln=True)
+    pdf.cell(190, 10, f"No. Resi: {data['resi']}", ln=True)
+    pdf.ln(5)
+    
+    # Tabel Sederhana
+    pdf.set_fill_color(200, 220, 255)
+    pdf.cell(95, 10, "Penerima", 1, 0, 'C', True)
+    pdf.cell(95, 10, "Layanan", 1, 1, 'C', True)
+    
+    pdf.cell(95, 10, data['penerima'], 1, 0, 'C')
+    pdf.cell(95, 10, data['layanan'], 1, 1, 'C')
+    
+    pdf.ln(10)
+    pdf.set_font("Arial", 'I', 10)
+    pdf.multi_cell(190, 10, "Terima kasih telah menggunakan jasa PT. GAMA GEMAH GEMILANG. Barang Anda akan segera kami proses sesuai dengan layanan yang dipilih.")
+
+    # Stempel / Tanda Tangan jika ada
+    if os.path.exists("STEMPEL TANDA TANGAN.png"):
+        pdf.image("STEMPEL TANDA TANGAN.png", x=140, y=pdf.get_y() + 5, w=40)
+
+    return pdf.output(dest='S').encode('latin-1')
+
+# --- DALAM MENU INPUT PAKET (BAGIAN SUBMIT) ---
+# (Cari bagian "if submit:" di kode sebelumnya, lalu sesuaikan seperti ini)
+
+if submit:
+    payload = {
+        "waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "resi": resi,
+        "penerima": penerima,
+        "layanan": layanan,
+        "status": status
+    }
+    
+    res = requests.post(API_URL, json=payload)
+    if res.text == "Success":
+        st.success(f"Data Resi {resi} Berhasil Disimpan!")
+        
+        # Buat PDF
+        pdf_data = buat_pdf(payload)
+        
+        # Tombol Download PDF
+        st.download_button(
+            label="📥 Cetak Invoice (PDF)",
+            data=pdf_data,
+            file_name=f"Invoice_{resi}.pdf",
+            mime="application/pdf"
+        )
+        
+
 elif menu == "🔍 Lacak Resi":
     st.subheader("Cari Status Paket")
     cari = st.text_input("Masukkan No. Resi")
@@ -92,4 +160,5 @@ elif menu == "🔍 Lacak Resi":
 
 st.divider()
 st.caption("© 2026 3G LOGISTICS | Sistem Logistik Terintegrasi")
+
 
