@@ -10,7 +10,7 @@ st.set_page_config(page_title="3G LOGISTICS - System", layout="wide")
 
 # --- KONEKSI GOOGLE SHEETS ---
 # MASUKKAN URL GOOGLE SHEETS KAMU DI SINI
-URL_SHEET = "MASUKKAN_URL_GOOGLE_SHEET_KAMU_DISINI"
+URL_SHEET = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -165,3 +165,4 @@ with tab3:
                 </table>
             </div>
             """, unsafe_allow_html=True)
+
