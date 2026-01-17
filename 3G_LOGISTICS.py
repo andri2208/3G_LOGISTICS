@@ -95,30 +95,44 @@ with tab2:
 with tab3:
     st.subheader("📄 Preview & Cetak Invoice")
     
-    # Pastikan data terbaru sudah dimuat
+    # Refresh data terbaru
     df_cetak = muat_data()
     
     if not df_cetak.empty:
-        # Menampilkan daftar resi (terbaru di atas)
+        # Menampilkan daftar resi terbaru di atas
         list_resi = df_cetak["Resi"].unique().tolist()
         resi_sel = st.selectbox("Pilih Nomor Resi untuk Dicetak", list_resi[::-1])
         
         if resi_sel:
-            # Ambil satu baris data berdasarkan resi yang dipilih
+            # Ambil data satu baris
             d = df_cetak[df_cetak["Resi"] == resi_sel].iloc[0]
             
-            # Konversi gambar ke Base64 agar muncul di PDF/Web
+            # --- FUNGSI DETEKSI KOLOM OTOMATIS ---
+            # Ini mencegah KeyError jika nama kolom di Sheets berubah-ubah
+            def get_val(possible_names, default=0):
+                for name in possible_names:
+                    if name in d: return d[name]
+                return default
+
+            v_harga = get_val(['Harga', 'Harga Satuan', 'PRICE'])
+            v_berat = get_val(['Berat', 'Berat (kg)', 'WEIGHT'])
+            v_total = get_val(['Total', 'Total Biaya', 'TOTAL'])
+            v_kolli = get_val(['Kolli', 'KOLLI', 'Qty'])
+
+            # Load Gambar
             logo = get_image_base64("LOGO INVOICE.png")
             ttd = get_image_base64("TANDA TANGAN.png")
             stempel = get_image_base64("STEMPEL DAN NAMA.png")
             
-            # Ambil nilai total (sesuaikan nama kolom jika di sheet namanya 'Total')
+            # Pastikan angka valid
             try:
-                total_val = float(d['Total'])
+                total_float = float(v_total)
+                harga_float = float(v_harga)
             except:
-                total_val = float(d['Total Biaya']) if 'Total Biaya' in d else 0
+                total_float = 0
+                harga_float = 0
 
-            # HTML Template Invoice
+            # Tampilan Invoice HTML
             st.markdown(f"""
             <div style="border: 1px solid #000; padding: 30px; background-color: white; color: black; font-family: Arial;">
                 <table style="width:100%; border:none;">
@@ -137,13 +151,11 @@ with tab3:
                         <td style="text-align:right; border:none;"><strong>INVOICE</strong></td>
                     </tr>
                     <tr><td style="border:none;"></td><td style="text-align:right; border:none;">DATE: {d['Tanggal']}</td></tr>
-                    <tr><td style="border:none;"><strong>PENERIMA:</strong> {str(d['Penerima']).upper()}</td><td style="text-align:right; border:none;">RESI: {d['Resi']}</td></tr>
                 </table>
                 <br>
                 <table style="width:100%; border-collapse: collapse; text-align: center; border: 1px solid black;">
-                    <tr style="background-color: #eee; border: 1px solid black;">
-                        <th style="border: 1px solid black; padding:5px;">Date</th>
-                        <th style="border: 1px solid black; padding:5px;">Description</th>
+                    <tr style="background-color: #eee;">
+                        <th style="border: 1px solid black; padding:5px;">Product Description</th>
                         <th style="border: 1px solid black; padding:5px;">Origin</th>
                         <th style="border: 1px solid black; padding:5px;">Destination</th>
                         <th style="border: 1px solid black; padding:5px;">KOLLI</th>
@@ -152,37 +164,32 @@ with tab3:
                         <th style="border: 1px solid black; padding:5px;">TOTAL</th>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid black; padding:10px;">{d['Tanggal']}</td>
-                        <td style="border: 1px solid black;">{d['Produk']}</td>
+                        <td style="border: 1px solid black; padding:10px;">{d['Produk']}</td>
                         <td style="border: 1px solid black;">{d['Origin']}</td>
                         <td style="border: 1px solid black;">{d['Destination']}</td>
-                        <td style="border: 1px solid black;">{d['Kolli']}</td>
-                        <td style="border: 1px solid black;">Rp {float(d['Harga']):,.0f}</td>
-                        <td style="border: 1px solid black;">{d['Berat']} Kg</td>
-                        <td style="border: 1px solid black;">Rp {total_val:,.0f}</td>
+                        <td style="border: 1px solid black;">{v_kolli}</td>
+                        <td style="border: 1px solid black;">Rp {harga_float:,.0f}</td>
+                        <td style="border: 1px solid black;">{v_berat} Kg</td>
+                        <td style="border: 1px solid black;">Rp {total_float:,.0f}</td>
                     </tr>
                 </table>
                 <br>
-                <div style="text-align: right;"><strong>YANG HARUS DIBAYAR: Rp {total_val:,.0f}</strong></div>
-                <p style="font-size:14px;"><strong>Terbilang:</strong> <em>{terbilang(total_val)} Rupiah</em></p>
+                <div style="text-align: right;"><strong>YANG HARUS DIBAYAR: Rp {total_float:,.0f}</strong></div>
+                <p style="font-size:14px;"><strong>Terbilang:</strong> <em>{terbilang(total_float)} Rupiah</em></p>
                 <br>
                 <table style="width:100%; border:none;">
                     <tr>
                         <td style="width:60%; border:none; vertical-align: top;">
                             <strong>TRANSFER TO :</strong><br>Bank Central Asia (BCA)<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>
-                            <small>NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</small>
                         </td>
                         <td style="text-align: center; border:none; position: relative;">
                             Sincerely,<br>PT. GAMA GEMAH GEMILANG<br><br>
-                            <img src="data:image/png;base64,{stempel}" style="width:200px; margin-top:10px;">
-                            <img src="data:image/png;base64,{ttd}" style="width:110px; position: absolute; top: 60px; left: 50%; transform: translateX(-50%);">
+                            <img src="data:image/png;base64,{stempel}" style="width:200px;">
+                            <img src="data:image/png;base64,{ttd}" style="width:110px; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
                         </td>
                     </tr>
                 </table>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.info("💡 Gunakan fitur 'Print' di Browser (Ctrl+P) dan pilih 'Save as PDF' untuk menyimpan invoice.")
     else:
-        st.warning("Data di Google Sheets masih kosong. Silakan input data terlebih dahulu di Tab 1.")
-
+        st.warning("Database kosong. Silakan isi data terlebih dahulu.")
