@@ -9,7 +9,7 @@ import os
 # Pastikan file "LOGO INVOICE.png" sudah ada di folder yang sama di GitHub
 st.set_page_config(
     page_title="3G LOGISTICS - System", 
-    page_icon="LOGO INVOICE.png", # Ini akan mengganti icon tab browser
+    page_icon="3G.png", # Ini akan mengganti icon tab browser
     layout="wide"
 )
 
@@ -49,7 +49,7 @@ def get_image_base64(path):
 # Menampilkan Logo dan Judul berdampingan
 col_logo, col_text = st.columns([1, 5])
 with col_logo:
-    st.image("LOGO_3G.png", width=100) # Sesuaikan ukuran logo di sini
+    st.image("3G.png", width=100) # Sesuaikan ukuran logo di sini
 with col_text:
     st.title("PT. GAMA GEMAH GEMILANG - Management System")
 
@@ -202,6 +202,7 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.warning("Database kosong. Silakan isi data terlebih dahulu.")
+
 
 
 
