@@ -1,29 +1,32 @@
 import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
-import base64
 from datetime import datetime
+import base64
 import os
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="3G LOGISTICS - System", layout="wide")
 
 # --- KONEKSI GOOGLE SHEETS ---
-# MASUKKAN URL GOOGLE SHEETS KAMU DI SINI
-URL_SHEET = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
+# GANTI DENGAN LINK GOOGLE SHEETS KAMU
+URL_SHEET = "MASUKKAN_URL_GOOGLE_SHEET_KAMU_DISINI"
 
+# Inisialisasi Koneksi
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def muat_data():
     try:
-        df = conn.read(spreadsheet=URL_SHEET, usecols=list(range(11)))
-        df = df.dropna(how="all") # Hapus baris kosong
-        # Pastikan kolom angka dibaca dengan benar
+        # Membaca data dari Google Sheets
+        df = conn.read(spreadsheet=URL_SHEET, ttl=0) # ttl=0 agar data selalu fresh
+        df = df.dropna(how="all")
+        # Pastikan kolom angka tetap angka
         kolom_angka = ["Kolli", "Berat (kg)", "Harga Satuan", "Total Biaya"]
         for col in kolom_angka:
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         return df.fillna('')
-    except:
+    except Exception as e:
         return pd.DataFrame(columns=["Tanggal", "Resi", "Pengirim", "Penerima", "Produk", "Origin", "Destination", "Kolli", "Berat (kg)", "Harga Satuan", "Total Biaya"])
 
 # --- FUNGSI TERBILANG ---
@@ -49,6 +52,7 @@ def get_image_base64(path):
 # --- APLIKASI UTAMA ---
 st.title("🚚 3G LOGISTICS - Management System")
 
+# Muat data ke session state
 if 'df' not in st.session_state:
     st.session_state.df = muat_data()
 
@@ -69,7 +73,7 @@ with tab1:
             berat = st.number_input("Weight (Kg)", min_value=1, value=1)
             harga_satuan = st.number_input("Harga Satuan (Rp)", min_value=0, value=0)
         
-        if st.form_submit_button("Simpan Data ke Cloud"):
+        if st.form_submit_button("Simpan Data"):
             total = berat * harga_satuan
             data_baru = pd.DataFrame([{
                 "Tanggal": datetime.now().strftime("%d-%b-%y"),
@@ -78,23 +82,28 @@ with tab1:
                 "Kolli": kolli, "Berat (kg)": berat, "Harga Satuan": harga_satuan, "Total Biaya": total
             }])
             
-            # Gabungkan dan Update ke Google Sheets
-            df_update = pd.concat([st.session_state.df, data_baru], ignore_index=True)
-            conn.update(spreadsheet=URL_SHEET, data=df_update)
-            st.session_state.df = df_update
-            st.success("Data Berhasil Disimpan ke Google Sheets!")
-            st.rerun()
+            try:
+                # Update ke Google Sheets
+                df_gabung = pd.concat([st.session_state.df, data_baru], ignore_index=True)
+                conn.update(spreadsheet=URL_SHEET, data=df_gabung)
+                st.session_state.df = df_gabung
+                st.success("✅ Data Berhasil Masuk ke Google Sheets!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Gagal simpan: Silakan pastikan Google Sheets sudah di-set 'Editor' untuk 'Anyone with the link'")
 
 with tab2:
-    st.subheader("📋 Data Terintegrasi Google Sheets")
-    if st.button("Refresh Data"):
+    st.subheader("📋 Riwayat Pengiriman (Cloud)")
+    if st.button("🔄 Refresh Data"):
         st.session_state.df = muat_data()
+        st.rerun()
     st.dataframe(st.session_state.df, use_container_width=True)
 
 with tab3:
     st.subheader("📄 Preview & Cetak Invoice")
     if not st.session_state.df.empty:
-        resi_sel = st.selectbox("Pilih Nomor Resi", st.session_state.df["Resi"].unique())
+        resi_list = st.session_state.df["Resi"].unique().tolist()
+        resi_sel = st.selectbox("Pilih Nomor Resi", resi_list[::-1]) # Resi terbaru di atas
         
         if resi_sel:
             d = st.session_state.df[st.session_state.df["Resi"] == resi_sel].iloc[0]
@@ -159,10 +168,11 @@ with tab3:
                         <td style="text-align: center; border:none; position: relative;">
                             Sincerely,<br>PT. GAMA GEMAH GEMILANG<br>
                             <img src="data:image/png;base64,{stempel}" style="width:230px; margin-top:10px;">
-                            <img src="data:image/png;base64,{ttd}" style="width:120px; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);">
+                            <img src="data:image/png;base64,{ttd}" style="width:120px; position: absolute; top: 75px; left: 50%; transform: translateX(-50%);">
                         </td>
                     </tr>
                 </table>
             </div>
             """, unsafe_allow_html=True)
-
+    else:
+        st.info("Belum ada data pengiriman.")
