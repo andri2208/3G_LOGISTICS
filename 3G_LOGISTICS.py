@@ -2,82 +2,63 @@ import streamlit as st
 from PIL import Image
 import os
 
-# 1. Konfigurasi Halaman & Favicon (Ikon di Tab Browser)
-# Pastikan file FAVICON.png ada di folder yang sama
+# 1. Konfigurasi Halaman & Favicon (Ikon Tab Browser)
 try:
-    img = Image.open("FAVICON.png")
-    st.set_page_config(page_title="", page_icon=img)
+    favicon = Image.open("FAVICON.png")
+    st.set_page_config(page_title="3G LOGISTICS", page_icon=favicon, layout="centered")
 except:
-    st.set_page_config(page_title="", page_icon="🚚")
+    st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚")
 
-# 2. Sidebar - Menampilkan Logo di bagian atas menu
+# 2. Menampilkan Header Invoice di bagian paling atas
+if os.path.exists("HEADER INVOICE.png"):
+    st.image("HEADER INVOICE.png", use_container_width=True)
+else:
+    st.title("🚚 3G LOGISTICS")
+
+# 3. Sidebar dengan Logo
 with st.sidebar:
-    if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADER INVOICE.png", width=500)
-    else:
-        st.write("")
-    
-    st.divider()
-    menu = st.selectbox("Pilih Menu", ["Cek Tarif", "Tracking Resi", "Tentang Kami"])
+    if os.path.exists("FAVICON.png"):
+        st.image("FAVICON.png", width=100)
+    st.title("Menu Utama")
+    menu = st.radio("Pilih Layanan:", ["Cek Tarif", "Tracking Resi", "Kontak"])
 
-# 3. Header Utama (Mengganti Emoji Mobil dengan Gambar)
-col1, col2 = st.columns([1, 5])
-with col1:
-    if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADER INVOICE.png", width=1000)
-
-
-st.markdown("### Solusi Pengiriman Cepat & Terpercaya")
-st.divider()
-
-# --- Database Sederhana ---
+# --- Database Tarif (Bisa kamu tambah sesuai kebutuhan) ---
 TARIF_KOTA = {
-    "Jakarta": {"Bandung": 15000, "Surabaya": 35000, "Medan": 50000},
-    "Bandung": {"Jakarta": 15000, "Surabaya": 30000, "Medan": 55000},
+    "JAKARTA": {"BANDUNG": 15000, "SURABAYA": 35000, "MEDAN": 50000},
+    "BANDUNG": {"JAKARTA": 15000, "SURABAYA": 30000, "MEDAN": 55000},
 }
 
-# --- Logika Menu ---
+# 4. Logika Menu
 if menu == "Cek Tarif":
-    st.subheader("📊 Hitung Estimasi Biaya")
+    st.subheader("📊 Estimasi Biaya Pengiriman")
     
-    c1, c2 = st.columns(2)
-    with c1:
-        asal = st.selectbox("Kota Asal", list(TARIF_KOTA.keys()))
-    with c2:
-        tujuan = st.selectbox("Kota Tujuan", ["Jakarta", "Bandung", "Surabaya", "Medan"])
+    col1, col2 = st.columns(2)
+    with col1:
+        asal = st.selectbox("Kota Asal", list(TARIF_KOTA.keys())).upper()
+    with col2:
+        tujuan = st.selectbox("Kota Tujuan", ["JAKARTA", "BANDUNG", "SURABAYA", "MEDAN"]).upper()
     
-    berat = st.number_input("Berat Paket (kg)", min_value=1.0, step=0.5)
+    berat = st.number_input("Berat Paket (Kg)", min_value=1, value=1)
     
-    if st.button("Hitung Sekarang"):
-        harga_per_kg = TARIF_KOTA.get(asal, {}).get(tujuan, 0)
-        if harga_per_kg > 0:
-            total = harga_per_kg * berat
-            st.success(f"Estimasi Biaya: **Rp {total:,.0f}**")
+    if st.button("Cek Harga"):
+        harga = TARIF_KOTA.get(asal, {}).get(tujuan, 0)
+        if harga > 0:
+            total = harga * berat
+            st.success(f"### Total Biaya: Rp {total:,.0f}")
+            st.caption(f"Tarif dasar: Rp {harga:,.0f}/Kg")
         else:
-            st.error("Rute belum tersedia.")
+            st.error("Rute pengiriman belum tersedia.")
 
 elif menu == "Tracking Resi":
-    st.subheader("🔍 Lacak Kiriman")
-    resi_input = st.text_input("Masukkan Nomor Resi")
+    st.subheader("🔍 Lacak Posisi Paket")
+    resi = st.text_input("Masukkan Nomor Resi (Contoh: 3G001)")
     if st.button("Lacak"):
-        if resi_input == "3G12345":
-            st.info("📦 **Status:** Paket sedang dalam perjalanan (Transit - Jakarta)")
+        if resi:
+            st.info(f"Paket dengan resi **{resi}** sedang dalam proses pengantaran.")
         else:
-            st.warning("Resi tidak ditemukan.")
+            st.warning("Silakan masukkan nomor resi.")
 
 else:
-    st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    st.subheader("📞 Kontak Kami")
+    st.write("PT. GAMA GEMAH GEMILANG")
+    st.write("Hubungi kami untuk kerja sama logistik lebih lanjut.")
