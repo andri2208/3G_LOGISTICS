@@ -26,6 +26,8 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9le3yTcQn3TAevrbOi1
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_image_base64(path):
+    import os
+    import base64
     if os.path.exists(path):
         with open(path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
@@ -175,3 +177,4 @@ with tab3:
         
         # --- PEMANGGILAN (Pastikan variabelnya sama: html_cetak) ---
         st.markdown(html_cetak, unsafe_allow_html=True)
+
