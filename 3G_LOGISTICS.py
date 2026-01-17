@@ -3,12 +3,12 @@ import requests
 import pandas as pd
 from datetime import datetime
 import os
+from fpdf import FPDF
 
-# --- KONFIGURASI ---
-# GANTI link di bawah ini dengan URL Web App (ujungnya /exec) yang kamu dapatkan dari Google Apps Script
-API_URL = st.secrets["API_URL"]
+# --- 1. KONFIGURASI API & HALAMAN ---
+# GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
+API_URL = "https://script.google.com/macros/s/AKfycbzV9hmyRqF5JErjh7aILmUTWbwVchR8a9MrKbZSzUE8FTuP2uYVlYEadxILqav8wbPn/exec" 
 
-# 1. Konfigurasi Halaman
 try:
     from PIL import Image
     favicon = Image.open("FAVICON.png")
@@ -16,90 +16,37 @@ try:
 except:
     st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚", layout="wide")
 
-# 2. Header Banner
-if os.path.exists("HEADER INVOICE.png"):
-    st.image("HEADER INVOICE.png", use_container_width=True)
-else:
-    st.title("🚚 3G LOGISTICS")
+# --- 2. FUNGSI PENDUKUNG ---
 
-# 3. Sidebar
-with st.sidebar:
-    if os.path.exists("FAVICON.png"):
-        st.image("FAVICON.png", width=100)
-    st.title("PT. GAMA GEMAH GEMILANG")
-    st.divider()
-    menu = st.radio("Navigasi", ["🏠 Dashboard", "📝 Input Paket Baru", "🔍 Lacak Resi"])
-
-# --- FUNGSI DATABASE ---
 def ambil_data_cloud():
     try:
         response = requests.get(API_URL)
         if response.status_code == 200:
             data = response.json()
-            # Baris pertama adalah Header, sisanya adalah Data
             return pd.DataFrame(data[1:], columns=data[0])
     except:
         return pd.DataFrame()
 
-# --- LOGIKA MENU ---
-if menu == "🏠 Dashboard":
-    st.subheader("Data Pengiriman di Google Sheets")
-    df = ambil_data_cloud()
-    if not df.empty:
-        st.dataframe(df, use_container_width=True)
-        if st.button("Refresh Data"):
-            st.rerun()
-    else:
-        st.warning("Gagal mengambil data atau spreadsheet masih kosong.")
-
-elif menu == "📝 Input Paket Baru":
-    st.subheader("Form Input Pengiriman")
-    with st.form("form_input"):
-        resi = st.text_input("Nomor Resi", value=f"3G-{datetime.now().strftime('%d%H%M')}")
-        penerima = st.text_input("Nama Penerima")
-        layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
-        status = "Booking"
-        
-        if st.form_submit_button("Kirim ke Google Sheets"):
-            payload = {
-                "waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "resi": resi,
-                "penerima": penerima,
-                "layanan": layanan,
-                "status": status
-            }
-            try:
-                res = requests.post(API_URL, json=payload)
-                if res.text == "Success":
-                    st.success(f"Data Resi {resi} Berhasil Disimpan!")
-                else:
-                    st.error("Gagal menyimpan. Pastikan Deployment Apps Script sudah 'Anyone'.")
-            except Exception as e:
-                st.error(f"Terjadi kesalahan: {e}")
-
-from fpdf import FPDF
-import base64
-
-# --- FUNGSI BUAT PDF ---
 def buat_pdf(data):
     pdf = FPDF()
     pdf.add_page()
     
-    # Header - Gunakan gambar HEADER INVOICE jika ada
+    # Header Invoice (Banner)
     if os.path.exists("HEADER INVOICE.png"):
         pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
-        pdf.ln(40) # Kasih jarak setelah gambar
+        pdf.ln(40)
     else:
         pdf.set_font("Arial", 'B', 16)
         pdf.cell(190, 10, "INVOICE PENGIRIMAN - 3G LOGISTICS", ln=True, align='C')
         pdf.ln(10)
 
+    # Isi Detail
     pdf.set_font("Arial", size=12)
     pdf.cell(190, 10, f"Tanggal: {data['waktu']}", ln=True)
-    pdf.cell(190, 10, f"No. Resi: {data['resi']}", ln=True)
+    pdf.cell(190, 10, f"No. Resi  : {data['resi']}", ln=True)
     pdf.ln(5)
     
-    # Tabel Sederhana
+    # Tabel
     pdf.set_fill_color(200, 220, 255)
     pdf.cell(95, 10, "Penerima", 1, 0, 'C', True)
     pdf.cell(95, 10, "Layanan", 1, 1, 'C', True)
@@ -107,58 +54,97 @@ def buat_pdf(data):
     pdf.cell(95, 10, data['penerima'], 1, 0, 'C')
     pdf.cell(95, 10, data['layanan'], 1, 1, 'C')
     
-    pdf.ln(10)
+    pdf.ln(15)
     pdf.set_font("Arial", 'I', 10)
-    pdf.multi_cell(190, 10, "Terima kasih telah menggunakan jasa PT. GAMA GEMAH GEMILANG. Barang Anda akan segera kami proses sesuai dengan layanan yang dipilih.")
+    pdf.multi_cell(190, 8, "Terima kasih telah menggunakan jasa PT. GAMA GEMAH GEMILANG. Paket Anda akan segera kami proses.")
 
-    # Stempel / Tanda Tangan jika ada
+    # Stempel/Tanda Tangan
     if os.path.exists("STEMPEL TANDA TANGAN.png"):
         pdf.image("STEMPEL TANDA TANGAN.png", x=140, y=pdf.get_y() + 5, w=40)
 
     return pdf.output(dest='S').encode('latin-1')
 
-# --- DALAM MENU INPUT PAKET (BAGIAN SUBMIT) ---
-# (Cari bagian "if submit:" di kode sebelumnya, lalu sesuaikan seperti ini)
+# --- 3. TAMPILAN UTAMA ---
 
-if submit:
-    payload = {
-        "waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "resi": resi,
-        "penerima": penerima,
-        "layanan": layanan,
-        "status": status
-    }
-    
-    res = requests.post(API_URL, json=payload)
-    if res.text == "Success":
-        st.success(f"Data Resi {resi} Berhasil Disimpan!")
+if os.path.exists("HEADER INVOICE.png"):
+    st.image("HEADER INVOICE.png", use_container_width=True)
+
+with st.sidebar:
+    if os.path.exists("FAVICON.png"):
+        st.image("FAVICON.png", width=120)
+    st.title("3G LOGISTICS")
+    st.write("PT. GAMA GEMAH GEMILANG")
+    st.divider()
+    menu = st.radio("Menu Utama", ["🏠 Dashboard", "📝 Input Paket", "🔍 Lacak Resi"])
+
+# --- 4. LOGIKA MENU ---
+
+if menu == "🏠 Dashboard":
+    st.subheader("Data Pengiriman Real-time")
+    df = ambil_data_cloud()
+    if not df.empty:
+        st.dataframe(df, use_container_width=True)
+        if st.button("🔄 Refresh Data"):
+            st.rerun()
+    else:
+        st.info("Belum ada data di Google Sheets.")
+
+elif menu == "📝 Input Paket":
+    st.subheader("Form Input Pengiriman Baru")
+    with st.form("input_form", clear_on_submit=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            resi = st.text_input("No. Resi", value=f"3G-{datetime.now().strftime('%d%H%M')}")
+            penerima = st.text_input("Nama Penerima")
+        with c2:
+            layanan = st.selectbox("Layanan", ["Regular", "Express", "Kargo"])
+            status = "Booking"
         
-        # Buat PDF
-        pdf_data = buat_pdf(payload)
+        submitted = st.form_submit_button("Simpan & Buat Invoice")
         
-        # Tombol Download PDF
-        st.download_button(
-            label="📥 Cetak Invoice (PDF)",
-            data=pdf_data,
-            file_name=f"Invoice_{resi}.pdf",
-            mime="application/pdf"
-        )
-        
+        if submitted:
+            if not penerima:
+                st.error("Nama penerima tidak boleh kosong!")
+            else:
+                payload = {
+                    "waktu": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "resi": resi,
+                    "penerima": penerima,
+                    "layanan": layanan,
+                    "status": status
+                }
+                
+                # Kirim ke Google Sheets
+                try:
+                    res = requests.post(API_URL, json=payload)
+                    if res.text == "Success":
+                        st.success(f"Berhasil! Data Resi {resi} tersimpan.")
+                        
+                        # Generate PDF
+                        pdf_data = buat_pdf(payload)
+                        st.download_button(
+                            label="📥 Download Invoice (PDF)",
+                            data=pdf_data,
+                            file_name=f"Invoice_{resi}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.error("Gagal menyimpan ke Google Sheets.")
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 elif menu == "🔍 Lacak Resi":
-    st.subheader("Cari Status Paket")
+    st.subheader("Tracking Paket")
     cari = st.text_input("Masukkan No. Resi")
-    if st.button("Lacak"):
+    if st.button("Cari"):
         df = ambil_data_cloud()
         if not df.empty:
             hasil = df[df['Resi'].astype(str) == cari]
             if not hasil.empty:
-                st.success(f"Status: {hasil.iloc[0]['Status']}")
+                st.success(f"Status Saat Ini: **{hasil.iloc[0]['Status']}**")
                 st.table(hasil)
             else:
-                st.error("Data tidak ditemukan.")
+                st.error("Nomor resi tidak ditemukan.")
 
 st.divider()
-st.caption("© 2026 3G LOGISTICS | Sistem Logistik Terintegrasi")
-
-
+st.caption("© 2026 PT. GAMA GEMAH GEMILANG | 3G LOGISTICS")
