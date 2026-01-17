@@ -24,7 +24,7 @@ with st.sidebar:
 col1, col2 = st.columns([1, 5])
 with col1:
     if os.path.exists("FAVICON.png"):
-        st.image("FAVICON.png", width=150)
+        st.image("FAVICON.png", width=200)
     else:
         st.title("🚚")
 with col2:
@@ -70,5 +70,6 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
