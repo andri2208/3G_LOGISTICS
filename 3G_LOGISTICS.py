@@ -75,7 +75,7 @@ with tab1:
             harga_satuan = st.number_input("Harga Satuan (Rp)", min_value=0, value=0)
         
         if st.form_submit_button("Simpan Data"):
-            url_script = "PASTE_URL_WEB_APP_DARI_APPS_SCRIPT_DI_SINI"
+            url_script = "https://script.google.com/macros/s/AKfycbwbzt7KTtdf6moIKUlsHm6xXYOb95mnMHmgIfusIZzFemzduEiv9pvDO2wJQV38Vv9q/exec"
             
             data_json = {
                 "Tanggal": datetime.now().strftime("%d-%b-%y"),
@@ -178,6 +178,7 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.info("Belum ada data pengiriman.")
+
 
 
 
