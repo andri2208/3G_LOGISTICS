@@ -24,7 +24,7 @@ with st.sidebar:
 col1, col2 = st.columns([1, 5])
 with col1:
     if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADER INVOICE.png", width=200)
+        st.image("HEADER INVOICE.png", width=500)
     else:
         st.title("🚚")
 with col2:
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
