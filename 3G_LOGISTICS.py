@@ -3,15 +3,16 @@ import pandas as pd
 from datetime import datetime
 import base64
 import os
+from streamlit_gsheets import GSheetsConnection
 
-# --- 1. KONFIGURASI HALAMAN & FAVICON ---
+# --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(
     page_title="3G LOGISTICS - System",
     page_icon="3G.png",
     layout="wide"
 )
 
-# --- 2. FUNGSI TOOLS ---
+# --- 2. FUNGSI TOOLS & GAMBAR ---
 def get_image_base64(path):
     if os.path.exists(path):
         with open(path, "rb") as img_file:
@@ -30,155 +31,158 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return str(n)
 
-# Load Gambar (Pastikan file-file ini ada di GitHub)
-logo_base64 = get_image_base64("3G.png")
-stempel_base64 = get_image_base64("STEMPEL.png")
-ttd_base64 = get_image_base64("TTD.png")
+# Load Asset Gambar
+logo_base = get_image_base64("3G.png")
+stempel_base = get_image_base64("STEMPEL.png")
+ttd_base = get_image_base64("TTD.png")
 
-# --- 3. TAMPILAN HEADER DASHBOARD (PRESISI) ---
+# --- 3. KONEKSI GOOGLE SHEETS ---
+# Pastikan URL sheet sudah benar di secrets atau input manual di sini
+url = "https://docs.google.com/spreadsheets/d/1doFjOpOIR6fZ4KngeiG77lzgbql3uwFFoHzq81pxMNk/edit?usp=sharing"
+
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+def fetch_data():
+    return conn.read(spreadsheet=url, usecols=list(range(9)))
+
+# --- 4. TAMPILAN HEADER DASHBOARD ---
 st.markdown(
     f"""
-    <div style="display: flex; align-items: center; gap: 20px; padding: 10px 0;">
-        <img src="data:image/png;base64,{logo_base64}" width="100">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <img src="data:image/png;base64,{logo_base}" width="90">
         <div>
-            <h1 style="margin: 0; padding: 0; line-height: 1; color: #1a3d8d;">PT. GAMA GEMAH GEMILANG</h1>
-            <p style="margin: 5px 0 0 0; font-size: 18px; color: #d62828; font-weight: bold;">Management Logistics System</p>
+            <h1 style="margin: 0; color: #1a3d8d;">PT. GAMA GEMAH GEMILANG</h1>
+            <p style="margin: 0; color: #d62828; font-weight: bold;">Management Logistics System</p>
         </div>
     </div>
-    <hr style="border: none; border-top: 3px solid #1a3d8d; margin-top: 10px; margin-bottom: 25px;">
-    """, 
-    unsafe_allow_html=True
+    <hr style="border-top: 3px solid #1a3d8d;">
+    """, unsafe_allow_html=True
 )
 
-# --- 4. DATABASE SEDERHANA (CONTOH) ---
-# Bagian ini bisa Anda sambungkan ke Google Sheets atau CSV Anda
-if 'db' not in st.session_state:
-    st.session_state.db = pd.DataFrame(columns=['Tanggal', 'Resi', 'Pengirim', 'Produk', 'Origin', 'Destination', 'Kolli', 'Harga', 'Berat'])
-
 # --- 5. TABS ---
-tab1, tab2, tab3 = st.tabs(["Tambah Data", "Lihat Database", "Cetak Invoice"])
+tab1, tab2, tab3 = st.tabs(["➕ Tambah Data", "📂 Database", "🧾 Cetak Invoice"])
 
 with tab1:
-    with st.form("input_form"):
+    with st.form("input_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
             tgl = st.date_input("Tanggal", datetime.now())
             resi = st.text_input("Nomor Resi")
             pengirim = st.text_input("Nama Customer")
-        with col2:
             produk = st.text_input("Deskripsi Barang")
+        with col2:
             origin = st.text_input("Origin")
             dest = st.text_input("Destination")
+            kolli = st.number_input("Kolli", min_value=1)
+            harga = st.number_input("Harga Satuan", min_value=0)
+            berat = st.number_input("Berat (Kg)", min_value=0.0)
         
-        c1, c2, c3 = st.columns(3)
-        kolli = c1.number_input("Kolli", min_value=0)
-        harga = c2.number_input("Harga Satuan", min_value=0)
-        berat = c3.number_input("Berat (Kg)", min_value=0)
-        
-        submit = st.form_submit_button("Simpan Data")
-        if submit:
-            new_data = pd.DataFrame([[tgl.strftime('%d-%b-%y'), resi, pengirim, produk, origin, dest, kolli, harga, berat]], 
-                                    columns=st.session_state.db.columns)
-            st.session_state.db = pd.concat([st.session_state.db, new_data], ignore_index=True)
-            st.success("Data Berhasil Disimpan!")
+        if st.form_submit_button("Simpan ke Google Sheets"):
+            # Siapkan data baru
+            new_row = pd.DataFrame([{
+                "Tanggal": tgl.strftime('%d-%b-%y'),
+                "Resi": resi,
+                "Pengirim": pengirim,
+                "Produk": produk,
+                "Origin": origin,
+                "Destination": dest,
+                "Kolli": kolli,
+                "Harga": harga,
+                "Berat": berat
+            }])
+            
+            # Ambil data lama, gabung, dan update
+            df_existing = fetch_data()
+            df_updated = pd.concat([df_existing, new_row], ignore_index=True)
+            conn.update(spreadsheet=url, data=df_updated)
+            st.success("Data Berhasil Terkirim ke Google Sheets!")
+            st.rerun()
 
 with tab2:
-    st.dataframe(st.session_state.db, use_container_width=True)
+    st.subheader("Data Logistik Real-time")
+    df = fetch_data()
+    st.dataframe(df, use_container_width=True)
 
 with tab3:
-    if not st.session_state.db.empty:
-        pilih_resi = st.selectbox("Pilih Nomor Resi untuk Invoice", st.session_state.db['Resi'].unique())
-        d = st.session_state.db[st.session_state.db['Resi'] == pilih_resi].iloc[0]
+    df = fetch_data()
+    if not df.empty:
+        pilih_resi = st.selectbox("Pilih Resi untuk Dicetak", df['Resi'].tolist())
+        d = df[df['Resi'] == pilih_resi].iloc[0]
         
-        # Perhitungan
-        harga_float = float(d['Harga'])
-        total_float = harga_float * float(d['Berat'])
+        # Hitung Total
+        total_harga = float(d['Harga']) * float(d['Berat'])
         
-        # --- HTML INVOICE YANG SUDAH DIPERBAIKI ---
+        # --- HTML INVOICE ---
         st.markdown(f"""
-        <div style="border: 1px solid #000; padding: 30px; background-color: white; color: black; font-family: Arial;">
-            <table style="width:100%; border:none; border-collapse: collapse;">
-                <tr>
-                    <td style="width:120px; border:none; vertical-align: middle;">
-                        <img src="data:image/png;base64,{logo_base64}" style="width:110px;">
-                    </td>
-                    <td style="border:none; padding-left: 20px; vertical-align: middle; text-align: left;">
-                        <h2 style="margin:0; color: #1a3d8d; font-size: 24px;">PT. GAMA GEMAH GEMILANG</h2>
-                        <p style="font-size:11px; margin:2px 0; color: black; line-height: 1.4;">
-                            Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti,<br>
-                            Gresik, Jawa Timur. Telp: 031-79973432 | Email: finance@3glogistics.com
-                        </p>
-                    </td>
-                    <td style="border:none; text-align:right; vertical-align: middle;">
-                        <h1 style="margin:0; color: #d62828; font-size: 32px;">INVOICE</h1>
-                        <p style="margin:0; font-weight: bold;"># {d['Resi']}</p>
-                    </td>
-                </tr>
-            </table>
-            
-            <hr style="border: none; border-top: 3px solid #1a3d8d; margin-top: 10px; margin-bottom: 20px;">
-            
+        <div style="border: 2px solid #ddd; padding: 40px; background: white; color: black; font-family: sans-serif;">
             <table style="width:100%; border:none;">
                 <tr>
-                    <td style="border:none;"><strong>DITUJUKAN KEPADA:</strong><br>{str(d['Pengirim']).upper()}</td>
-                    <td style="text-align:right; border:none; vertical-align: top;">
-                        <strong>TANGGAL:</strong> {d['Tanggal']}<br>
-                        <strong>METODE:</strong> Darat / Laut
+                    <td style="width:15%; border:none;"><img src="data:image/png;base64,{logo_base}" width="100"></td>
+                    <td style="border:none; padding-left:20px;">
+                        <h2 style="margin:0; color:#1a3d8d;">PT. GAMA GEMAH GEMILANG</h2>
+                        <p style="margin:2px 0; font-size:12px;">Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik.<br>
+                        Telp: 031-79973432 | Email: finance@3glogistics.com</p>
+                    </td>
+                    <td style="text-align:right; border:none; vertical-align:top;">
+                        <h1 style="margin:0; color:#d62828;">INVOICE</h1>
+                        <p style="margin:0; font-weight:bold;"># {d['Resi']}</p>
                     </td>
                 </tr>
             </table>
             
-            <br>
-            <table style="width:100%; border-collapse: collapse; text-align: center; border: 1px solid black;">
-                <tr style="background-color: #1a3d8d; color: white;">
-                    <th style="border: 1px solid black; padding:8px;">Deskripsi Barang</th>
-                    <th style="border: 1px solid black; padding:8px;">Origin</th>
-                    <th style="border: 1px solid black; padding:8px;">Destination</th>
-                    <th style="border: 1px solid black; padding:8px;">KOLLI</th>
-                    <th style="border: 1px solid black; padding:8px;">BERAT</th>
-                    <th style="border: 1px solid black; padding:8px;">HARGA</th>
-                    <th style="border: 1px solid black; padding:8px;">TOTAL</th>
-                </tr>
+            <hr style="border-top: 3px solid #1a3d8d;">
+            
+            <table style="width:100%; margin-top:20px;">
                 <tr>
-                    <td style="border: 1px solid black; padding:15px; text-align: left;">{d['Produk']}</td>
-                    <td style="border: 1px solid black;">{d['Origin']}</td>
-                    <td style="border: 1px solid black;">{d['Destination']}</td>
-                    <td style="border: 1px solid black;">{d['Kolli']}</td>
-                    <td style="border: 1px solid black;">{d['Berat']} Kg</td>
-                    <td style="border: 1px solid black;">Rp {harga_float:,.0f}</td>
-                    <td style="border: 1px solid black; font-weight: bold;">Rp {total_float:,.0f}</td>
+                    <td style="border:none;"><strong>KEPADA:</strong><br>{str(d['Pengirim']).upper()}</td>
+                    <td style="text-align:right; border:none;"><strong>TANGGAL:</strong> {d['Tanggal']}<br><strong>STATUS:</strong> PAID</td>
                 </tr>
             </table>
-            
-            <div style="margin-top: 20px; text-align: right;">
-                <h3 style="margin:0; color: #d62828;">YANG HARUS DIBAYAR: Rp {total_float:,.0f}</h3>
-            </div>
-            
-            <div style="margin-top: 10px; padding: 10px; background-color: #f2f2f2; border-left: 5px solid #d62828;">
-                <strong>Terbilang:</strong> <em>{terbilang(total_float)} Rupiah</em>
+
+            <table style="width:100%; border-collapse: collapse; margin-top:30px; text-align:center;">
+                <thead>
+                    <tr style="background:#1a3d8d; color:white;">
+                        <th style="border:1px solid #333; padding:10px;">ITEM</th>
+                        <th style="border:1px solid #333; padding:10px;">ORIGIN</th>
+                        <th style="border:1px solid #333; padding:10px;">DEST</th>
+                        <th style="border:1px solid #333; padding:10px;">QTY</th>
+                        <th style="border:1px solid #333; padding:10px;">BERAT</th>
+                        <th style="border:1px solid #333; padding:10px;">HARGA</th>
+                        <th style="border:1px solid #333; padding:10px;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border:1px solid #333; padding:15px;">{d['Produk']}</td>
+                        <td style="border:1px solid #333;">{d['Origin']}</td>
+                        <td style="border:1px solid #333;">{d['Destination']}</td>
+                        <td style="border:1px solid #333;">{d['Kolli']}</td>
+                        <td style="border:1px solid #333;">{d['Berat']} Kg</td>
+                        <td style="border:1px solid #333;">Rp {float(d['Harga']):,.0f}</td>
+                        <td style="border:1px solid #333; font-weight:bold;">Rp {total_harga:,.0f}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:20px; background:#f9f9f9; padding:15px; border-left:5px solid #d62828;">
+                <strong>TERBILANG:</strong> {terbilang(total_harga)} Rupiah
             </div>
 
-            <table style="width:100%; border:none; margin-top: 40px;">
+            <table style="width:100%; margin-top:50px;">
                 <tr>
-                    <td style="width:60%; border:none; vertical-align: top; font-size: 13px;">
-                        <strong>INFORMASI PEMBAYARAN:</strong><br>
-                        Bank Central Asia (BCA)<br>
-                        No. Rekening: <strong>6720422334</strong><br>
-                        A/N: <strong>ADITYA GAMA SAPUTRI</strong>
+                    <td style="border:none; font-size:12px;">
+                        <strong>PEMBAYARAN VIA:</strong><br>
+                        BCA: 6720422334<br>
+                        A/N: ADITYA GAMA SAPUTRI
                     </td>
-                    <td style="text-align: center; border:none;">
-                        Gresik, {d['Tanggal']}<br>
-                        PT. GAMA GEMAH GEMILANG<br><br>
-                        <div style="position: relative; display: inline-block;">
-                            <img src="data:image/png;base64,{stempel_base64}" style="width:180px;">
-                            <img src="data:image/png;base64,{ttd_base64}" style="width:100px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);">
+                    <td style="text-align:center; border:none;">
+                        Hormat Kami,<br><br>
+                        <div style="position:relative; display:inline-block;">
+                            <img src="data:image/png;base64,{stempel_base}" width="150">
+                            <img src="data:image/png;base64,{ttd_base}" width="90" style="position:absolute; top:10px; left:30px;">
                         </div>
                     </td>
                 </tr>
             </table>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.info("Gunakan Ctrl+P (Windows) atau Cmd+P (Mac) untuk menyimpan sebagai PDF.")
-    else:
-        st.warning("Silakan isi data terlebih dahulu di tab 'Tambah Data'.")
