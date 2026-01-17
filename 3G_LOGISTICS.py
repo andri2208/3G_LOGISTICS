@@ -5,7 +5,7 @@ import os
 # 1. Konfigurasi Halaman & Favicon (Ikon di Tab Browser)
 # Pastikan file FAVICON.png ada di folder yang sama
 try:
-    img = Image.open("FAVICON.png")
+    img = Image.open("HEADER INVOICE.png")
     st.set_page_config(page_title="3G LOGISTICS", page_icon=img)
 except:
     st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚")
@@ -13,7 +13,7 @@ except:
 # 2. Sidebar - Menampilkan Logo di bagian atas menu
 with st.sidebar:
     if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADRE INVOICE.png", width=150)
+        st.image("HEADER INVOICE.png", width=150)
     else:
         st.write("🚚 **3G LOGISTICS**")
     
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
