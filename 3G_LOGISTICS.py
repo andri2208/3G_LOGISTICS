@@ -28,7 +28,7 @@ with col1:
     else:
         st.title("🚚")
 with col2:
-    st.title("3G LOGISTICS")
+    st.title("")
 
 st.markdown("### Solusi Pengiriman Cepat & Terpercaya")
 st.divider()
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
