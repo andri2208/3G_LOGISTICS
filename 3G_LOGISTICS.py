@@ -5,7 +5,7 @@ import os
 # 1. Konfigurasi Halaman & Favicon (Ikon di Tab Browser)
 # Pastikan file FAVICON.png ada di folder yang sama
 try:
-    img = Image.open("HEADER INVOICE.png")
+    img = Image.open("FAVICON.png")
     st.set_page_config(page_title="3G LOGISTICS", page_icon=img)
 except:
     st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚")
@@ -23,8 +23,8 @@ with st.sidebar:
 # 3. Header Utama (Mengganti Emoji Mobil dengan Gambar)
 col1, col2 = st.columns([1, 5])
 with col1:
-    if os.path.exists("FAVICON.png"):
-        st.image("FAVICON.png", width=200)
+    if os.path.exists("HEADER INVOICE.png"):
+        st.image("HEADER INVOICE.png", width=200)
     else:
         st.title("🚚")
 with col2:
@@ -70,6 +70,7 @@ elif menu == "Tracking Resi":
 
 else:
     st.write("3G LOGISTICS adalah layanan jasa logistik modern berbasis teknologi.")
+
 
 
 
