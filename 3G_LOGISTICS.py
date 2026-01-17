@@ -6,7 +6,7 @@ import os
 
 # --- KONFIGURASI ---
 # GANTI link di bawah ini dengan URL Web App (ujungnya /exec) yang kamu dapatkan dari Google Apps Script
-API_URL = "https://script.google.com/macros/s/AKfycbzV9hmyRqF5JErjh7aILmUTWbwVchR8a9MrKbZSzUE8FTuP2uYVlYEadxILqav8wbPn/exec" 
+API_URL = st.secrets["API_URL"]
 
 # 1. Konfigurasi Halaman
 try:
@@ -92,3 +92,4 @@ elif menu == "🔍 Lacak Resi":
 
 st.divider()
 st.caption("© 2026 3G LOGISTICS | Sistem Logistik Terintegrasi")
+
