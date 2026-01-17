@@ -5,6 +5,7 @@ from datetime import datetime
 import base64
 import os
 
+
 # Pastikan file "LOGO INVOICE.png" sudah ada di folder yang sama di GitHub
 st.set_page_config(
     page_title="3G LOGISTICS - System", 
@@ -201,4 +202,5 @@ with tab3:
             """, unsafe_allow_html=True)
     else:
         st.warning("Database kosong. Silakan isi data terlebih dahulu.")
+
 
