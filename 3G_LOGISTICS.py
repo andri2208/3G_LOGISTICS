@@ -34,8 +34,8 @@ if 'db' not in st.session_state:
 
 # --- 5. NAVIGASI (DENGAN HEADER GAMBAR) ---
 # Menampilkan gambar header sebagai pengganti judul teks
-if os.path.exists("HEADER INVOICE.png"):
-    st.image("HEADER INVOICE.png", use_container_width=True)
+if os.path.exists("FAVICON.png"):
+    st.image("FAVICON.png", use_container_width=True)
 else:
     st.title("3G LOGISTICS SYSTEM") # Cadangan jika file gambar tidak ditemukan
 
@@ -136,6 +136,7 @@ with tab2:
         </div>
         """
         st.markdown(invoice_html, unsafe_allow_html=True)
+
 
 
 
