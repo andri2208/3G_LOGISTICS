@@ -7,8 +7,7 @@ from fpdf import FPDF
 
 # --- 1. KONFIGURASI API & HALAMAN ---
 # GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
-API_URL = "https://script.google.com/macros/s/AKfycbzV9hmyRqF5JErjh7aILmUTWbwVchR8a9MrKbZSzUE8FTuP2uYVlYEadxILqav8wbPn/exec" 
-
+API_URL = st.secrets["API_URL"]
 try:
     from PIL import Image
     favicon = Image.open("FAVICON.png")
@@ -148,3 +147,4 @@ elif menu == "🔍 Lacak Resi":
 
 st.divider()
 st.caption("© 2026 PT. GAMA GEMAH GEMILANG | 3G LOGISTICS")
+
