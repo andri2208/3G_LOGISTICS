@@ -20,7 +20,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.title("🔐 Akses Terbatas - 3G LOGISTICS")
+    st.title("🔐 LOGIN - 3G LOGISTICS")
     pwd_input = st.text_input("Masukkan Password Akses:", type="password")
     if st.button("Login"):
         if pwd_input == PASSWORD_AKSES:
@@ -196,4 +196,5 @@ with tab2:
 if st.sidebar.button("🚪 Logout"):
     st.session_state.authenticated = False
     st.rerun()
+
 
