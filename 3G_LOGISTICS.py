@@ -47,16 +47,16 @@ with tab1:
         if res.status_code == 200:
             st.dataframe(pd.DataFrame(res.json()), use_container_width=True)
     except:
-        st.info("Koneksi ke database sedang diproses.")
+        st.info("Menunggu data dari Google Sheets...")
 
 with tab2:
-    st.subheader("Form Input Sesuai Format Invoice")
+    st.subheader("Form Input Invoice")
     
     with st.form("invoice_form"):
-        # Header Info Otomatis
+        # Penentuan Tanggal Otomatis
         tgl_skrng = datetime.now()
-        tgl_format = tgl_skrng.strftime("%d/%m/%Y")
-        tgl_load_format = tgl_skrng.strftime("%d-%b-%y")
+        [cite_start]tgl_format = tgl_skrng.strftime("%d/%m/%Y") # Untuk DATE [cite: 5]
+        [cite_start]tgl_load_format = tgl_skrng.strftime("%d-%b-%y") # Untuk Date of Load [cite: 5]
         
         st.info(f"📅 DATE : {tgl_format}")
         
@@ -68,29 +68,24 @@ with tab2:
             destination = st.text_input("Destination", value="MEDAN")
             
         with col2:
-            kolli = st.text_input("KOLLI", placeholder="Isi jika ada")
+            kolli = st.text_input("KOLLI", placeholder="Contoh: 1")
             weight = st.text_input("WEIGHT", placeholder="Contoh: 290 Kg")
-            harga_satuan = st.number_input("HARGA SATUAN (Rp)", min_value=0, value=0)
-            jumlah_barang = st.number_input("JUMLAH / QUANTITY", min_value=1, value=1)
+            # Harga di sini langsung menjadi total bayar
+            total_bayar = st.number_input("HARGA / TOTAL BAYAR (Rp)", min_value=0, value=0, step=1000)
             
-        # Kalkulasi Otomatis Berdasarkan Format Gambar
-        total_bayar = harga_satuan * jumlah_barang
+        # Terbilang Otomatis dari Total Bayar
         teks_terbilang = f"{terbilang(total_bayar)} rupiah" if total_bayar > 0 else ""
         
         st.markdown("---")
-        col_res1, col_res2 = st.columns(2)
-        with col_res1:
-            st.markdown(f"**YANG HARUS DI BAYAR:**")
-            st.subheader(f"Rp {total_bayar:,.0f}")
-        with col_res2:
-            st.markdown(f"**Terbilang :**")
-            st.write(f"*{teks_terbilang.lower()}*")
+        st.markdown(f"**YANG HARUS DI BAYAR:**")
+        st.subheader(f"Rp {total_bayar:,.0f}")
+        st.write(f"**Terbilang :** *{teks_terbilang.lower()}*")
 
         submitted = st.form_submit_button("Simpan Data Invoice")
 
         if submitted:
-            if not customer:
-                st.warning("Nama Customer tidak boleh kosong!")
+            if not customer or total_bayar == 0:
+                st.warning("Nama Customer dan Harga tidak boleh kosong!")
             else:
                 payload = {
                     "date": tgl_format,
@@ -100,7 +95,6 @@ with tab2:
                     "origin": origin.upper(),
                     "destination": destination.upper(),
                     "kolli": kolli,
-                    "harga": harga_satuan,
                     "weight": weight,
                     "total": total_bayar,
                     "terbilang": teks_terbilang.lower()
@@ -112,7 +106,7 @@ with tab2:
                         st.success("✅ Data Invoice Berhasil Disimpan!")
                         st.balloons()
                     else:
-                        st.error("Gagal mengirim data.")
+                        st.error("Gagal mengirim data. Cek Deployment Apps Script Anda.")
                 except Exception as e:
                     st.error(f"Terjadi kesalahan: {e}")
 
