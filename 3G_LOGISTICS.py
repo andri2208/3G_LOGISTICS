@@ -42,7 +42,7 @@ st.markdown(f"""
         padding: 20px;
     }}
     .header-box img {{
-        width: 100%;
+        width: 50%;
         max-width: 700px;
         height: auto;
         filter: drop-shadow(0px 0px 15px rgba(255,255,255,0.5));
@@ -111,7 +111,7 @@ if not st.session_state.authenticated:
         if logo_data:
             st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{logo_data}"></div>', unsafe_allow_html=True)
         
-        st.markdown("<h1 style='text-align:center; font-size: 50px;'>3G LOGIN</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align:center; font-size: 30px;'>LOGIN</h1>", unsafe_allow_html=True)
         
         with st.container():
             st.write("---")
@@ -243,4 +243,5 @@ with t2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.error("Database Gagal Dimuat")
+
 
