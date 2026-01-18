@@ -21,3 +21,24 @@ st.title("Aplikasi Invoice & Logistik")
 # 3. Menampilkan Stempel di bagian tanda tangan (misalnya di akhir invoice)
 st.write("Hormat Kami,")
 st.image("STEMPEL TANDA TANGAN.png", width=200) # Atur width sesuai kebutuhan
+
+# Sembunyikan menu default, footer, dan matikan klik kanan pada gambar
+hide_menu_style = """
+        <style>
+        /* Sembunyikan Menu Streamlit (Hamburger & Footer) */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+
+        /* Mencegah klik kanan pada gambar (pointer-events) */
+        img {
+            pointer-events: none;
+            -webkit-user-select: none; /* Safari */        
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standard */
+        }
+        </style>
+        """
+st.markdown(hide_menu_style, unsafe_allow_html=True)
+
