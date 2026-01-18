@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import json
 from datetime import datetime
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
@@ -42,27 +43,49 @@ with t1:
         tgl = str(row['date']).split('T')[0]
         total = int(row['total'])
         kata = terbilang(total).title() + " Rupiah"
+        inv_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{row.name}"
 
-        # Kunci Perbaikan: HTML diletakkan tanpa spasi sama sekali di awal baris
-        st.markdown(f"""
-<div style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:850px;margin:auto;">
+        # HTML Kode Invoice (ID: 'invoice-content' ditambahkan untuk target PDF)
+        html_content = f"""
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<div id="invoice-content" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:800px;margin:auto;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size:20px;">INVOICE</div>
 <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><b>CUSTOMER : {row['customer']}</b><b>DATE : {tgl}</b></div>
-<div style="overflow-x:auto;">
 <table style="width:100%;border-collapse:collapse;border:1px solid black;font-size:12px;text-align:center;">
 <tr style="background-color:#316395;color:white;"><th style="border:1px solid black;padding:8px;">Date of Load</th><th style="border:1px solid black;">Product Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Destination</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th></tr>
 <tr><td style="border:1px solid black;padding:10px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td></tr>
 <tr style="font-weight:bold;background-color:#f2f2f2;"><td colspan="6" style="border:1px solid black;text-align:center;padding:5px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total:,}</td></tr>
 </table>
-</div>
 <div style="border:1px solid black;margin-top:5px;padding:8px;font-size:13px;font-style:italic;"><b>Terbilang :</b> {kata}</div>
-<div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;font-size:12px;">
-<div style="flex:1;min-width:200px;margin-bottom:15px;"><b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Konfirmasi Finance 082179799200</small></div>
-<div style="flex:1;text-align:center;min-width:200px;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</div>
+<div style="margin-top:20px;display:flex;justify-content:space-between;font-size:12px;">
+<div style="width:50%;"><b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Konfirmasi Finance 082179799200</small></div>
+<div style="text-align:center;width:50%;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</div>
 </div>
 </div>
-""", unsafe_allow_html=True)
+<script>
+function downloadPDF() {{
+  const element = document.getElementById('invoice-content');
+  const opt = {{
+    margin: 0.5,
+    filename: '{inv_no}.pdf',
+    image: {{ type: 'jpeg', quality: 0.98 }},
+    html2canvas: {{ scale: 2, useCORS: true }},
+    jsPDF: {{ unit: 'in', format: 'letter', orientation: 'portrait' }}
+  }};
+  html2pdf().set(opt).from(element).save();
+}}
+</script>
+"""
+        st.markdown(html_content, unsafe_allow_html=True)
+        
+        # Tombol download menggunakan HTML Button agar bisa trigger JavaScript
+        st.write("---")
+        components.html(f"""
+            <button onclick="parent.downloadPDF()" style="background-color: #4CAF50; color: white; padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                📥 Download PDF Sekarang
+            </button>
+        """, height=70)
 
 with t2:
     with st.form("f1", clear_on_submit=True):
