@@ -6,7 +6,7 @@ import os
 from fpdf import FPDF
 
 # --- 1. KONFIGURASI KEAMANAN & API ---
-PASSWORD_AKSES = "GGGLOGISTICS2026" # <--- SILAKAN GANTI PASSWORD ANDA DI SINI
+PASSWORD_AKSES = "3G2026" # <--- SILAKAN GANTI PASSWORD ANDA DI SINI
 API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
 
 st.set_page_config(
@@ -196,3 +196,4 @@ with tab2:
 if st.sidebar.button("🚪 Logout"):
     st.session_state.authenticated = False
     st.rerun()
+
