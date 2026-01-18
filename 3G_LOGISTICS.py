@@ -7,6 +7,28 @@ import streamlit.components.v1 as components
 
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
+# 1. KONFIGURASI HALAMAN
+st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
+
+# --- TAMBAHKAN CSS INI UNTUK MENARIK TAMPILAN KE ATAS ---
+st.markdown("""
+    <style>
+    /* Menghilangkan jarak atas pada aplikasi */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+        margin-top: -20px;
+    }
+    /* Menghilangkan ruang kosong di atas tabs */
+    .stTabs {
+        margin-top: -20px;
+    }
+    /* Mengatur jarak header agar tidak terlalu besar */
+    [data-testid="stImage"] {
+        margin-top: -30px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- SISTEM LOGIN SEDERHANA ---
 def login():
@@ -139,3 +161,4 @@ function downloadPDF() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal menyimpan data.")
+
