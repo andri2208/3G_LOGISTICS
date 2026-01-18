@@ -46,7 +46,7 @@ st.markdown(f"""
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 30px;
-        padding: 50px 30px;
+        padding: 10px 10px;
         width: 100%;
         max-width: 450px;
         box-shadow: 0 25px 50px rgba(0,0,0,0.5);
@@ -170,5 +170,6 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
