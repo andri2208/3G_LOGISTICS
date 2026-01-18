@@ -19,89 +19,85 @@ def get_base64_img(img_path):
         return base64.b64encode(data).decode()
     return None
 
-# --- 2. CSS FINAL: ZERO EMPTY BOX & PERFECT PRECISION ---
+# --- 2. DEEP CLEAN CSS (ANTI KOTAK KOSONG) ---
 logo_b64 = get_base64_img("FAVICON.png")
 
 st.markdown(f"""
     <style>
-    /* Hapus paksa semua container kosong bawaan Streamlit */
+    /* 1. Hapus Background & Border Bawaan Streamlit secara Total */
+    [data-testid="stVerticalBlock"], 
+    [data-testid="stVerticalBlockBorderWrapper"],
     [data-testid="stVerticalBlock"] > div {{
-        padding: 0px !important;
-        margin: 0px !important;
-    }}
-    
-    /* Hilangkan background kotak abu-abu/transparan yang mengganggu */
-    [data-testid="stVerticalBlockBorderWrapper"] {{
+        background: none !important;
         border: none !important;
-        background-color: transparent !important;
         box-shadow: none !important;
+        padding: 0 !important;
+        gap: 0 !important;
     }}
 
+    /* 2. Background Utama */
     .stApp {{ 
         background: linear-gradient(135deg, #052222 0%, #000000 100%); 
     }}
 
-    /* Container Utama di Tengah Atas */
-    .main-wrapper {{
+    /* 3. Wrapper Utama untuk Presisi */
+    .login-wrapper {{
         display: flex;
         flex-direction: column;
         align-items: center;
+        text-align: center;
+        padding-top: 80px; /* Atur jarak dari atas layar di sini */
         width: 100%;
-        padding-top: 60px;
     }}
 
-    .logo-img {{
-        width: 200px;
-        margin-bottom: 5px;
+    .logo-container {{
+        margin-bottom: 20px;
     }}
 
-    .title-text {{
+    /* 4. Teks Brand */
+    .brand-title {{
         color: white;
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        margin-bottom: 25px;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        letter-spacing: 1px;
     }}
 
-    /* Input Password Super Presisi */
+    /* 5. Styling Input Password agar Mungil & Clean */
     div[data-baseweb="input"] {{
-        width: 280px !important;
+        width: 300px !important;
         margin: 0 auto !important;
-        border: none !important;
     }}
 
     .stTextInput > div > div > input {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 8px !important;
+        height: 45px !important;
         text-align: center !important;
-        background-color: #f0f2f6 !important;
-        color: #000 !important;
-        border-radius: 5px !important;
-        height: 42px !important;
         font-size: 16px !important;
-        border: none !important;
+        border: 2px solid transparent !important;
     }}
 
-    /* Tombol Masuk Merah Padat */
+    /* 6. Tombol Masuk Merah Menyala */
     .stButton > button {{
-        background-color: #cc0000 !important;
+        background: #cc0000 !important;
         color: white !important;
-        width: 280px !important;
-        border-radius: 5px !important;
-        border: none !important;
+        width: 300px !important;
+        border-radius: 8px !important;
         height: 45px !important;
         font-weight: bold;
-        text-transform: uppercase;
-        margin-top: 15px;
-        transition: 0.3s;
+        border: none !important;
+        margin-top: 20px !important;
+        cursor: pointer;
     }}
 
-    .stButton > button:hover {{
-        background-color: #ff0000 !important;
-        box-shadow: 0px 4px 15px rgba(255, 0, 0, 0.3);
+    /* 7. Hilangkan Header & Footer Streamlit */
+    header, footer, .stDeployButton, [data-testid="stHeader"] {{
+        visibility: hidden;
+        display: none !important;
     }}
-
-    /* Sembunyikan Header & Footer Streamlit */
-    header, footer, .stDeployButton {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -110,34 +106,34 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    # Menggunakan HTML murni untuk membungkus agar tidak ada elemen 'ghost' dari Streamlit
-    st.markdown('<div class="main-wrapper">', unsafe_allow_html=True)
+    # Menggunakan wrapper HTML murni agar tidak terpengaruh grid Streamlit
+    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
     
+    # Logo Section
     if logo_b64:
-        st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">', unsafe_allow_html=True)
+        st.markdown(f'<div class="logo-container"><img src="data:image/png;base64,{logo_b64}" width="220"></div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="title-text">3G LOGISTICS LOGIN</div>', unsafe_allow_html=True)
+    st.markdown('<div class="brand-title">3G LOGISTICS LOGIN</div>', unsafe_allow_html=True)
     
-    # Input Password
-    pwd = st.text_input("PWD", type="password", placeholder="KODE AKSES", label_visibility="collapsed")
+    # Elemen Input
+    # Gunakan container kosong agar CSS kita bisa menargetkan dengan tepat
+    pwd = st.text_input("PASSWORD", type="password", placeholder="MASUKKAN KODE AKSES", label_visibility="collapsed")
     
-    # Tombol Authenticate
-    if st.button("MASUK SISTEM"):
+    if st.button("AUTHENTICATE SYSTEM"):
         if pwd == PASSWORD_AKSES:
             st.session_state.authenticated = True
             st.rerun()
         else:
-            st.error("Akses Ditolak!")
+            st.error("Kode Akses Salah")
             
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 4. DASHBOARD & DATASET (SAMA DENGAN SEBELUMNYA) ---
+# --- 4. DASHBOARD (MUNCUL JIKA SUDAH LOGIN) ---
 st.markdown("<style>.stApp { overflow: auto !important; }</style>", unsafe_allow_html=True)
 
-# Tambahkan Fungsi Terbilang, Cetak PDF, dan Tab Input di sini...
-st.success("Akses Diberikan. Selamat Datang di Dashboard.")
-
-if st.sidebar.button("🚪 LOGOUT"):
+# Lanjutkan dengan Tab Input dan Database seperti sebelumnya...
+st.success("Login Berhasil.")
+if st.sidebar.button("LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
