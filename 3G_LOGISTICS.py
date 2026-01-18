@@ -11,22 +11,20 @@ st.set_page_config(page_title="3G Logistics", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS: HEADER KECIL & AMAN DARI TAB ---
+# --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
-    
-    /* Jarak aman dari tab Streamlit di atas */
     .block-container { padding-top: 5rem !important; }
 
-    /* Header Utama Web Ramping */
+    /* Header Ramping */
     .custom-header { text-align: center; margin-bottom: 20px; }
     .custom-header img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
 
-    /* Label Input Tebal */
+    /* Label Tebal & Input Bersih */
     .stWidgetLabel p { font-weight: 900 !important; font-size: 14px !important; color: #1A2A3A !important; }
     
-    .stTextInput input, .stNumberInput input, .stDateInput input {
+    .stTextInput input {
         background-color: #FFFFFF !important;
         border: 2px solid #BCC6CC !important;
         border-radius: 8px !important;
@@ -42,7 +40,8 @@ st.markdown("""
 
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
-    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
+    # Membersihkan karakter non-angka kecuali titik untuk desimal
+    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
     if match: return float(match[0])
     return 0
 
@@ -76,6 +75,7 @@ with tab1:
         selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
         row = df[df['customer'] == selected_cust].iloc[-1]
         
+        # Kalkulasi
         b_val = extract_number(row['weight'])
         h_val = extract_number(row['harga'])
         t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
@@ -84,7 +84,6 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        # HTML INVOICE DENGAN STRUKTUR TABEL YANG DIKUNCI (SANGAT RAPI)
         invoice_html = f"""
         <!DOCTYPE html>
         <html>
@@ -92,26 +91,16 @@ with tab1:
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
                 body {{ background: #f0f0f0; padding: 10px; }}
-                #inv {{ 
-                    background: white; padding: 25px; width: 750px; margin: auto; 
-                    border: 1px solid #ccc; color: black; font-family: Arial, sans-serif; 
-                }}
-                .header-img {{ width: 100%; height: auto; display: block; }}
-                .title {{ 
-                    text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; 
-                    margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; 
-                }}
+                #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                .header-img {{ width: 100%; height: auto; }}
+                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
                 .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
                 .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                 .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
                 .data-table th {{ background-color: #f2f2f2; }}
                 .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                 .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
-                .btn-dl {{ 
-                    width: 750px; display: block; margin: 20px auto; background: #1A2A3A; 
-                    color: white; padding: 15px; border: none; border-radius: 8px; 
-                    font-weight: bold; cursor: pointer; font-size: 16px; 
-                }}
+                .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
             </style>
         </head>
         <body>
@@ -119,55 +108,33 @@ with tab1:
                 <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                 <div class="title">INVOICE</div>
                 <table class="info-table">
-                    <tr>
-                        <td style="width: 50%;">CUSTOMER: {row['customer']}</td>
-                        <td style="text-align:right;">DATE: {tgl_indo}</td>
-                    </tr>
+                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
                 </table>
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
-                        </tr>
+                        <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
                             <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
                         </tr>
-                        <tr style="font-weight:bold;">
-                            <td colspan="6" style="text-align:right; border: 1px solid black;">TOTAL BAYAR</td>
-                            <td style="border: 1px solid black;">Rp {t_val:,}</td>
-                        </tr>
+                        <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </tbody>
                 </table>
                 <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                 <table class="footer-table">
                     <tr>
-                        <td style="width:60%; vertical-align:top;">
-                            <b>TRANSFER TO :</b><br>Bank Central Asia <b>6720422334</b><br>A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
-                            <i>NB : Jika sudah transfer mohon konfirmasi ke ke Finance <b>082179799200</b></i>
-                        </td>
-                        <td style="text-align:center;">
-                            Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px; margin: 10px 0;"><br>
-                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                        </td>
+                        <td style="width:60%;"><b>TRANSFER TO:</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke Finance: 082179799200</td>
+                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px;"><br><b><u>KELVINITO JAYADI</u></b></td>
                     </tr>
                 </table>
             </div>
             <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
             <script>
                 function savePDF() {{
-                    const element = document.getElementById('inv');
-                    const opt = {{
-                        margin: 0,
-                        filename: 'Inv_{selected_cust}.pdf',
-                        image: {{ type: 'jpeg', quality: 0.98 }},
-                        html2canvas: {{ scale: 3, useCORS: true }},
-                        jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
-                    }};
-                    html2pdf().set(opt).from(element).save();
+                    const e = document.getElementById('inv');
+                    html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
                 }}
             </script>
         </body>
@@ -186,22 +153,29 @@ with tab2:
         v_orig = c4.text_input("DARI", value="SBY")
         v_dest = c5.text_input("TUJUAN")
         v_kol = c6.text_input("KOLLI")
-        v_kg = c7.text_input("WEIGHT")
-        v_hrg = c8.number_input("HARGA", 0)
+        v_kg = c7.text_input("WEIGHT") # Input teks biasa
+        v_hrg = c8.text_input("HARGA") # Diubah jadi text_input agar tidak ada angka 0 dan -+
         
         if st.form_submit_button("💾 SIMPAN DATA"):
+            # Membersihkan input agar bisa dikalkulasi
+            h_num = extract_number(v_hrg)
             w_num = extract_number(v_kg)
-            total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
+            
+            # Otomatis tambah " Kg" jika belum ada
+            weight_final = str(v_kg)
+            if v_kg and "kg" not in v_kg.lower():
+                weight_final = f"{v_kg} Kg"
+            
+            total_db = int(w_num * h_num) if w_num > 0 else int(h_num)
+            
             payload = {
                 "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
                 "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                "harga": v_hrg, "weight": v_kg, "total": total_db
+                "harga": h_num, "weight": weight_final, "total": total_db
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Berhasil! Rp {total_db:,}")
+                st.success(f"Berhasil Disimpan! Weight: {weight_final}")
                 st.cache_data.clear()
             except:
-                st.error("Gagal!")
-
-
+                st.error("Gagal terhubung!")
