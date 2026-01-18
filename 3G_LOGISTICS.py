@@ -10,64 +10,82 @@ PASSWORD_AKSES = "3G2026"
 API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
 
 st.set_page_config(
-    page_title="3G LOGISTICS PRO",
-    page_icon="FAVICON.png", 
+    page_title="3G LOGISTICS - PRO DASHBOARD",
+    page_icon="🚚", 
     layout="wide"
 )
 
-# --- 2. CUSTOM CSS (LOGO BESAR & TEKS TOMBOL KONTRAS) ---
+# --- 2. ULTIMATE PRO CSS (GLASSMORPHISM & HIGH CONTRAST) ---
 st.markdown("""
     <style>
-    /* Background Gradien Merah Biru Terang */
+    /* Main Background Gradien Merah-Biru Menyala */
     .stApp {
-        background: linear-gradient(135deg, #ff4b4b 0%, #1c92ff 100%);
-    }
-    
-    /* Memaksa Teks Label Putih Tebal */
-    label, .stMarkdown, p, h1, h2, h3 {
-        color: white !important;
-        font-weight: 800 !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        background: linear-gradient(135deg, #e11d48 0%, #2563eb 100%);
     }
 
-    /* FIX TOMBOL: Background Gelap, Teks Putih WAJIB Terlihat */
+    /* Styling Teks Utama */
+    h1, h2, h3, label, .stMarkdown {
+        color: white !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Glassmorphism Container */
+    div[data-testid="stForm"], .stTable, .stDataFrame {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(10px);
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 25px;
+    }
+
+    /* TOMBOL PRO (NAVY DARK - TEKS PUTIH MURNI) */
     .stButton>button, .stDownloadButton>button {
-        background-color: #001f3f !important; /* Biru Navy Sangat Gelap */
-        color: #ffffff !important; /* TEKS PUTIH MURNI */
-        border-radius: 12px;
-        border: 2px solid #ffffff !important;
-        font-weight: 900 !important;
-        font-size: 20px !important; /* Ukuran teks diperbesar */
-        height: 3.5em;
+        background-color: #0f172a !important; /* Navy Sangat Gelap */
+        color: #ffffff !important; /* Teks Putih Murni */
+        border: 2px solid rgba(255,255,255,0.5) !important;
+        border-radius: 12px !important;
+        font-weight: 800 !important;
+        font-size: 1.1rem !important;
+        height: 3.5rem !important;
         width: 100%;
-        box-shadow: 0px 5px 15px rgba(0,0,0,0.4);
-        display: block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* Memastikan teks tombol di dalam form juga putih */
-    div[data-testid="stFormSubmitButton"] button p {
+    /* Paksa teks di dalam tombol tetap putih */
+    .stButton>button div p, .stDownloadButton>button div p {
         color: white !important;
-        font-size: 18px !important;
-        font-weight: 900 !important;
     }
-    
+
     .stButton>button:hover {
-        background-color: #ff0000 !important;
-        border-color: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     }
 
-    /* Input Fields Putih Bersih */
-    .stTextInput>div>div>input, .stNumberInput>div>div>input {
+    /* Styling Input Fields */
+    input {
         background-color: white !important;
-        color: black !important;
-        font-weight: bold !important;
-        font-size: 16px !important;
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
     }
 
-    /* Header Logo agar lebih besar */
-    .logo-container {
-        text-align: left;
-        margin-bottom: 20px;
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 20px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 10px 10px 0 0;
+        color: white !important;
+        font-weight: bold;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: rgba(255,255,255,0.3) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -77,41 +95,40 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.write("#")
-    c1, c2, c3 = st.columns([1, 1.2, 1])
+    c1, c2, c3 = st.columns([1, 1, 1])
     with c2:
-        with st.container(border=True):
-            st.markdown("<h1 style='text-align: center;'>🔐 LOGIN ADMIN</h1>", unsafe_allow_html=True)
-            pwd_input = st.text_input("PASSWORD AKSES", type="password")
-            if st.button("MASUK SISTEM"):
-                if pwd_input == PASSWORD_AKSES:
+        st.write("#")
+        st.write("#")
+        with st.container():
+            st.markdown("<h1 style='text-align:center;'>🔒 ACCESS CONTROL</h1>", unsafe_allow_html=True)
+            pwd = st.text_input("Enter Admin Password", type="password")
+            if st.button("UNLOCK SYSTEM"):
+                if pwd == PASSWORD_AKSES:
                     st.session_state.authenticated = True
                     st.rerun()
                 else:
-                    st.error("PASSWORD SALAH!")
+                    st.error("Invalid Access!")
     st.stop()
 
-# --- 4. HEADER & LOGOUT (LOGO DIPERBESAR) ---
-col_head, col_log = st.columns([0.7, 0.3])
-with col_head:
+# --- 4. HEADER ---
+c_logo, c_empty, c_logout = st.columns([0.4, 0.4, 0.2])
+with c_logo:
     if os.path.exists("HEADER INVOICE.png"):
-        # Logo diperbesar menggunakan use_container_width atau width manual yang lebih tinggi
-        st.image("HEADER INVOICE.png", width=550) 
+        st.image("HEADER INVOICE.png", width=450)
     else:
-        st.title("PT. GAMA GEMAH GEMILANG")
+        st.title("3G LOGISTICS")
 
-with col_log:
-    st.write("##") 
-    if st.button("🚪 LOGOUT SISTEM"):
+with c_logout:
+    st.write("##")
+    if st.button("🚪 LOGOUT"):
         st.session_state.authenticated = False
         st.rerun()
 
-st.divider()
+st.markdown("---")
 
-# --- 5. FUNGSI TEKNIS ---
-def generate_invoice_number():
-    now = datetime.now()
-    return f"INV/{now.strftime('%Y%m%d')}/{now.strftime('%H%M%S')}"
+# --- 5. FUNGSI INTI ---
+def generate_inv():
+    return f"INV/{datetime.now().strftime('%Y%m%d/%H%M%S')}"
 
 def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
@@ -127,7 +144,7 @@ def terbilang(n):
     elif n < 1000000000: hasil = terbilang(n // 1000000).replace(" Rupiah", "") + " Juta " + terbilang(n % 1000000).replace(" Rupiah", "")
     return hasil.strip() + " Rupiah"
 
-def buat_pdf_custom(data):
+def render_pdf(data):
     pdf = FPDF()
     pdf.add_page()
     if os.path.exists("HEADER INVOICE.png"):
@@ -138,19 +155,16 @@ def buat_pdf_custom(data):
     pdf.cell(90, 6, "INVOICE", 0, 1, 'R')
     pdf.set_font("Arial", size=9)
     pdf.cell(100, 6, f"No: {data['no_inv']}", 0)
-    pdf.cell(90, 6, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
+    pdf.cell(90, 6, f"Date: {data['waktu_tgl']}", 0, 1, 'R')
     pdf.ln(10)
     
-    # Tabel PDF
+    # PDF TABLE
     pdf.set_font("Arial", 'B', 8)
-    pdf.set_fill_color(230, 230, 230)
-    pdf.cell(25, 10, "Date Load", 1, 0, 'C', True)
-    pdf.cell(50, 10, "Description", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Origin", 1, 0, 'C', True)
-    pdf.cell(25, 10, "Dest", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Price", 1, 0, 'C', True)
-    pdf.cell(20, 10, "Weight", 1, 0, 'C', True)
-    pdf.cell(30, 10, "Total", 1, 1, 'C', True)
+    pdf.set_fill_color(240, 240, 240)
+    cols = [("Date Load", 25), ("Description", 50), ("Origin", 20), ("Dest", 25), ("Price", 20), ("Weight", 20), ("Total", 30)]
+    for head, width in cols:
+        pdf.cell(width, 10, head, 1, 0, 'C', True)
+    pdf.ln()
     
     pdf.set_font("Arial", size=8)
     pdf.cell(25, 10, data['waktu_tgl'], 1, 0, 'C')
@@ -162,73 +176,76 @@ def buat_pdf_custom(data):
     pdf.cell(30, 10, f"Rp {data['total']:,}", 1, 1, 'C')
     
     pdf.ln(10)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(190, 12, f"TOTAL BAYAR: Rp {data['total']:,}", 1, 1, 'C', True)
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(140, 12, "TOTAL AMOUNT PAYABLE", 0, 0, 'R')
+    pdf.cell(50, 12, f"Rp {data['total']:,}", 1, 1, 'C', True)
     pdf.set_font("Arial", 'I', 9)
-    pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])}")
+    pdf.multi_cell(190, 8, f"In Words: {terbilang(data['total'])}")
 
     pdf.ln(10)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "SINCERELY,", 0, 1, 'R')
     if os.path.exists("STEMPEL TANDA TANGAN.png"):
-        pdf.image("STEMPEL TANDA TANGAN.png", x=155, y=pdf.get_y()+5, w=35)
-    pdf.ln(20)
+        pdf.image("STEMPEL TANDA TANGAN.png", x=155, y=pdf.get_y()+2, w=35)
+    pdf.ln(25)
     pdf.cell(190, 5, "KELVINITO JAYADI", 0, 1, 'R')
+    pdf.set_font("Arial", size=8)
+    pdf.cell(190, 5, "DIRECTOR", 0, 1, 'R')
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 6. TAB CONTENT ---
-tab1, tab2 = st.tabs(["📝 INPUT DATA INVOICE", "📊 LIHAT DATABASE"])
+# --- 6. TAMPILAN TAB ---
+t1, t2 = st.tabs(["💎 CREATE NEW INVOICE", "📂 ARCHIVE DATABASE"])
 
-with tab1:
-    if 'preview_data' not in st.session_state:
-        st.session_state.preview_data = None
-
-    with st.form("main_form", clear_on_submit=True):
-        st.markdown("### 📝 FORM PENGIRIMAN BARU")
+with t1:
+    with st.form("pro_form", clear_on_submit=True):
+        st.markdown("### 📝 Shipment Details")
         c1, c2 = st.columns(2)
-        cust = c1.text_input("NAMA CUSTOMER *")
-        prod = c2.text_input("DESKRIPSI BARANG *")
+        cust = c1.text_input("Customer Name")
+        prod = c2.text_input("Product Description")
         
         c3, c4, c5, c6 = st.columns(4)
-        ori = c3.text_input("ORIGIN *")
-        dest = c4.text_input("DESTINATION *")
-        hrg = c5.number_input("HARGA SATUAN *", min_value=0, value=0)
-        wgt = c6.number_input("BERAT TOTAL (Kg) *", min_value=0.0, value=0.0)
+        ori = c3.text_input("Origin")
+        dest = c4.text_input("Destination")
+        hrg = c5.number_input("Unit Price", min_value=0, value=0)
+        wgt = c6.number_input("Total Weight (Kg)", min_value=0.0, format="%.2f")
         
-        # Tombol Submit Form
-        if st.form_submit_button("SIMPAN DATA & GENERATE"):
-            if not all([cust.strip(), prod.strip(), ori.strip(), dest.strip()]) or hrg <= 0 or wgt <= 0:
-                st.warning("⚠️ SEMUA DATA WAJIB DIISI DENGAN BENAR!")
+        submit = st.form_submit_button("🔥 SAVE & GENERATE INVOICE")
+
+        if submit:
+            if not all([cust, prod, ori, dest]) or hrg <= 0 or wgt <= 0:
+                st.error("🚨 Please fill all required fields correctly!")
             else:
-                inv_no = generate_invoice_number()
-                st.session_state.preview_data = {
+                inv_no = generate_inv()
+                st.session_state.preview = {
                     "no_inv": inv_no, "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
                     "penerima": cust, "deskripsi": prod, "asal": ori, "tujuan": dest,
                     "harga": hrg, "berat": wgt, "total": int(hrg * wgt)
                 }
-                try:
-                    requests.post(API_URL, json=st.session_state.preview_data)
-                    st.success(f"BERHASIL! No Invoice: {inv_no}")
-                    st.balloons()
-                except:
-                    st.error("KONEKSI DATABASE GAGAL!")
+                requests.post(API_URL, json=st.session_state.preview)
+                st.success(f"Success! Invoice {inv_no} has been recorded.")
+                st.balloons()
 
-    if st.session_state.preview_data:
-        d = st.session_state.preview_data
-        st.divider()
-        if st.button("❌ RESET / TUTUP PREVIEW"):
-            st.session_state.preview_data = None
-            st.rerun()
+    if "preview" in st.session_state and st.session_state.preview:
+        p = st.session_state.preview
+        st.write("---")
+        st.markdown(f"### 📄 Preview Invoice: `{p['no_inv']}`")
+        st.write(f"**Customer:** {p['penerima']} | **Total:** Rp {p['total']:,}")
         
-        pdf_bytes = buat_pdf_custom(d)
-        st.download_button("📥 DOWNLOAD PDF INVOICE SEKARANG", data=pdf_bytes, file_name=f"Invoice_{d['no_inv']}.pdf")
+        pdf_data = render_pdf(p)
+        st.download_button("📥 DOWNLOAD OFFICIAL PDF", data=pdf_data, file_name=f"3G_{p['penerima']}.pdf")
+        if st.button("❌ Close Preview"):
+            st.session_state.preview = None
+            st.rerun()
 
-with tab2:
-    st.markdown("### 📊 RIWAYAT TRANSAKSI TERAKHIR")
-    if st.button("🔄 REFRESH DATA DARI CLOUD"):
+with t2:
+    st.markdown("### 📊 Transaction History")
+    if st.button("🔄 REFRESH DATABASE"):
         try:
             res = requests.get(API_URL).json()
-            df = pd.DataFrame(res[1:], columns=res[0])
-            st.dataframe(df.iloc[::-1], use_container_width=True)
+            if len(res) > 1:
+                df = pd.DataFrame(res[1:], columns=res[0])
+                st.dataframe(df.iloc[::-1], use_container_width=True, height=500)
+            else:
+                st.info("No records found.")
         except:
-            st.error("GAGAL MENGAMBIL DATA.")
+            st.error("Connection failed.")
