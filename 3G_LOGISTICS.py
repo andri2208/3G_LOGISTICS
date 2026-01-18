@@ -55,8 +55,8 @@ with tab2:
     with st.form("invoice_form"):
         # Penentuan Tanggal Otomatis
         tgl_skrng = datetime.now()
-        [cite_start]tgl_format = tgl_skrng.strftime("%d/%m/%Y") # Untuk DATE [cite: 5]
-        [cite_start]tgl_load_format = tgl_skrng.strftime("%d-%b-%y") # Untuk Date of Load [cite: 5]
+        tgl_format = tgl_skrng.strftime("%d/%m/%Y") 
+        tgl_load_format = tgl_skrng.strftime("%d-%b-%y") 
         
         st.info(f"📅 DATE : {tgl_format}")
         
@@ -70,14 +70,13 @@ with tab2:
         with col2:
             kolli = st.text_input("KOLLI", placeholder="Contoh: 1")
             weight = st.text_input("WEIGHT", placeholder="Contoh: 290 Kg")
-            # Harga di sini langsung menjadi total bayar
             total_bayar = st.number_input("HARGA / TOTAL BAYAR (Rp)", min_value=0, value=0, step=1000)
             
         # Terbilang Otomatis dari Total Bayar
         teks_terbilang = f"{terbilang(total_bayar)} rupiah" if total_bayar > 0 else ""
         
         st.markdown("---")
-        st.markdown(f"**YANG HARUS DI BAYAR:**")
+        st.markdown("**YANG HARUS DI BAYAR:**")
         st.subheader(f"Rp {total_bayar:,.0f}")
         st.write(f"**Terbilang :** *{teks_terbilang.lower()}*")
 
