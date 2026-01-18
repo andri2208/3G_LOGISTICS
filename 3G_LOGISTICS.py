@@ -11,53 +11,53 @@ st.set_page_config(page_title="3G Logistics System", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS DARK MODE KONTRAS TINGGI ---
+# --- CSS SILVER GLOSSY & HIGH CONTRAST ---
 st.markdown("""
     <style>
-    /* Latar belakang utama aplikasi */
+    /* Latar Belakang Gelap Elegan */
     .stApp {
-        background-color: #0E1117;
+        background-color: #1a1a1a;
     }
     
-    /* Mempertebal label dan warna putih cerah agar kontras */
+    /* Label Teks Silver Glossy */
     .stWidgetLabel p {
         font-weight: 900 !important;
         font-size: 16px !important;
-        color: #00FF41 !important; /* Warna Hijau Matrix agar sangat kontras */
+        background: linear-gradient(to bottom, #ffffff 0%, #a6a6a6 50%, #ffffff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
     }
     
-    /* Box Input: Latar Hitam, Border Abu Terang */
+    /* Kolom Isian (Input) Putih Kristal agar Kontras */
     .stTextInput input, .stNumberInput input, .stDateInput input {
-        background-color: #161B22 !important;
-        color: white !important;
-        border: 2px solid #30363D !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 3px solid #c0c0c0 !important; /* Border Perak */
         border-radius: 8px !important;
-        padding: 10px !important;
+        font-weight: bold !important;
+        padding: 12px !important;
     }
 
-    /* Saat kolom diklik (Focus) */
+    /* Efek Glow saat kolom diklik */
     .stTextInput input:focus {
-        border-color: #00FF41 !important;
-        background-color: #0D1117 !important;
+        border-color: #ffffff !important;
+        box-shadow: 0 0 10px #ffffff !important;
     }
 
     /* Mempercantik Tab */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background-color: #0E1117;
+        background-color: #1a1a1a;
     }
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        background-color: #161B22;
-        border-radius: 5px 5px 0px 0px;
-        color: white;
+        color: #c0c0c0;
         font-weight: bold;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #00FF41 !important;
-        color: black !important;
+        color: #ffffff !important;
+        border-bottom: 4px solid #ffffff !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -115,8 +115,8 @@ with tab1:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; background-color: #161B22; padding: 10px; }}
-                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; }}
+                body {{ font-family: Arial, sans-serif; background-color: #1a1a1a; padding: 10px; }}
+                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 2px solid #c0c0c0; color: black; box-shadow: 0px 0px 20px rgba(255,255,255,0.1); }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
                 .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
@@ -125,7 +125,7 @@ with tab1:
                 .data-table th {{ background-color: #eee; }}
                 .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
                 .footer {{ width: 100%; margin-top: 20px; font-size: 11px; }}
-                .btn-download {{ width: 100%; background: #00FF41; color: black; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
+                .btn-download {{ width: 100%; background: linear-gradient(145deg, #ffffff, #a6a6a6); color: black; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; box-shadow: 0px 4px 10px rgba(0,0,0,0.5); }}
             </style>
         </head>
         <body>
@@ -193,7 +193,7 @@ with tab1:
         components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='color: white;'>➕ DATA ENTRY</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: white; text-align: center; border-bottom: 2px solid white; padding-bottom: 10px;'>➕ INPUT DATA BARU</h2>", unsafe_allow_html=True)
     with st.form("form_db", clear_on_submit=True):
         col1, col2 = st.columns(2)
         v_tgl = col1.date_input("TANGGAL PENGIRIMAN", datetime.now())
@@ -206,7 +206,7 @@ with tab2:
         v_hrg = col2.number_input("HARGA SATUAN", 0)
         
         st.markdown("---")
-        if st.form_submit_button("💾 SIMPAN DATA KE SISTEM"):
+        if st.form_submit_button("💾 SIMPAN KE DATABASE"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -216,7 +216,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"✅ Tersimpan! Total: Rp {total_db:,}")
+                st.success(f"✅ Data Tersimpan! Total: Rp {total_db:,}")
                 st.cache_data.clear()
             except:
                 st.error("❌ Koneksi Gagal.")
