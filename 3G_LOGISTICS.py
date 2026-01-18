@@ -6,7 +6,7 @@ import requests
 st.set_page_config(layout="wide")
 
 # Masukkan URL dari Google Apps Script Anda di sini
-API_URL = "URL_APPS_SCRIPT_ANDA"
+API_URL = "https://script.google.com/macros/s/AKfycbwchICNuVh5xlgMYlEtqeVxZypUYlg0nNe03tRwVhu5DmN6YR02-6Wsuagi2tUiZ_HF/exec"
 
 def get_data():
     response = requests.get(API_URL)
@@ -81,3 +81,4 @@ try:
 
 except Exception as e:
     st.error(f"Gagal memuat data: {e}")
+
