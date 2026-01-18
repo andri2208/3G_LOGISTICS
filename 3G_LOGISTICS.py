@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN
+# 2. CSS UNTUK TAMPILAN WEB (Agar nyaman di intip sebelum download)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -18,6 +18,10 @@ st.markdown("""
     }
     .stTabs {
         margin-top: -15px;
+    }
+    /* Memastikan pratinjau invoice di web tidak meluber ke samping di HP */
+    [data-testid="stMarkdownContainer"] > div > div {
+        overflow-x: auto;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -30,7 +34,7 @@ def login():
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
         if st.form_submit_button("Masuk"):
-            if user == "admin" and pw == "2026":
+            if user == "admin3g" and pw == "gama2024":
                 st.session_state['logged_in'] = True
                 st.rerun()
             else:
@@ -86,56 +90,103 @@ else:
             total_harga = int(row['total'])
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
-# HTML INVOICE YANG SUDAH DIPERBAIKI (ANTI POTONG)
-            html_content = f"""<div id="invoice-box" style="background-color:white;padding:30px;border:1px solid black;color:black;font-family:Arial, sans-serif;width:750px;margin:auto;box-sizing:border-box;">
-<center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
-<div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size: 22px;">INVOICE</div>
-<table style="width:100%; font-weight:bold; font-size:14px; margin-bottom:10px;">
-    <tr><td>CUSTOMER : {row['customer']}</td><td style="text-align:right;">DATE : {tgl}</td></tr>
-</table>
-<table style="width:100%;border-collapse:collapse;border:2px solid black;font-size: 12px;text-align:center;">
-<tr style="background-color:#316395;color:white;"><th style="border:1px solid black;padding:10px;">Date of Load</th><th style="border:1px solid black;">Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th></tr>
-<tr><td style="border:1px solid black;padding:15px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td></tr>
-<tr style="font-weight:bold;background-color:#f2f2f2;"><td colspan="6" style="border:1px solid black;text-align:center;padding:10px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td></tr></table>
-<div style="border:2px solid black;border-top:none;padding:10px;font-size: 13px;font-style:italic;"><b>Terbilang :</b> {teks_terbilang}</div>
-<br>
-<table style="width:100%; font-size:12px;">
-<tr>
-<td style="width:60%; vertical-align:top;">
-<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke<br>Finance 082179799200<br></b>
-</td>
-<td style="width:40%; text-align:center; vertical-align:top;">
-Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:150px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-</td>
-</tr>
-</table>
-</div>"""
 
+            # --- DESAIN INVOICE ANTI POTONG ---
+            html_content = f"""
+<div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #ccc; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
+    <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
+    
+    <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:5px; font-weight:bold; font-size: 24px;">INVOICE</div>
+    
+    <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px;">
+        <tr>
+            <td style="width:50%;">CUSTOMER : {row['customer']}</td>
+            <td style="width:50%; text-align:right;">DATE : {tgl}</td>
+        </tr>
+    </table>
+
+    <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size: 13px; text-align:center;">
+        <tr style="background-color:#316395; color:white;">
+            <th style="border:1px solid black; padding:12px;">Date of Load</th>
+            <th style="border:1px solid black;">Description</th>
+            <th style="border:1px solid black;">Origin</th>
+            <th style="border:1px solid black;">Dest</th>
+            <th style="border:1px solid black;">KOLLI</th>
+            <th style="border:1px solid black;">HARGA</th>
+            <th style="border:1px solid black;">WEIGHT</th>
+        </tr>
+        <tr>
+            <td style="border:1px solid black; padding:20px;">{tgl}</td>
+            <td style="border:1px solid black;">{row['description']}</td>
+            <td style="border:1px solid black;">{row['origin']}</td>
+            <td style="border:1px solid black;">{row['destination']}</td>
+            <td style="border:1px solid black;">{row['kolli']}</td>
+            <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
+            <td style="border:1px solid black;">{row['weight']} Kg</td>
+        </tr>
+        <tr style="font-weight:bold; background-color:#f2f2f2;">
+            <td colspan="6" style="border:1px solid black; text-align:center; padding:12px;">YANG HARUS DI BAYAR</td>
+            <td style="border:1px solid black;">Rp {total_harga:,}</td>
+        </tr>
+    </table>
+
+    <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic; background-color:#fdfdfd;">
+        <b>Terbilang :</b> {teks_terbilang}
+    </div>
+
+    <br><br>
+
+    <table style="width:100%; font-size:13px; line-height:1.6;">
+        <tr>
+            <td style="width:60%; vertical-align:top;">
+                <div style="padding-top:10px;">
+                    <b style="font-size:14px;">TRANSFER TO :</b><br>
+                    Bank Central Asia (BCA)<br>
+                    <span style="font-size:16px; font-weight:bold;">6720422334</span><br>
+                    A/N ADITYA GAMA SAPUTRI<br>
+                    Finance: 082179799200<br>
+                    <i style="color:#d32f2f;">NB : Jika sudah transfer mohon konfirmasi ke Finance</i>
+                </div>
+            </td>
+            <td style="width:40%; text-align:center; vertical-align:top;">
+                Sincerely,<br>
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;">
+                <br>
+                <b><u>KELVINITO JAYADI</u></b><br>
+                DIREKTUR
+            </td>
+        </tr>
+    </table>
+</div>
+"""
+            # Tampilkan Preview di Web
             st.markdown(html_content, unsafe_allow_html=True)
-            st.write("")
             
-            # Script Download yang Dioptimalkan
+            st.write("---")
+
+            # 4. SCRIPT DOWNLOAD (OPTIMAL)
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<button onclick="doDownload()" style="background-color:#4CAF50;color:white;padding:15px;border:none;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;font-size:18px;">📥 DOWNLOAD INVOICE (PDF)</button>
+<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">📥 SIMPAN SEBAGAI PDF (A4)</button>
 <script>
-function doDownload() {{
+function generatePDF() {{
   const element = window.parent.document.getElementById('invoice-box');
   const opt = {{
-    margin: 0.3,
+    margin: [0.3, 0.3, 0.3, 0.3],
     filename: '{nama_file}',
     image: {{ type: 'jpeg', quality: 0.98 }},
     html2canvas: {{ 
         scale: 2, 
-        useCORS: true,
-        width: 780
+        useCORS: true, 
+        logging: false,
+        width: 800
     }},
     jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
   }};
   html2pdf().set(opt).from(element).save();
 }}
 </script>""", height=100)
-            
+
     with tab2:
         st.subheader("➕ Input Data Pengiriman")
         with st.form("form_entry", clear_on_submit=True):
@@ -149,8 +200,7 @@ function doDownload() {{
             f_kg = c2.number_input("Weight (Kg)", 1)
             f_hrg = c2.number_input("Harga Satuan", 0)
             
-            if st.form_submit_button("🚀 SIMPAN KE DATABASE"):
-                # PERBAIKAN DI SINI: Menggunakan kurung tunggal { }
+            if st.form_submit_button("🚀 SIMPAN DATA"):
                 payload = {
                     "date": str(f_tgl),
                     "customer": f_cust.upper(),
@@ -164,10 +214,7 @@ function doDownload() {{
                 }
                 try:
                     requests.post(API_URL, data=json.dumps(payload))
-                    st.success("Berhasil Disimpan!")
+                    st.success("Berhasil Disimpan! Cek tab Cetak Invoice.")
                     st.cache_data.clear()
                 except:
                     st.error("Gagal simpan.")
-
-
-
