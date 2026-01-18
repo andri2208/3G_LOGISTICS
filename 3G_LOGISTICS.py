@@ -19,24 +19,26 @@ def generate_invoice_number():
     now = datetime.now()
     return f"INV/{now.strftime('%Y%m%d')}/{now.strftime('%H%M%S')}"
 
-# --- 2. FUNGSI TERBILANG ---
+# --- 2. FUNGSI TERBILANG SEMPURNA ---
 def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
-    if n < 12: return bilangan[int(n)]
-    elif n < 20: return terbilang(n - 10) + " Belas"
-    elif n < 100: return terbilang(n // 10) + " Puluh " + terbilang(n % 10)
-    elif n < 200: return "Seratus " + terbilang(n - 100)
-    elif n < 1000: return terbilang(n // 100) + " Ratus " + terbilang(n % 100)
-    elif n < 2000: return "Seribu " + terbilang(n - 1000)
-    elif n < 1000000: return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
-    elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
-    return ""
+    hasil = ""
+    n = int(n)
+    if n == 0: return "Rupiah"
+    if n < 12: hasil = bilangan[n]
+    elif n < 20: hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
+    elif n < 100: hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
+    elif n < 200: hasil = "Seratus " + terbilang(n - 100).replace(" Rupiah", "")
+    elif n < 1000: hasil = terbilang(n // 100).replace(" Rupiah", "") + " Ratus " + terbilang(n % 100).replace(" Rupiah", "")
+    elif n < 2000: hasil = "Seribu " + terbilang(n - 1000).replace(" Rupiah", "")
+    elif n < 1000000: hasil = terbilang(n // 1000).replace(" Rupiah", "") + " Ribu " + terbilang(n % 1000).replace(" Rupiah", "")
+    elif n < 1000000000: hasil = terbilang(n // 1000000).replace(" Rupiah", "") + " Juta " + terbilang(n % 1000000).replace(" Rupiah", "")
+    return hasil.strip() + " Rupiah"
 
 # --- 3. FUNGSI PDF ---
 def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
-    
     if os.path.exists("HEADER INVOICE.png"):
         pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
         pdf.ln(35)
@@ -53,6 +55,7 @@ def buat_pdf_custom(data):
     pdf.cell(90, 6, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
     pdf.ln(5)
     
+    # Tabel
     pdf.set_font("Arial", 'B', 8)
     pdf.set_fill_color(230, 230, 230)
     pdf.cell(25, 10, "Date of Load", 1, 0, 'C', True)
@@ -77,8 +80,9 @@ def buat_pdf_custom(data):
     pdf.cell(140, 10, "YANG HARUS DI BAYAR", 0, 0, 'R')
     pdf.cell(50, 10, f"Rp {data['total']:,}", 1, 1, 'C', True)
     pdf.set_font("Arial", 'I', 9)
-    pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])} Rupiah")
+    pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])}")
 
+    # Info Transfer
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "TRANSFER TO :", ln=True)
@@ -87,54 +91,54 @@ def buat_pdf_custom(data):
     pdf.set_font("Arial", 'I', 8)
     pdf.cell(190, 5, "NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200", ln=True)
     
+    # Tanda Tangan
     pdf.ln(10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
-    
     y_ttd = pdf.get_y()
     if os.path.exists("STEMPEL TANDA TANGAN.png"):
         pdf.image("STEMPEL TANDA TANGAN.png", x=145, y=y_ttd, w=35)
-        pdf.ln(20)
-    else:
-        pdf.ln(20)
-        
+    pdf.ln(20)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
+    pdf.set_font("Arial", size=9)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 4. LOGIKA TAMPILAN ---
+# --- 4. ANTARMUKA WEB ---
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-# MEMBUAT TAB
 tab1, tab2 = st.tabs(["📝 Buat Invoice", "📊 Riwayat Invoice"])
 
-# --- TAB 1: BUAT INVOICE ---
+# --- TAB 1: INPUT DATA ---
 with tab1:
-    st.subheader("Input Data Pengiriman")
-    
     if 'preview_data' not in st.session_state:
         st.session_state.preview_data = None
 
-    def reset_form():
-        st.session_state.preview_data = None
-
     with st.form("main_form", clear_on_submit=True):
-        cust = st.text_input("Nama Customer")
-        prod = st.text_input("Deskripsi Barang")
+        st.subheader("Form Pengiriman")
+        cust = st.text_input("Nama Customer (Wajib)")
+        prod = st.text_input("Deskripsi Barang (Wajib)")
         c1, c2, c3, c4 = st.columns(4)
         with c1: ori = st.text_input("Origin")
         with c2: dest = st.text_input("Destination")
-        with c3: hrg = st.number_input("Harga", value=8500)
-        with c4: wgt = st.number_input("Berat (Kg)", value=1.0)
+        with c3: hrg = st.number_input("Harga", min_value=0, value=8500)
+        with c4: wgt = st.number_input("Berat (Kg)", min_value=0.0, value=1.0, step=0.1)
         
-        if st.form_submit_button("Proses & Preview"):
-            if not cust:
-                st.error("Nama Customer harus diisi!")
+        btn_proses = st.form_submit_button("Proses & Simpan")
+
+        if btn_proses:
+            # --- VALIDASI INPUT ---
+            if not cust.strip():
+                st.error("❌ Nama Customer tidak boleh kosong!")
+            elif not prod.strip():
+                st.error("❌ Deskripsi Barang tidak boleh kosong!")
+            elif hrg <= 0 or wgt <= 0:
+                st.error("❌ Harga dan Berat harus lebih dari 0!")
             else:
                 inv_no = generate_invoice_number()
                 st.session_state.preview_data = {
@@ -150,23 +154,23 @@ with tab1:
                 }
                 try:
                     requests.post(API_URL, json=st.session_state.preview_data)
-                    st.success("Data berhasil terkirim ke Google Sheets!")
+                    st.success(f"✅ Berhasil! Data {inv_no} tersimpan.")
+                    st.balloons()
                 except:
-                    st.error("Gagal mengirim data ke Google Sheets.")
+                    st.error("❌ Gagal terhubung ke database Google Sheets.")
 
     if st.session_state.preview_data:
         d = st.session_state.preview_data
         st.divider()
-        c_head, c_res = st.columns([0.8, 0.2])
-        with c_head:
-            st.subheader(f"🔍 Preview: {d['no_inv']}")
-        with c_res:
-            st.button("🗑️ Reset", on_click=reset_form)
+        col1, col2 = st.columns([0.8, 0.2])
+        col1.subheader(f"🔍 Preview: {d['no_inv']}")
+        if col2.button("🗑️ Reset Tampilan"):
+            st.session_state.preview_data = None
+            st.rerun()
         
         with st.container(border=True):
-            st.write(f"**Customer:** {d['penerima']} | **Tanggal:** {d['waktu_tgl']}")
             st.table(pd.DataFrame([d]))
-            st.write(f"### Total Bayar: Rp {d['total']:,}")
+            st.write(f"**Terbilang:** {terbilang(d['total'])}")
 
         pdf_bytes = buat_pdf_custom(d)
         st.download_button(
@@ -176,21 +180,17 @@ with tab1:
             mime="application/pdf"
         )
 
-# --- TAB 2: RIWAYAT INVOICE ---
+# --- TAB 2: RIWAYAT ---
 with tab2:
-    st.subheader("Database Invoice Terakhir")
-    if st.button("🔄 Refresh Data"):
+    st.subheader("Data Google Sheets")
+    if st.button("🔄 Refresh Data Riwayat"):
         try:
-            response = requests.get(API_URL)
-            all_data = response.json()
-            if len(all_data) > 1:
-                # Kolom sesuai urutan di Google Sheets (no_inv, waktu_tgl, dst)
-                df_history = pd.DataFrame(all_data[1:], columns=all_data[0])
-                st.dataframe(df_history.iloc[::-1], use_container_width=True) # Urutan terbaru di atas
-                st.caption(f"Menampilkan total {len(df_history)} transaksi.")
+            res = requests.get(API_URL)
+            all_rows = res.json()
+            if len(all_rows) > 1:
+                df = pd.DataFrame(all_rows[1:], columns=all_rows[0])
+                st.dataframe(df.iloc[::-1], use_container_width=True)
             else:
-                st.info("Belum ada data transaksi.")
-        except Exception as e:
-            st.error("Gagal mengambil data dari Google Sheets. Pastikan URL API benar.")
-    else:
-        st.info("Klik tombol 'Refresh Data' untuk memuat riwayat transaksi dari Google Sheets.")
+                st.info("Belum ada data.")
+        except:
+            st.error("Gagal mengambil data.")
