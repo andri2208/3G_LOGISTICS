@@ -10,14 +10,14 @@ from reportlab.lib.utils import ImageReader
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics - Invoice System", page_icon="FAVICON.png", layout="wide")
 
-# CSS PROTEKSI & TAMPILAN
+# CSS PROTEKSI
 st.markdown("<style>img { pointer-events: none; } #MainMenu {visibility: hidden;} footer {visibility: hidden;}</style>", unsafe_allow_html=True)
 
 def format_terbilang(angka):
     if angka == 0: return "-"
     return num2words(int(angka), lang='id').title() + " Rupiah"
 
-# 2. FUNGSI GENERATE PDF DENGAN HEADER DI PALING ATAS
+# 2. FUNGSI GENERATE PDF
 def generate_pdf(d):
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
@@ -25,24 +25,24 @@ def generate_pdf(d):
     
     # --- POSISI HEADER (PALING ATAS) ---
     try:
-        # Menempatkan Header di Y=750 (Area paling atas A4)
         header_img = ImageReader("HEADER INVOICE.png")
+        # Menempatkan Header di koordinat Y tertinggi
         c.drawImage(header_img, 40, height - 95, width=520, preserveAspectRatio=True, mask='auto')
-    except Exception as e:
-        # Jika gambar gagal muat, tampilkan teks sebagai backup
+    except:
+        # Teks Backup jika Gambar Tidak Ditemukan
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(50, height - 50, "PT. [cite_start]GAMA GEMAH GEMILANG [cite: 1, 18, 64]")
+        c.drawString(50, height - 50, "PT. GAMA GEMAH GEMILANG")
         c.setFont("Helvetica", 8)
-        [cite_start]c.drawString(50, height - 62, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik [cite: 2, 19]")
+        c.drawString(50, height - 62, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik")
 
     # --- JUDUL & INFO ---
     c.setFont("Helvetica-Bold", 14)
-    [cite_start]c.drawCentredString(width/2, height - 120, "INVOICE [cite: 4, 21, 55]")
+    c.drawCentredString(width/2, height - 120, "INVOICE")
     
     c.setFont("Helvetica", 9)
-    [cite_start]c.drawString(50, height - 145, f"CUSTOMER: {d['cust']} [cite: 3, 20, 52]")
-    [cite_start]c.drawString(440, height - 145, f"DATE: {d['date']} [cite: 13, 22, 56]")
-    [cite_start]c.drawString(50, height - 158, f"NO. INVOICE: {d['inv']} [cite: 53]")
+    c.drawString(50, height - 145, f"CUSTOMER: {d['cust']}")
+    c.drawString(440, height - 145, f"DATE: {d['date']}")
+    c.drawString(50, height - 158, f"NO. INVOICE: {d['inv']}")
 
     # --- TABEL DATA ---
     t_top = height - 175
@@ -50,7 +50,6 @@ def generate_pdf(d):
     c.line(50, t_top, 550, t_top)
     
     c.setFont("Helvetica-Bold", 8)
-    # [cite_start]Header kolom sesuai referensi: Date, Description, Origin, Dest, Kolli, Harga, Weight, Total [cite: 5, 23, 54]
     headers = ["Date of Load", "Description", "Origin", "Dest", "Kolli", "Harga/Kg", "Weight", "Total"]
     x_pos = [52, 115, 245, 295, 340, 390, 455, 505]
     for i, h in enumerate(headers):
@@ -58,7 +57,7 @@ def generate_pdf(d):
     
     c.line(50, t_top - 20, 550, t_top - 20)
 
-    # Isi Baris
+    # Isi Tabel
     c.setFont("Helvetica", 8)
     row_y = t_top - 34
     c.drawString(52, row_y, d['load'])
@@ -74,29 +73,30 @@ def generate_pdf(d):
 
     # --- SUMMARY & FOOTER ---
     c.setFont("Helvetica-Bold", 9)
-    [cite_start]c.drawString(340, row_y - 25, "YANG HARUS DI BAYAR [cite: 26, 54]")
-    [cite_start]c.drawRightString(545, row_y - 25, f"Rp {d['total']:,.0f} [cite: 25, 54]")
+    c.drawString(340, row_y - 25, "YANG HARUS DI BAYAR")
+    c.drawRightString(545, row_y - 25, f"Rp {d['total']:,.0f}")
     
     c.setFont("Helvetica-Oblique", 8)
-    [cite_start]c.drawString(50, row_y - 45, f"Terbilang: {d['said']} [cite: 6, 28, 57]")
+    c.drawString(50, row_y - 45, f"Terbilang: {d['said']}")
 
     # Info Bank & Finance
     f_y = row_y - 95
     c.setFont("Helvetica-Bold", 9)
-    [cite_start]c.drawString(50, f_y, "TRANSFER TO : [cite: 7, 29, 58]")
+    c.drawString(50, f_y, "TRANSFER TO :")
     c.setFont("Helvetica", 9)
-    [cite_start]c.drawString(50, f_y - 15, "Bank Central Asia (BCA) - 6720422334 [cite: 8, 9, 30, 31, 59]")
-    [cite_start]c.drawString(50, f_y - 28, "A/N ADITYA GAMA SAPUTRI [cite: 10, 32, 60]")
+    c.drawString(50, f_y - 15, "Bank Central Asia (BCA) - 6720422334")
+    c.drawString(50, f_y - 28, "A/N ADITYA GAMA SAPUTRI")
     c.setFont("Helvetica-Oblique", 8)
-    [cite_start]c.drawString(50, f_y - 45, f"NB: Jika sudah transfer mohon konfirmasi ke Finance {d['fin_no']} [cite: 12, 33, 61]")
+    c.drawString(50, f_y - 45, f"NB: Jika sudah transfer mohon konfirmasi ke Finance {d['fin_no']}")
 
     # Tanda Tangan
-    [cite_start]c.drawString(400, f_y, f"Surabaya, {d['date']} [cite: 62]")
-    [cite_start]c.drawString(400, f_y - 15, "Sincerely, [cite: 14, 34, 63]")
-    [cite_start]c.drawString(400, f_y - 28, "PT. GAMA GEMAH GEMILANG [cite: 15, 64]")
+    c.setFont("Helvetica", 9)
+    c.drawString(400, f_y, f"Surabaya, {d['date']}")
+    c.drawString(400, f_y - 15, "Sincerely,")
+    c.drawString(400, f_y - 28, "PT. GAMA GEMAH GEMILANG")
     c.setFont("Helvetica-Bold", 9)
-    [cite_start]c.drawString(400, f_y - 85, "KELVINITO JAYADI [cite: 16, 36, 65]")
-    [cite_start]c.drawString(400, f_y - 97, "DIREKTUR [cite: 17, 37, 66]")
+    c.drawString(400, f_y - 85, "KELVINITO JAYADI")
+    c.drawString(400, f_y - 97, "DIREKTUR")
     
     c.save()
     buf.seek(0)
@@ -110,7 +110,7 @@ auto_no = f"INV/{datetime.now().strftime('%Y%m%d')}/{str(st.session_state.inv_co
 tab_in, tab_prev = st.tabs(["📝 Input Data", "👁️ Preview & Download"])
 
 with tab_in:
-    with st.form("form_final"):
+    with st.form("form_final_clean"):
         c1, c2 = st.columns(2)
         cust = c1.text_input("Customer")
         tgl_inv = c1.date_input("Tanggal Invoice", datetime.now())
@@ -128,24 +128,29 @@ with tab_in:
         price = c4.number_input("Harga Satuan (Rp)", min_value=0)
         
         total = int(weight * price)
-        if st.form_submit_button("Kunci Data & Siapkan PDF"):
-            st.session_state.data = {
-                "cust": cust, "inv": no_inv, "date": tgl_inv.strftime("%d/%m/%Y"),
-                "load": tgl_load.strftime("%d-%b-%y"), "prod": p_desc, "ori": origin,
-                "dest": dest, "kolli": kolli, "weight": weight, "price": price,
-                "total": total, "said": format_terbilang(total), "fin_no": fin_no
-            }
-            st.success("Data Tersimpan!")
+        
+        if st.form_submit_button("Simpan Data & Siapkan PDF"):
+            if not cust:
+                st.error("Nama Customer harus diisi!")
+            else:
+                st.session_state.data = {
+                    "cust": cust, "inv": no_inv, "date": tgl_inv.strftime("%d/%m/%Y"),
+                    "load": tgl_load.strftime("%d-%b-%y"), "prod": p_desc, "ori": origin,
+                    "dest": dest, "kolli": kolli, "weight": weight, "price": price,
+                    "total": total, "said": format_terbilang(total), "fin_no": fin_no
+                }
+                st.success("Data Tersimpan! Silakan ke Tab Preview.")
 
 with tab_prev:
     if 'data' in st.session_state:
         d = st.session_state.data
+        st.write(f"Draf untuk: **{d['cust']}**")
         st.download_button(
-            label="📥 Download PDF Invoice (Cek Header Di Sini)",
+            label="📥 Download PDF Invoice",
             data=generate_pdf(d),
             file_name=f"Invoice_{d['cust']}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
     else:
-        st.info("Isi data terlebih dahulu.")
+        st.info("Isi data terlebih dahulu di tab 'Input Data'.")
