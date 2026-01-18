@@ -113,7 +113,7 @@ def buat_pdf_custom(data):
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-st.title("INVOICE 3G LOGISTICS")
+st.title("INVOICE")
 
 if 'preview_data' not in st.session_state:
     st.session_state.preview_data = None
@@ -163,5 +163,6 @@ if st.session_state.preview_data:
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
     )
+
 
 
