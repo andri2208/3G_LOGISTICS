@@ -22,15 +22,33 @@ def generate_invoice_number():
 # --- 2. FUNGSI TERBILANG ---
 def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
-    if n < 12: return bilangan[int(n)]
-    elif n < 20: return terbilang(n - 10) + " Belas"
-    elif n < 100: return terbilang(n // 10) + " Puluh " + terbilang(n % 10)
-    elif n < 200: return "Seratus " + terbilang(n - 100)
-    elif n < 1000: return terbilang(n // 100) + " Ratus " + terbilang(n % 100)
-    elif n < 2000: return "Seribu " + terbilang(n - 1000)
-    elif n < 1000000: return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
-    elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
-    return ""
+    hasil = ""
+    n = int(n)
+    
+    if n == 0:
+        return "Nol Rupiah"
+    
+    if n < 12:
+        hasil = bilangan[n]
+    elif n < 20:
+        hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
+    elif n < 100:
+        hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
+    elif n < 200:
+        hasil = "Seratus " + terbilang(n - 100).replace(" Rupiah", "")
+    elif n < 1000:
+        hasil = terbilang(n // 100).replace(" Rupiah", "") + " Ratus " + terbilang(n % 100).replace(" Rupiah", "")
+    elif n < 2000:
+        hasil = "Seribu " + terbilang(n - 1000).replace(" Rupiah", "")
+    elif n < 1000000:
+        hasil = terbilang(n // 1000).replace(" Rupiah", "") + " Ribu " + terbilang(n % 1000).replace(" Rupiah", "")
+    elif n < 1000000000:
+        hasil = terbilang(n // 1000000).replace(" Rupiah", "") + " Juta " + terbilang(n % 1000000).replace(" Rupiah", "")
+    elif n < 1000000000000:
+        hasil = terbilang(n // 1000000000).replace(" Rupiah", "") + " Miliar " + terbilang(n % 1000000000).replace(" Rupiah", "")
+    
+    # Menghapus spasi berlebih dan menambahkan Rupiah hanya di akhir
+    return hasil.strip() + " Rupiah"
 
 # --- 3. FUNGSI PDF ---
 def buat_pdf_custom(data):
@@ -194,3 +212,4 @@ with tab2:
             st.error("Gagal mengambil data dari Google Sheets. Pastikan URL API benar.")
     else:
         st.info("Klik tombol 'Refresh Data' untuk memuat riwayat transaksi dari Google Sheets.")
+
