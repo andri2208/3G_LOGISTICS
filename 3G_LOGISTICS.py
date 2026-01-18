@@ -24,7 +24,7 @@ def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
     hasil = ""
     n = int(n)
-    if n == 0: return "Nol Rupiah"
+    if n == 0: return "Rupiah"
     if n < 12: hasil = bilangan[n]
     elif n < 20: hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
     elif n < 100: hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
@@ -190,3 +190,4 @@ with tab2:
                 st.info("Belum ada data.")
         except:
             st.error("Gagal mengambil data dari Google Sheets.")
+
