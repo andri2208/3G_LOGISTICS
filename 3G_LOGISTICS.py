@@ -23,25 +23,21 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- 3. FUNGSI PDF DENGAN HEADER GAMBAR ---
+# --- 3. FUNGSI PDF DENGAN HEADER & TANDA TANGAN ---
 def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
     
-    # HEADER GAMBAR (Jika file HEADER INVOICE.png ada di folder yang sama)
+    # --- HEADER GAMBAR ---
     if os.path.exists("HEADER INVOICE.png"):
-        # Menyisipkan gambar header (x, y, lebar)
         pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
-        pdf.ln(35) # Jarak setelah gambar agar teks tidak tumpang tindih
+        pdf.ln(35)
     else:
-        # Jika gambar tidak ada, pakai teks biasa (cadangan)
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(190, 7, "PT. GAMA GEMAH GEMILANG", ln=True)
-        pdf.set_font("Arial", size=8)
-        pdf.multi_cell(130, 4, "Ruko Paragon Plaza Blok D-6 Jalan Ngasinan, Kepatihan, Menganti, Gresik, Jawa Timur.")
-        pdf.ln(5)
+        pdf.ln(10)
     
-    # Detail Customer & Judul
+    # Detail Customer
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(100, 6, f"CUSTOMER: {data['penerima'].upper()}", 0)
     pdf.cell(90, 6, "INVOICE", 0, 1, 'R')
@@ -53,7 +49,6 @@ def buat_pdf_custom(data):
     # Tabel Header
     pdf.set_font("Arial", 'B', 8)
     pdf.set_fill_color(230, 230, 230)
-    # Sesuaikan lebar kolom agar total 190
     pdf.cell(25, 10, "Date of Load", 1, 0, 'C', True)
     pdf.cell(50, 10, "Product Description", 1, 0, 'C', True)
     pdf.cell(20, 10, "Origin", 1, 0, 'C', True)
@@ -72,30 +67,35 @@ def buat_pdf_custom(data):
     pdf.cell(20, 10, f"{data['berat']} Kg", 1, 0, 'C')
     pdf.cell(30, 10, f"Rp {data['total']:,}", 1, 1, 'C')
     
-    # Total Bayar
+    # Total & Terbilang
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(140, 10, "YANG HARUS DI BAYAR", 0, 0, 'R')
     pdf.cell(50, 10, f"Rp {data['total']:,}", 1, 1, 'C', True)
-    
-    # Terbilang
     pdf.set_font("Arial", 'I', 9)
     pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])} Rupiah")
 
-    # Rekening & Bank
+    # Info Bank
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "TRANSFER TO :", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.cell(190, 5, "Bank Central Asia (BCA) - 6720422334 - A/N ADITYA GAMA SAPUTRI", ln=True)
-    pdf.set_font("Arial", 'I', 8)
-    pdf.cell(190, 5, "NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200", ln=True)
     
-    # Tanda Tangan
+    # --- BAGIAN TANDA TANGAN DENGAN GAMBAR ---
     pdf.ln(10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
-    pdf.ln(15)
+    
+    # Posisi Gambar Tanda Tangan
+    y_ttd = pdf.get_y()
+    if os.path.exists("TANDA_TANGAN.png"):
+        # Menyisipkan gambar TTD (x, y, lebar)
+        pdf.image("TANDA_TANGAN.png", x=145, y=y_ttd, w=35)
+        pdf.ln(20) # Ruang untuk gambar
+    else:
+        pdf.ln(20) # Ruang kosong jika gambar tidak ada
+        
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
@@ -105,68 +105,49 @@ def buat_pdf_custom(data):
 
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 4. TAMPILAN APLIKASI ---
-
-# Tampilkan Header di Halaman Web
+# --- 4. ANTARMUKA WEB ---
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-st.title("PT. GAMA GEMAH GEMILANG")
-st.write("Sistem Input Data & Cetak Invoice Otomatis")
+st.title("Sistem Cetak Invoice 3G LOGISTICS")
 
 if 'preview_data' not in st.session_state:
     st.session_state.preview_data = None
 
-# FORM INPUT
-with st.container(border=True):
-    with st.form("invoice_form_3g"):
-        cust_name = st.text_input("Nama Customer")
-        prod_desc = st.text_input("Deskripsi Barang")
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: origin = st.text_input("Origin (Asal)")
-        with c2: destination = st.text_input("Destination (Tujuan)")
-        with c3: price = st.number_input("Harga Per Kg", value=8500)
-        with c4: weight = st.number_input("Berat (Kg)", value=1)
-        
-        btn_submit = st.form_submit_button("Simpan & Lihat Preview")
+with st.form("main_form"):
+    cust = st.text_input("Nama Customer")
+    prod = st.text_input("Deskripsi Barang")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: ori = st.text_input("Origin")
+    with c2: dest = st.text_input("Destination")
+    with c3: hrg = st.number_input("Harga", value=8500)
+    with c4: wgt = st.number_input("Berat (Kg)", value=1)
+    
+    if st.form_submit_button("Proses & Preview"):
+        st.session_state.preview_data = {
+            "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
+            "penerima": cust,
+            "deskripsi": prod,
+            "asal": ori,
+            "tujuan": dest,
+            "harga": hrg,
+            "berat": wgt,
+            "total": int(hrg * wgt)
+        }
+        try:
+            requests.post(API_URL, json=st.session_state.preview_data)
+        except:
+            pass
 
-        if btn_submit:
-            if not cust_name or not prod_desc:
-                st.warning("Mohon lengkapi Nama Customer dan Deskripsi!")
-            else:
-                st.session_state.preview_data = {
-                    "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
-                    "penerima": cust_name,
-                    "deskripsi": prod_desc,
-                    "asal": origin,
-                    "tujuan": destination,
-                    "harga": price,
-                    "berat": weight,
-                    "total": int(price * weight)
-                }
-                # Kirim data ke Google Sheets
-                try:
-                    requests.post(API_URL, json=st.session_state.preview_data)
-                    st.success("Data berhasil tersimpan di Google Sheets!")
-                except:
-                    st.error("Gagal mengirim data ke Google Sheets.")
-
-# --- 5. PREVIEW & DOWNLOAD ---
-if st.session_state.preview_data is not None:
+if st.session_state.preview_data:
     d = st.session_state.preview_data
     st.divider()
-    st.subheader("🔍 Preview Sebelum Cetak")
+    st.subheader("🔍 Preview")
+    st.write(f"**Customer:** {d['penerima']} | **Total:** Rp {d['total']:,}")
     
-    with st.container(border=True):
-        st.write(f"**Customer:** {d['penerima']} | **Tanggal:** {d['waktu_tgl']}")
-        st.table(pd.DataFrame([d]))
-        st.write(f"### Total Bayar: Rp {d['total']:,}")
-        st.write(f"*Terbilang: {terbilang(d['total'])} Rupiah*")
-
-    # Proses PDF
     pdf_bytes = buat_pdf_custom(d)
     st.download_button(
-        label="📥 Download Invoice PDF (Header Gambar)",
+        label="📥 Download Invoice PDF (Header & TTD)",
         data=pdf_bytes,
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
