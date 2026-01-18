@@ -30,7 +30,7 @@ st.markdown(f"""
        
     /* Input & Button Styling */
     .stTextInput > div > div > input {{
-        text-align: center; border-radius: 10px !important; height: 10px !important;
+        text-align: center; border-radius: 10px !important; height: 15px !important;
     }}
     .stButton > button {{
         background: linear-gradient(90deg, #FF0000 0%, #CC0000 100%) !important;
@@ -192,6 +192,7 @@ with tab2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.info("Klik tombol refresh untuk menarik data.")
+
 
 
 
