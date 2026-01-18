@@ -1,17 +1,16 @@
 import streamlit as st
-import requests
-import pandas as pd
-from datetime import datetime
 import os
 import base64
-from fpdf import FPDF
 
-# --- 1. KONFIGURASI ---
-PASSWORD_AKSES = "2026"
-API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
+# --- 1. KONFIGURASI HALAMAN ---
+st.set_page_config(
+    page_title="3G LOGISTICS - LOGIN",
+    page_icon="🚚",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.set_page_config(page_title="3G LOGISTICS", page_icon="🚚", layout="wide")
-
+# --- 2. FUNGSI ENCODE GAMBAR ---
 def get_base64_img(img_path):
     if os.path.exists(img_path):
         with open(img_path, "rb") as f:
@@ -19,170 +18,155 @@ def get_base64_img(img_path):
         return base64.b64encode(data).decode()
     return None
 
-# --- 2. CSS CUSTOM (MINIMALIS & RESPONSIVE) ---
+# --- 3. CSS LUXURY RESPONSIVE (TANPA KOTAK KOSONG) ---
+logo_b64 = get_base64_img("FAVICON.png")
+
 st.markdown(f"""
     <style>
+    /* Background Utama */
     .stApp {{
-        background: linear-gradient(145deg, #4b0000 0%, #000000 100%);
+        background: linear-gradient(135deg, #4b0000 0%, #000000 100%);
+        background-attachment: fixed;
     }}
-    .login-wrapper {{
-        display: flex; justify-content: center; align-items: center; min-height: 80vh;
+
+    /* Container Utama untuk Responsivitas */
+    .main-login-container {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 90vh;
+        padding: 20px;
     }}
+
+    /* Card Login Elegan */
     .login-card {{
         background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(15px);
-        padding: 40px; border-radius: 25px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        width: 100%; max-width: 450px; text-align: center;
+        border-radius: 30px;
+        padding: 50px 30px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        text-align: center;
     }}
-    .login-logo {{ width: 100%; max-width: 350px; margin-bottom: 20px; }}
-    .stButton>button {{
-        background: white !important; color: black !important;
-        font-weight: bold !important; border-radius: 10px !important; width: 100%;
+
+    /* Logo Pro */
+    .logo-img {{
+        width: 100%;
+        max-width: 280px;
+        height: auto;
+        margin-bottom: 20px;
     }}
-    header, footer, .stDeployButton {{visibility: hidden;}}
+
+    /* Teks Deskripsi */
+    .brand-text {{
+        color: white;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }}
+
+    .sub-text {{
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        margin-bottom: 30px;
+    }}
+
+    /* Styling Input */
+    .stTextInput > div > div > input {{
+        background-color: rgba(255,255,255,0.9) !important;
+        color: #1a1a1a !important;
+        border-radius: 12px !important;
+        height: 50px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+        border: none !important;
+    }}
+
+    /* Styling Button */
+    .stButton > button {{
+        background: linear-gradient(90deg, #cc0000 0%, #800000 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        height: 50px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: 0.3s all ease;
+        margin-top: 10px;
+    }}
+
+    .stButton > button:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(204, 0, 0, 0.4);
+        background: #ff0000 !important;
+    }}
+
+    /* Sembunyikan Elemen Streamlit */
+    header, footer, #MainMenu {{visibility: hidden;}}
+    .stDeployButton {{display:none;}}
+    
+    /* Responsivitas Layar HP */
+    @media (max-width: 480px) {{
+        .login-card {{
+            padding: 30px 20px;
+        }}
+        .logo-img {{
+            max-width: 200px;
+        }}
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. LOGIKA DATASET (TERBILANG) ---
-def terbilang(n):
-    bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
-    n = int(n)
-    hasil = "" # Inisialisasi untuk mencegah UnboundLocalError
-    if n < 12:
-        hasil = bilangan[n]
-    elif n < 20:
-        hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
-    elif n < 100:
-        hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
-    elif n < 200:
-        hasil = "Seratus " + terbilang(n - 100).replace(" Rupiah", "")
-    elif n < 1000:
-        hasil = terbilang(n // 100).replace(" Rupiah", "") + " Ratus " + terbilang(n % 100).replace(" Rupiah", "")
-    elif n < 2000:
-        hasil = "Seribu " + terbilang(n - 1000).replace(" Rupiah", "")
-    elif n < 1000000:
-        hasil = terbilang(n // 1000).replace(" Rupiah", "") + " Ribu " + terbilang(n % 1000).replace(" Rupiah", "")
-    elif n < 1000000000:
-        hasil = terbilang(n // 1000000).replace(" Rupiah", "") + " Juta " + terbilang(n % 1000000).replace(" Rupiah", "")
-    
-    return (hasil.strip() + " rupiah") if n != 0 else "rupiah"
-
-# --- 4. TAMPILAN INVOICE PDF (SESUAI GAMBAR) ---
-def render_pdf(data):
-    pdf = FPDF(orientation='P', unit='mm', format='A4')
-    pdf.add_page()
-    
-    # Header Logo & Alamat (Sesuai image_35d824.png)
-    if os.path.exists("FAVICON.png"):
-        pdf.image("FAVICON.png", x=15, y=10, w=40)
-    
-    pdf.set_font("Arial", 'B', 11)
-    pdf.set_text_color(0, 51, 153) # Biru PT
-    pdf.set_xy(60, 10)
-    pdf.cell(0, 5, "PT. GAMA GEMAH GEMILANG", 0, 1)
-    
-    pdf.set_font("Arial", 'B', 9)
-    pdf.set_text_color(204, 0, 0) # Merah Alamat
-    pdf.set_x(60)
-    pdf.multi_cell(0, 4, "Ruko Paragon Plaza Blok D - 6 Jalan Ngasinan, Kepatihan, Menganti, Gresik,\nJawa Timur. Telp 031-79973432")
-    
-    pdf.set_draw_color(0, 0, 0)
-    pdf.line(10, 32, 200, 32) # Garis Header
-    
-    # Info Customer & Tanggal
-    pdf.ln(5)
-    pdf.set_fill_color(220, 220, 220)
-    pdf.set_font("Arial", 'B', 9)
-    pdf.set_text_color(0, 0, 0)
-    pdf.cell(190, 6, "INVOICE", 1, 1, 'C', True)
-    
-    pdf.ln(2)
-    pdf.cell(95, 6, f"CUSTOMER : {data['penerima'].upper()}", 0, 0)
-    pdf.cell(95, 6, f"DATE : {data['waktu_tgl']}", 0, 1, 'R')
-    
-    # Tabel Data
-    pdf.set_font("Arial", 'B', 8)
-    pdf.set_fill_color(51, 122, 183) # Biru Tabel
-    pdf.set_text_color(255, 255, 255)
-    cols = [("Date of Load", 25), ("Product Description", 55), ("Origin", 20), ("Destination", 30), ("KOLLI", 15), ("HARGA", 20), ("WEIGHT", 25)]
-    for txt, w in cols:
-        pdf.cell(w, 8, txt, 1, 0, 'C', True)
-    pdf.ln()
-    
-    pdf.set_font("Arial", '', 8)
-    pdf.set_text_color(0, 0, 0)
-    pdf.cell(25, 8, data['waktu_tgl'], 1, 0, 'C')
-    pdf.cell(55, 8, data['deskripsi'].upper(), 1, 0, 'C')
-    pdf.cell(20, 8, data['asal'].upper(), 1, 0, 'C')
-    pdf.cell(30, 8, data['tujuan'].upper(), 1, 0, 'C')
-    pdf.cell(15, 8, "", 1, 0, 'C') # Kolli Kosong
-    pdf.cell(20, 8, f"Rp {data['harga']:,}", 1, 0, 'C')
-    pdf.cell(25, 8, f"{data['berat']} Kg", 1, 0, 'C')
-    pdf.ln()
-    
-    # Total
-    pdf.set_font("Arial", 'B', 9)
-    pdf.set_fill_color(220, 220, 220)
-    pdf.cell(145, 7, "YANG HARUS DI BAYAR", 1, 0, 'C', True)
-    pdf.cell(45, 7, f"Rp {data['total']:,}", 1, 1, 'R')
-    
-    # Terbilang
-    pdf.set_font("Arial", 'B', 9)
-    pdf.cell(25, 8, "Terbilang :", "LTB", 0)
-    pdf.set_font("Arial", 'BI', 9)
-    pdf.cell(165, 8, terbilang(data['total']), "RTB", 1, 'C', True)
-    
-    # Footer (Transfer Info & Signature)
-    pdf.ln(10)
-    pdf.set_font("Arial", 'B', 9)
-    pdf.cell(100, 5, "TRANSFER TO :", 0, 0)
-    pdf.cell(90, 5, "Sincerely,", 0, 1, 'C')
-    
-    pdf.set_font("Arial", '', 9)
-    pdf.cell(100, 5, "Bank Central Asia", 0, 0)
-    pdf.set_xy(10, pdf.get_y()+5)
-    pdf.cell(100, 5, "6720422334", 0, 0)
-    pdf.set_xy(10, pdf.get_y()+5)
-    pdf.cell(100, 5, "A/N ADITYA GAMA SAPUTRI", 0, 0)
-    
-    # Signature box
-    pdf.set_xy(140, pdf.get_y()-5)
-    if os.path.exists("FAVICON.png"): # Ganti stempel jika ada file khusus
-        pdf.image("FAVICON.png", x=155, y=pdf.get_y(), w=20)
-    
-    pdf.set_xy(140, pdf.get_y()+15)
-    pdf.set_font("Arial", 'BU', 10)
-    pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
-    pdf.set_font("Arial", 'B', 9)
-    pdf.set_x(140)
-    pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
-    
-    return pdf.output(dest='S').encode('latin-1')
-
-# --- 5. LOGIKA LOGIN ---
+# --- 4. LOGIKA LOGIN ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
+    # Menggunakan HTML murni untuk wrapper agar center sempurna
+    st.markdown('<div class="main-login-container">', unsafe_allow_html=True)
+    
+    # Memulai Card
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    
+    # Menampilkan Logo jika ada
+    if logo_b64:
+        st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">', unsafe_allow_html=True)
+    
+    st.markdown('<div class="brand-text">PT. GAMA GEMAH GEMILANG</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-text">Cargo & Logistics Management System</div>', unsafe_allow_html=True)
+    
+    # Input Password menggunakan Streamlit
+    # Kita gunakan container kosong agar form streamlit masuk ke dalam div login-card
     with st.container():
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        logo_b64 = get_base64_img("FAVICON.png")
-        if logo_b64:
-            st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="login-logo">', unsafe_allow_html=True)
+        pwd = st.text_input("PASSWORD", type="password", placeholder="ENTER ACCESS CODE", label_visibility="collapsed")
         
-        pwd = st.text_input("PASSWORD", type="password", placeholder="Access Code", label_visibility="collapsed")
-        if st.button("AUTHENTICATE"):
-            if pwd == PASSWORD_AKSES:
+        if st.button("UNLOCK SYSTEM"):
+            if pwd == "2026":
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error("Invalid Code")
-        st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.error("Invalid Access Code")
+                
+    st.markdown('</div>', unsafe_allow_html=True) # Tutup login-card
+    st.markdown('</div>', unsafe_allow_html=True) # Tutup main-login-container
     st.stop()
 
-# --- 6. TAMPILAN DASHBOARD ---
+# --- 5. HALAMAN DASHBOARD (SETELAH LOGIN) ---
 st.markdown("<style>.stApp { overflow: auto !important; }</style>", unsafe_allow_html=True)
-# ... Lanjutkan dengan tab Create Invoice dan Database seperti kode Anda sebelumnya ...
+st.success("Login Berhasil! Selamat Datang di Dashboard.")
+
+# Tombol Logout sederhana di pojok
+if st.sidebar.button("🚪 LOGOUT"):
+    st.session_state.authenticated = False
+    st.rerun()
