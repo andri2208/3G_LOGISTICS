@@ -25,20 +25,61 @@ logo_b64 = get_base64_img("FAVICON.png")
 
 st.markdown(f"""
     <style>
-    .stApp {{ background: linear-gradient(0deg,rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%); }}
-    
-       
-    /* Input & Button Styling */
-    .stTextInput > div > div > input {{
-        text-align: center; border-radius: 10px !important; height: 15px !important;
+    /* Background Utama */
+    .stApp {{ 
+        background: linear-gradient(135deg, #0A4A4A 0%, #1A1A1A 100%); 
     }}
+    
+    /* Container Login agar tetap di tengah & mungil */
+    .login-wrapper {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        width: 100%;
+    }}
+
+    .login-card {{
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        padding: 40px;
+        width: 100%;
+        max-width: 350px; /* MEMBATASI LEBAR CARD DI PC */
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }}
+    
+    /* Mengecilkan Kotak Input secara paksa */
+    div[data-baseweb="input"] {{
+        width: 100% !important;
+        max-width: 280px !important; /* UKURAN INPUT DIKUNCI DI SINI */
+        margin: 0 auto !important;
+    }}
+
+    .stTextInput > div > div > input {{
+        text-align: center;
+        border-radius: 10px !important;
+        height: 42px !important;
+        background-color: white !important;
+        color: black !important;
+    }}
+
+    /* Tombol mengikuti lebar input */
     .stButton > button {{
         background: linear-gradient(90deg, #FF0000 0%, #CC0000 100%) !important;
-        color: white !important; border-radius: 10px !important; width: 100%;
-        font-weight: bold; border: none;
+        color: white !important;
+        border-radius: 10px !important;
+        width: 100% !important;
+        max-width: 280px !important; /* LEBAR TOMBOL SAMA DENGAN INPUT */
+        height: 42px !important;
+        font-weight: bold;
+        border: none;
+        margin-top: 10px;
     }}
     
-    /* Clean UI */
+    /* Sembunyikan elemen bawaan */
     header, footer, .stDeployButton {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
@@ -192,6 +233,7 @@ with tab2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.info("Klik tombol refresh untuk menarik data.")
+
 
 
 
