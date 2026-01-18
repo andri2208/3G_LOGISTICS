@@ -2,39 +2,38 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
-from datetime import datetime
 import streamlit.components.v1 as components
 
-# 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
+# 1. SETTING HALAMAN
+st.set_page_config(page_title="3G System", layout="wide")
 
-# 2. CSS UNTUK TAMPILAN WEB (RESPONSIF HP)
+# 2. CSS BIAR RAPI
 st.markdown("""
     <style>
     header {visibility: hidden;}
-    .main .block-container { padding: 1rem; }
-    .stTabs { margin-top: -15px; }
-    /* Supaya di HP bisa di-geser tapi tidak rusak layoutnya */
-    .table-responsive { width: 100%; overflow-x: auto; background: #f0f2f6; padding: 10px 0; }
+    .stTabs { margin-top: -20px; }
+    #print-area { background: white; padding: 20px; }
+    @media only screen and (max-width: 600px) {
+        #print-area { zoom: 0.5; }
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. LOGIN SISTEM
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
+# 3. LOGIN
+if 'auth' not in st.session_state:
+    st.session_state['auth'] = False
 
-if not st.session_state['logged_in']:
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
-    with st.form("login_form"):
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.form_submit_button("Masuk"):
-            if u == "admin3g" and p == "gama2024":
-                st.session_state['logged_in'] = True
-                st.rerun()
-            else: st.error("Akses Ditolak!")
+if not st.session_state['auth']:
+    st.title("🔐 Login 3G Logistics")
+    u = st.text_input("Username")
+    p = st.text_input("Password", type="password")
+    if st.button("Masuk"):
+        if u == "admin3g" and p == "gama2024":
+            st.session_state['auth'] = True
+            st.rerun()
+        else: st.error("Salah!")
 else:
-    API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
+    API = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
     def terbilang(n):
         bil = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"]
@@ -48,130 +47,105 @@ else:
         elif n < 1000000000: return terbilang(n // 1000000) + " juta " + terbilang(n % 1000000)
         return ""
 
-    @st.cache_data(ttl=5)
-    def get_data():
-        try: return requests.get(API_URL).json()
-        except: return []
+    # TOMBOL LOGOUT
+    if st.sidebar.button("Keluar / Logout"):
+        st.session_state['auth'] = False
+        st.rerun()
 
-    # UI HEADER
-    c1, c2 = st.columns([0.8, 0.2])
-    with c2: 
-        if st.button("Logout 🚪"): 
-            st.session_state['logged_in'] = False
-            st.rerun()
-
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
     tab1, tab2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
 
     with tab1:
-        data = get_data()
-        if data:
-            df = pd.DataFrame(data)
-            pilih = st.selectbox("Pilih Customer:", df['customer'].unique())
-            row = df[df['customer'] == pilih].iloc[-1]
-            tgl = str(row['date']).split('T')[0]
-            total = int(row['total'])
-            txt_terbilang = terbilang(total).title() + " Rupiah"
+        try:
+            res = requests.get(API).json()
+            df = pd.DataFrame(res)
+            nama = st.selectbox("Pilih Customer", df['customer'].unique())
+            r = df[df['customer'] == nama].iloc[-1]
+            tgl = str(r['date']).split('T')[0]
+            total = int(r['total'])
+            kata = terbilang(total).title() + " Rupiah"
 
-            # --- HTML INVOICE (GARIS NYAMBUNG & KUNCI LEBAR 800PX) ---
-            html_invoice = f"""
-            <div id="print-area" style="background:white; padding:40px; width:800px; margin:auto; color:black; font-family:Arial, sans-serif;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; display:block;">
-                <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:8px; font-weight:bold; font-size:24px;">INVOICE</div>
-                
-                <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px; border-collapse: collapse;">
-                    <tr><td>CUSTOMER : {row['customer']}</td><td style="text-align:right;">DATE : {tgl}</td></tr>
+            # INVOICE HTML (GARIS DIJAMIN NYAMBUNG)
+            html = f"""
+            <div id="print-area" style="width:750px; margin:auto; border:2px solid black; padding:30px; font-family:Arial;">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;">
+                <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold; font-size:20px;">INVOICE</div>
+                <table style="width:100%; font-weight:bold; margin-bottom:10px;">
+                    <tr><td>CUSTOMER: {nama}</td><td style="text-align:right;">DATE: {tgl}</td></tr>
                 </table>
-
-                <table style="width:100%; border-collapse:collapse; border:2px solid black; border-spacing:0;">
-                    <tr style="background:#316395; color:white; text-align:center; font-size:13px;">
-                        <th style="border:1px solid black; padding:10px;">Date of Load</th>
-                        <th style="border:1px solid black;">Description</th>
+                <table style="width:100%; border-collapse:collapse; border:1px solid black;">
+                    <tr style="background:#316395; color:white; text-align:center;">
+                        <th style="border:1px solid black; padding:8px;">Description</th>
                         <th style="border:1px solid black;">Origin</th>
                         <th style="border:1px solid black;">Dest</th>
                         <th style="border:1px solid black;">KOLLI</th>
-                        <th style="border:1px solid black;">HARGA</th>
-                        <th style="border:1px solid black;">WEIGHT</th>
+                        <th style="border:1px solid black;">Price</th>
+                        <th style="border:1px solid black;">Weight</th>
                     </tr>
-                    <tr style="text-align:center; font-size:13px;">
-                        <td style="border:1px solid black; padding:20px;">{tgl}</td>
-                        <td style="border:1px solid black;">{row['description']}</td>
-                        <td style="border:1px solid black;">{row['origin']}</td>
-                        <td style="border:1px solid black;">{row['destination']}</td>
-                        <td style="border:1px solid black;">{row['kolli']}</td>
-                        <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
-                        <td style="border:1px solid black;">{row['weight']} Kg</td>
+                    <tr style="text-align:center; height:60px;">
+                        <td style="border:1px solid black;">{r['description']}</td>
+                        <td style="border:1px solid black;">{r['origin']}</td>
+                        <td style="border:1px solid black;">{r['destination']}</td>
+                        <td style="border:1px solid black;">{r['kolli']}</td>
+                        <td style="border:1px solid black;">Rp {int(r['harga']):,}</td>
+                        <td style="border:1px solid black;">{r['weight']} Kg</td>
                     </tr>
-                    <tr style="font-weight:bold; background:#f2f2f2; text-align:center; font-size:13px;">
-                        <td colspan="6" style="border:1px solid black; padding:12px;">YANG HARUS DI BAYAR</td>
-                        <td style="border:1px solid black;">Rp {total:,}</td>
+                    <tr style="font-weight:bold; background:#eee;">
+                        <td colspan="5" style="border:1px solid black; text-align:center; padding:10px;">TOTAL BAYAR</td>
+                        <td style="border:1px solid black; text-align:center;">Rp {total:,}</td>
                     </tr>
                     <tr>
-                        <td colspan="7" style="border:1px solid black; padding:12px; font-size:14px; font-style:italic;">
-                            <b>Terbilang :</b> {txt_terbilang}
-                        </td>
+                        <td colspan="6" style="border:1px solid black; padding:10px;"><b>Terbilang:</b> <i>{kata}</i></td>
                     </tr>
                 </table>
-
-                <br><br>
-                <table style="width:100%; font-size:14px; line-height:1.6;">
+                <br>
+                <table style="width:100%;">
                     <tr>
-                        <td style="width:60%; vertical-align:top;">
-                            <b>TRANSFER TO :</b><br>
+                        <td style="width:60%; font-size:12px;">
+                            <b>TRANSFER TO:</b><br>
                             Bank Central Asia 6720422334<br>
-                            A/N ADITYA GAMA SAPUTRI<br>
-                            NB : Jika sudah transfer mohon konfirmasi ke<br>
+                            A/N ADITYA GAMA SAPUTRI<br><br>
+                            NB: Jika sudah transfer mohon konfirmasi ke<br>
                             Finance 082179799200
                         </td>
-                        <td style="width:40%; text-align:center;">
+                        <td style="text-align:center; font-size:12px;">
                             Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; margin:10px 0;"><br>
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:120px;"><br>
                             <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
                         </td>
                     </tr>
                 </table>
             </div>
             """
+            st.markdown(html, unsafe_allow_html=True)
             
-            # Tampilkan Preview
-            st.markdown('<div class="table-responsive">', unsafe_allow_html=True)
-            st.markdown(html_invoice, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            # SCRIPT DOWNLOAD PDF
+            # TOMBOL DOWNLOAD
             st.write("---")
             components.html(f"""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <button onclick="downloadPDF()" style="width:100%; padding:18px; background:#4CAF50; color:white; border:none; border-radius:10px; font-weight:bold; font-size:18px; cursor:pointer;">📥 DOWNLOAD INVOICE SEKARANG</button>
-            <script>
-            function downloadPDF() {{
-                const element = window.parent.document.getElementById('print-area');
-                const opt = {{
-                    margin: 0.3,
-                    filename: 'INV_{pilih}_{tgl}.pdf',
-                    image: {{ type: 'jpeg', quality: 0.98 }},
-                    html2canvas: {{ scale: 2, useCORS: true, width: 800 }},
-                    jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
-                }};
-                html2pdf().set(opt).from(element).save();
-            }}
-            </script>
-            """, height=100)
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <button onclick="save()" style="width:100%; padding:15px; background:#4CAF50; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">📥 SIMPAN PDF</button>
+                <script>
+                function save() {{
+                    const e = window.parent.document.getElementById('print-area');
+                    html2pdf().from(e).set({{ margin: 0.5, filename: 'Inv_{nama}.pdf', html2canvas: {{ scale: 2 }}, jsPDF: {{ format: 'a4', orientation: 'portrait' }} }}).save();
+                }}
+                </script>
+            """, height=80)
+        except: st.error("Gagal ambil data. Cek koneksi.")
 
     with tab2:
-        st.subheader("➕ Tambah Data Pengiriman")
-        with st.form("input_data", clear_on_submit=True):
+        st.subheader("Input Data Baru")
+        with st.form("f1", clear_on_submit=True):
             c1, c2 = st.columns(2)
             f_tgl = c1.date_input("Tanggal")
-            f_cust = c1.text_input("Customer")
-            f_desc = c1.text_input("Barang")
-            f_orig = c2.text_input("Origin", "SBY")
-            f_dest = c2.text_input("Destination")
+            f_cus = c1.text_input("Customer")
+            f_brg = c1.text_input("Barang")
+            f_ori = c2.text_input("Origin", "SBY")
+            f_des = c2.text_input("Dest")
             f_kol = c2.number_input("Kolli", 0)
-            f_kg = c2.number_input("Weight (Kg)", 1)
-            f_hrg = c2.number_input("Harga Satuan", 0)
-            if st.form_submit_button("🚀 SIMPAN DATA"):
-                p = { "date": str(f_tgl), "customer": f_cust.upper(), "description": f_desc.upper(), "origin": f_orig.upper(), "destination": f_dest.upper(), "kolli": f_kol, "harga": f_hrg, "weight": f_kg, "total": f_hrg * f_kg }
-                requests.post(API_URL, data=json.dumps(p))
-                st.success("Data Berhasil Disimpan!")
+            f_kg = c2.number_input("Kg", 1)
+            f_hrg = c2.number_input("Harga", 0)
+            if st.form_submit_button("Simpan"):
+                d = {"date":str(f_tgl),"customer":f_cus.upper(),"description":f_brg.upper(),"origin":f_ori.upper(),"destination":f_des.upper(),"kolli":f_kol,"harga":f_hrg,"weight":f_kg,"total":f_hrg*f_kg}
+                requests.post(API, data=json.dumps(d))
+                st.success("Tersimpan!")
                 st.cache_data.clear()
