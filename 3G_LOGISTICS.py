@@ -7,65 +7,58 @@ import streamlit.components.v1 as components
 import re
 
 # 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G Logistics System", layout="wide")
+st.set_page_config(page_title="3G Logistics", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS ELEGANT LIGHT MODE (IVORY & SILVER) ---
+# --- CSS MINIMALIS & HEADER KECIL ---
 st.markdown("""
     <style>
-    /* Latar Belakang Warna Cream Ivory Elegan */
-    .stApp {
-        background-color: #FDFCF0;
-    }
+    /* Latar Belakang Ivory */
+    .stApp { background-color: #FDFCF0; }
     
-    /* Label Teks Tebal & Mewah (Midnight Blue) */
+    /* Memperkecil Margin Atas agar Header naik */
+    .block-container { padding-top: 1rem !important; }
+
+    /* Mengecilkan Header Image */
+    [data-testid="stImage"] img {
+        max-width: 400px !important; /* Header diperkecil ke 400px */
+        margin: 0 auto;
+        display: block;
+    }
+
+    /* Label Tebal Minimalis */
     .stWidgetLabel p {
-        font-weight: 900 !important;
-        font-size: 16px !important;
-        color: #1A2A3A !important; /* Biru Gelap Sangat Kontras */
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 5px !important;
+        font-weight: 800 !important;
+        font-size: 13px !important; /* Font lebih kecil tapi tebal */
+        color: #1A2A3A !important;
+        margin-bottom: 2px !important;
     }
     
-    /* Kolom Isian Putih Bersih dengan Border Perak Tegas */
+    /* Kolom Input Lebih Pendek (Minimalis) */
     .stTextInput input, .stNumberInput input, .stDateInput input {
         background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 2px solid #BCC6CC !important; /* Silver Grey Border */
-        border-radius: 10px !important;
-        padding: 12px !important;
-        font-weight: 600 !important;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
+        border: 1px solid #BCC6CC !important;
+        border-radius: 6px !important;
+        padding: 6px 12px !important;
+        font-size: 14px !important;
     }
 
-    /* Efek Fokus Hijau Lembut saat mengisi */
-    .stTextInput input:focus {
-        border-color: #28a745 !important;
-        box-shadow: 0 0 8px rgba(40, 167, 69, 0.2) !important;
-    }
-
-    /* Styling Form Container */
+    /* Form Minimalis */
     [data-testid="stForm"] {
         background-color: #FFFFFF !important;
         border: 1px solid #E0E0E0 !important;
-        border-radius: 15px !important;
-        padding: 30px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        border-radius: 10px !important;
+        padding: 15px !important;
+        margin-top: -20px;
     }
 
-    /* Styling Tab */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 15px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold;
-        color: #666666;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #1A2A3A !important;
-        border-bottom-color: #1A2A3A !important;
+    /* Button Simpan Kecil */
+    .stButton button {
+        width: 100%;
+        background-color: #1A2A3A !important;
+        color: white !important;
+        border-radius: 6px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -95,14 +88,15 @@ def get_data():
         return r.json()
     except: return []
 
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
+# HEADER WEB DIPERKECIL
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png")
 
-tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
+tab1, tab2 = st.tabs(["📄 CETAK", "➕ INPUT"])
 
 with tab1:
     data = get_data()
     if not data:
-        st.info("Menghubungkan ke server...")
+        st.info("Loading...")
     else:
         df = pd.DataFrame(data)
         selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
@@ -117,104 +111,66 @@ with tab1:
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
         invoice_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <style>
-                body {{ font-family: Arial, sans-serif; background-color: #FDFCF0; padding: 10px; }}
-                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ddd; color: black; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
-                .header-img {{ width: 100%; height: auto; }}
-                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
-                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
-                .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
-                .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
-                .data-table th {{ background-color: #f8f9fa; }}
-                .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
-                .footer {{ width: 100%; margin-top: 20px; font-size: 11px; }}
-                .btn-download {{ width: 100%; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container" id="invoice-card">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" class="header-img">
-                <div class="title">INVOICE</div>
-                <table class="info-table">
-                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                </table>
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td>
-                                <td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td>
-                            </tr>
-                            <tr style="font-weight:bold; background:#f9f9f9;">
-                                <td colspan="6" style="text-align:right;">YANG HARUS DIBAYAR</td><td>Rp {t_val:,}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
-                
-                <table class="footer">
-                    <tr>
-                        <td style="width:60%; vertical-align: top;">
-                            <b>TRANSFER TO :</b><br>
-                            Bank Central Asia <b>6720422334</b><br>
-                            A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
-                            <i>NB : Jika sudah transfer mohon konfirmasi ke<br>
-                            Finance <b>082179799200</b></i>
-                        </td>
-                        <td style="text-align:center; vertical-align: top;">
-                            Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:110px;"><br>
-                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <button class="btn-download" onclick="downloadA5()">📥 DOWNLOAD INVOICE (UKURAN A5)</button>
-
-            <script>
-                function downloadA5() {{
-                    const element = document.getElementById('invoice-card');
-                    const opt = {{
-                        margin: 0.1,
-                        filename: 'Invoice_{selected_cust}.pdf',
-                        image: {{ type: 'jpeg', quality: 0.98 }},
-                        html2canvas: {{ scale: 3, useCORS: true }},
-                        jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
-                    }};
-                    html2pdf().set(opt).from(element).save();
-                }}
-            </script>
-        </body>
-        </html>
+        <div id="invoice-card" style="background:white; padding:15px; max-width:700px; margin:auto; border:1px solid #ddd; color:black; font-family:Arial;">
+            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;">
+            <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold;">INVOICE</div>
+            <table style="width:100%; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
+            </table>
+            <table style="width:100%; border-collapse:collapse; border:1px solid black; font-size:10px; text-align:center;">
+                <tr style="background:#f8f9fa;">
+                    <th style="border:1px solid black; padding:5px;">Description</th><th style="border:1px solid black;">Origin</th>
+                    <th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th>
+                    <th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th><th style="border:1px solid black;">TOTAL</th>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:8px;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td>
+                    <td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td>
+                    <td style="border:1px solid black;">Rp {int(h_val):,}</td><td style="border:1px solid black;">{row['weight']}</td>
+                    <td style="border:1px solid black; font-weight:bold;">Rp {t_val:,}</td>
+                </tr>
+                <tr style="font-weight:bold;">
+                    <td colspan="6" style="border:1px solid black; text-align:right; padding:5px;">TOTAL BAYAR</td>
+                    <td style="border:1px solid black;">Rp {t_val:,}</td>
+                </tr>
+            </table>
+            <div style="border:1px solid black; padding:5px; margin-top:10px; font-size:10px; font-style:italic;"><b>Terbilang:</b> {kata_terbilang}</div>
+            <table style="width:100%; margin-top:15px; font-size:10px;">
+                <tr>
+                    <td><b>TRANSFER TO:</b><br>BCA 6720422334<br>A/N ADITYA GAMA SAPUTRI<br>Finance: 082179799200</td>
+                    <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:90px;"><br><b><u>KELVINITO JAYADI</u></b></td>
+                </tr>
+            </table>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <button onclick="downloadPDF()" style="width:100%; background:#1A2A3A; color:white; padding:10px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">📥 DOWNLOAD PDF A5</button>
+        <script>
+        function downloadPDF() {{
+            const element = document.getElementById('invoice-card');
+            const opt = {{ margin: 0.1, filename: 'Inv_{selected_cust}.pdf', html2canvas: {{ scale: 3 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }};
+            html2pdf().set(opt).from(element).save();
+        }}
+        </script>
         """
-        components.html(invoice_html, height=850, scrolling=True)
+        components.html(invoice_html, height=750, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='color: #1A2A3A; text-align: center;'>📦 INPUT DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("form_db", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        v_tgl = col1.date_input("TANGGAL INVOICE", datetime.now())
-        v_cust = col1.text_input("NAMA CUSTOMER (WAJIB)")
-        v_desc = col1.text_input("DESKRIPSI BARANG")
-        v_orig = col2.text_input("ORIGIN (ASAL)", value="SBY")
-        v_dest = col2.text_input("DESTINATION (TUJUAN)")
-        v_kol = col2.text_input("JUMLAH KOLLI")
-        v_kg = col2.text_input("WEIGHT (BERAT DALAM KG)")
-        v_hrg = col2.number_input("HARGA SATUAN (RP)", 0)
+        # Baris 1
+        c1, c2, c3 = st.columns([1.5, 2, 2])
+        v_tgl = c1.date_input("TANGGAL", datetime.now())
+        v_cust = c2.text_input("CUSTOMER")
+        v_desc = c3.text_input("BARANG")
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.form_submit_button("💾 SIMPAN DATA SEKARANG"):
+        # Baris 2
+        c4, c5, c6, c7, c8 = st.columns([1, 1, 1, 1, 1.5])
+        v_orig = c4.text_input("ORIGIN", value="SBY")
+        v_dest = c5.text_input("DEST")
+        v_kol = c6.text_input("KOLLI")
+        v_kg = c7.text_input("WEIGHT")
+        v_hrg = c8.number_input("HARGA", 0)
+        
+        if st.form_submit_button("💾 SIMPAN DATA"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -224,7 +180,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"✅ Data Tersimpan! Total Tagihan: Rp {total_db:,}")
+                st.success(f"Tersimpan! Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("❌ Gagal menyimpan data. Cek koneksi internet.")
+                st.error("Gagal!")
