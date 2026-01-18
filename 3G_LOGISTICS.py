@@ -11,6 +11,28 @@ st.set_page_config(page_title="3G Logistics System", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
+# --- CSS UNTUK MEWARNAI KOLOM INPUT & MEMPERTEBAL LABEL ---
+st.markdown("""
+    <style>
+    /* Mempertebal label teks di atas kolom */
+    label {
+        font-weight: bold !important;
+        color: #31333F !important;
+    }
+    /* Memberi warna latar belakang pada kolom input */
+    .stTextInput input, .stNumberInput input, .stDateInput input {
+        background-color: #F0F2F6 !important; /* Warna abu muda kebiruan */
+        border: 1px solid #D1D5DB !important;
+        border-radius: 5px !important;
+    }
+    /* Warna saat kolom diklik/aktif */
+    .stTextInput input:focus {
+        border-color: #28a745 !important;
+        background-color: #FFFFFF !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
@@ -36,7 +58,6 @@ def get_data():
         return r.json()
     except: return []
 
-# Header Web
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
 tab1, tab2 = st.tabs(["📄 Cetak Invoice (Responsif)", "➕ Tambah Data"])
@@ -50,7 +71,6 @@ with tab1:
         selected_cust = st.selectbox("Pilih Nama Customer:", sorted(df['customer'].unique()))
         row = df[df['customer'] == selected_cust].iloc[-1]
         
-        # Hitung Total
         b_val = extract_number(row['weight'])
         h_val = extract_number(row['harga'])
         t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
@@ -77,10 +97,6 @@ with tab1:
                 .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
                 .footer {{ width: 100%; margin-top: 20px; font-size: 11px; }}
                 .btn-download {{ width: 100%; background: #28a745; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
-                @media screen and (max-width: 600px) {{
-                    .data-table {{ font-size: 9px; }}
-                    .info-table {{ font-size: 10px; }}
-                }}
             </style>
         </head>
         <body>
@@ -152,15 +168,15 @@ with tab2:
     with st.form("form_db", clear_on_submit=True):
         col1, col2 = st.columns(2)
         v_tgl = col1.date_input("Tanggal", datetime.now())
-        v_cust = col1.text_input("Customer")
+        v_cust = col1.text_input("Nama Customer")
         v_desc = col1.text_input("Deskripsi Barang")
-        v_orig = col2.text_input("Origin", value="SBY")
-        v_dest = col2.text_input("Destination")
-        v_kol = col2.text_input("Kolli")
-        v_kg = col2.text_input("Weight (Angka saja)")
+        v_orig = col2.text_input("Origin (Asal)", value="SBY")
+        v_dest = col2.text_input("Destination (Tujuan)")
+        v_kol = col2.text_input("Kolli (Contoh: 10 Box)")
+        v_kg = col2.text_input("Weight (Berat - Angka Saja)")
         v_hrg = col2.number_input("Harga Satuan", 0)
         
-        if st.form_submit_button("SIMPAN"):
+        if st.form_submit_button("SIMPAN KE DATABASE"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -170,7 +186,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Tersimpan! Total: Rp {total_db:,}")
+                st.success(f"Berhasil! Total: Rp {total_db:,} sudah masuk ke database.")
                 st.cache_data.clear()
             except:
-                st.error("Gagal simpan ke database.")
+                st.error("Gagal terhubung ke database.")
