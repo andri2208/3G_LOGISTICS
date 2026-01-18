@@ -9,6 +9,7 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
+# URL API BARU BAPAK
 API_URL = "https://script.google.com/macros/s/AKfycbzcsQ1mUtr65kF9F1SLOIwwYf_EW0TgmqNv22fHLoVe1qkT2hRr47CCit7LSoBe9uuk/exec"
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
@@ -66,87 +67,91 @@ tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 with tab1:
     data = get_data()
     if not data:
-        st.info("Loading Data...")
+        st.info("Menunggu data dari Google Sheets...")
     else:
         df = pd.DataFrame(data)
-        selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
-        row = df[df['customer'] == selected_cust].iloc[-1]
-        
-        b_val = extract_number(row['weight'])
-        h_val = extract_number(row['harga'])
-        t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-        
-        tgl_raw = str(row['date']).split('T')[0]
-        tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
-        kata_terbilang = terbilang(t_val) + " Rupiah"
+        # Pastikan kolom customer ada
+        if 'customer' in df.columns:
+            selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
+            row = df[df['customer'] == selected_cust].iloc[-1]
+            
+            b_val = extract_number(row['weight'])
+            h_val = extract_number(row['harga'])
+            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
+            
+            tgl_raw = str(row['date']).split('T')[0]
+            tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        invoice_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <style>
-                body {{ background: #f0f0f0; padding: 10px; }}
-                #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
-                .header-img {{ width: 100%; height: auto; }}
-                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
-                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
-                .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
-                .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                .data-table th {{ background-color: #f2f2f2; }}
-                .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
-                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
-                .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
-            </style>
-        </head>
-        <body>
-            <div id="inv">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
-                <div class="title">INVOICE</div>
-                <table class="info-table">
-                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                </table>
-                <table class="data-table">
-                    <thead>
-                        <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    </thead>
-                    <tbody>
+            invoice_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    body {{ background: #f0f0f0; padding: 10px; }}
+                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                    .header-img {{ width: 100%; height: auto; }}
+                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .data-table th {{ background-color: #f2f2f2; }}
+                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
+                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
+                </style>
+            </head>
+            <body>
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table">
+                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
+                    </table>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
+                                <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
+                            </tr>
+                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <table class="footer-table">
                         <tr>
-                            <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
-                            <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
+                            <td style="width:65%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>
+                                BCA <b>6720422334</b><br>
+                                <b>ADITYA GAMA SAPUTRI</b><br>
+                                NB: Jika sudah transfer mohon konfirmasi ke<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">
+                                Sincerely,<br>
+                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
+                                <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                            </td>
                         </tr>
-                        <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
-                    </tbody>
-                </table>
-                <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
-                <table class="footer-table">
-                    <tr>
-                        <td style="width:65%; vertical-align:top;">
-                            <b>TRANSFER TO :</b><br>
-                            BCA <b>6720422334</b><br>
-                            <b>ADITYA GAMA SAPUTRI</b><br>
-                            NB: Jika sudah transfer mohon konfirmasi ke<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
-                        </td>
-                        <td style="text-align:center; vertical-align:top;">
-                            Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
-                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
-            <script>
-                function savePDF() {{
-                    const e = document.getElementById('inv');
-                    html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
-                }}
-            </script>
-        </body>
-        </html>
-        """
-        components.html(invoice_html, height=850, scrolling=True)
+                    </table>
+                </div>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
+                <script>
+                    function savePDF() {{
+                        const e = document.getElementById('inv');
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    }}
+                </script>
+            </body>
+            </html>
+            """
+            components.html(invoice_html, height=850, scrolling=True)
+        else:
+            st.warning("Kolom 'customer' tidak ditemukan di Google Sheets.")
 
 with tab2:
     with st.form("input_form", clear_on_submit=True):
@@ -176,9 +181,12 @@ with tab2:
                 "harga": h_num, "weight": weight_final, "total": total_db
             }
             try:
-                requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Berhasil!")
-                st.cache_data.clear()
-            except:
-                st.error("Gagal!")
-
+                # Mengirim data ke API baru
+                r = requests.post(API_URL, data=json.dumps(payload))
+                if r.status_code == 200:
+                    st.success(f"Berhasil Disimpan ke Cloud!")
+                    st.cache_data.clear()
+                else:
+                    st.error(f"Gagal! Status: {r.status_code}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
