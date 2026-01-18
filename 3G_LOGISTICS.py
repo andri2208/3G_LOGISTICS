@@ -1,74 +1,109 @@
 import streamlit as st
 from PIL import Image
+import pandas as pd
 
-# 1. PROTEKSI UI & ANTI-DOWNLOAD
-# Script ini menyembunyikan menu dan mencegah klik kanan pada gambar
-st.set_page_config(
-    page_title="3G Logistics",
-    page_icon="FAVICON.png",
-    layout="wide"
-)
+# 1. KONFIGURASI HALAMAN & PROTEKSI
+st.set_page_config(page_title="3G Logistics - Generator Invoice", page_icon="FAVICON.png", layout="wide")
 
+# CSS untuk Anti-Download & Tampilan Cetak
 st.markdown("""
     <style>
-    /* Mencegah klik kanan dan drag pada gambar */
-    img {
-        pointer-events: none;
-        -webkit-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
+    img { pointer-events: none; } 
+    #MainMenu { visibility: hidden; } 
+    footer { visibility: hidden; }
+    header { visibility: hidden; }
+    
+    @media print {
+        .no-print { display: none !important; }
+        .stButton { display: none !important; }
     }
-    
-    /* Menyembunyikan elemen Streamlit untuk tampilan bersih */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Pengaturan spasi untuk area tanda tangan manual */
-    .signature-space {
-        margin-top: 100px;
-        border-bottom: 1px solid #000;
-        width: 250px;
+    .invoice-box {
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. HEADER INVOICE
-try:
+# 2. FUNGSI RESET
+if 'form_data' not in st.session_state:
+    st.session_state.form_data = {}
+
+def reset_form():
+    for key in st.session_state.keys():
+        del st.session_state[key]
+    st.rerun()
+
+# 3. SIDEBAR INPUT (INPUT MANUAL)
+with st.sidebar:
+    st.header("Input Data Invoice")
+    cust_name = st.text_input("Customer", placeholder="Contoh: PT HARVI") [cite: 3]
+    inv_date = st.text_input("Tanggal Invoice", value="8/12/2024") [cite: 13]
+    
+    st.subheader("Detail Barang")
+    load_date = st.text_input("Date of Load", value="8-Dec-24") [cite: 5]
+    prod_desc = st.text_area("Product Description", value="3 UNIT CDD") [cite: 5]
+    origin = st.text_input("Origin", value="TUAL") [cite: 5]
+    dest = st.text_input("Destination", value="LARAT") [cite: 5]
+    price = st.number_input("Harga (Rp)", min_value=0, value=27000000, step=1000) [cite: 5]
+    terbilang = st.text_input("Terbilang", value="Dua puluh tujuh juta rupiah") [cite: 6]
+    
+    st.markdown("---")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        st.button("Reset Form", on_click=reset_form, use_container_width=True)
+    with col_btn2:
+        preview_mode = st.checkbox("Preview Invoice")
+
+# 4. TAMPILAN UTAMA (PREVIEW INVOICE)
+if preview_mode:
+    # Header dari File Anda
     st.image("HEADER INVOICE.png", use_container_width=True)
-except:
-    st.warning("File HEADER INVOICE.png tidak ditemukan di repository.")
+    
+    # Informasi Perusahaan (Opsional jika sudah ada di Header Gambar)
+    st.write(f"**CUSTOMER:** {cust_name}") [cite: 3]
+    st.write(f"**DATE:** {inv_date}") [cite: 13]
+    st.markdown("<h2 style='text-align: center;'>INVOICE</h2>", unsafe_allow_html=True) [cite: 4]
 
-# 3. KONTEN APLIKASI
-st.title("Sistem Manajemen Logistik")
-st.write("---")
+    # Tabel Data
+    data = {
+        "Date of Load": [load_date],
+        "Product Description": [prod_desc],
+        "Origin": [origin],
+        "Destination": [dest],
+        "Harga": [f"Rp {price:,.0f}"]
+    }
+    df = pd.DataFrame(data)
+    st.table(df) [cite: 5]
 
-# Contoh Form Input Data (Bisa Anda sesuaikan)
-col1, col2 = st.columns(2)
+    # Total & Terbilang
+    col_t1, col_t2 = st.columns([2, 1])
+    with col_t2:
+        st.write(f"**TOTAL BAYAR: Rp {price:,.0f}**") [cite: 5]
+    st.write(f"*Terbilang: {terbilang}*") [cite: 6]
 
-with col1:
-    customer_name = st.text_input("Nama Pelanggan")
-    no_invoice = st.text_input("Nomor Invoice")
+    # Informasi Bank & Tanda Tangan
+    st.markdown("---")
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        st.write("**TRANSFER TO :**") [cite: 7]
+        st.write("Bank Central Asia (BCA)") [cite: 8]
+        st.write("Acc No: 6720422334") [cite: 9]
+        st.write("A/N: ADITYA GAMA SAPUTRI") [cite: 10]
+        st.write("Konfirmasi Finance: 081217833322") [cite: 12]
+    
+    with col_f2:
+        st.write(f"Surabaya, {inv_date}")
+        st.write("Sincerely,") [cite: 14]
+        st.write("PT. GAMA GEMAH GEMILANG") [cite: 15]
+        st.write("##")
+        st.write("##") # Ruang tanda tangan manual
+        st.write(f"**KELVINITO JAYADI**") [cite: 16]
+        st.write("DIREKTUR") [cite: 17]
 
-with col2:
-    tgl_kirim = st.date_input("Tanggal Pengiriman")
-    keterangan = st.text_area("Keterangan Barang")
-
-# Tabel Item (Contoh Sederhana)
-st.subheader("Rincian Pengiriman")
-# Anda bisa menambahkan logika tabel atau perhitungan harga di sini
-
-# 4. AREA TANDA TANGAN (KOSONG UNTUK MANUAL)
-st.write("##")
-st.write("##")
-col_sign1, col_sign2, col_sign3 = st.columns([1, 1, 1])
-
-with col_sign3:
-    st.write("Hormat Kami,")
-    # Memberikan ruang kosong untuk stempel/tanda tangan basah nantinya
-    st.markdown('<div class="signature-space"></div>', unsafe_allow_html=True)
-    st.write("Administrasi 3G Logistics")
-
-# Tombol Cetak (Hanya memicu fungsi print browser)
-if st.button("Persiapkan Cetak"):
-    st.info("Gunakan kombinasi tombol Ctrl+P atau Cmd+P untuk mencetak ke PDF.")
+    # Tombol Cetak
+    st.markdown("---")
+    if st.button("Cetak / Simpan PDF", use_container_width=True):
+        st.info("Gunakan Ctrl+P (Windows) atau Cmd+P (Mac) untuk menyimpan sebagai PDF.")
+else:
+    st.info("Silakan isi data di sidebar kiri dan centang 'Preview Invoice' untuk melihat hasil.")
