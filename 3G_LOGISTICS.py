@@ -9,7 +9,7 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
-API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbzcsQ1mUtr65kF9F1SLOIwwYf_EW0TgmqNv22fHLoVe1qkT2hRr47CCit7LSoBe9uuk/exec"
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
 st.markdown("""
@@ -181,3 +181,4 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("Gagal!")
+
