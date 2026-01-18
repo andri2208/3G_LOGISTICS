@@ -30,7 +30,7 @@ def login():
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
         if st.form_submit_button("Masuk"):
-            if user == "admin3g" and pw == "gama2024":
+            if user == "admin" and pw == "2026":
                 st.session_state['logged_in'] = True
                 st.rerun()
             else:
@@ -168,4 +168,5 @@ function doDownload() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal simpan.")
+
 
