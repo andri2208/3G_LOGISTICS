@@ -16,7 +16,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. FUNGSI HELPER ---
+# --- 2. FUNGSI ENCODE GAMBAR ---
 def get_base64_img(img_path):
     if os.path.exists(img_path):
         with open(img_path, "rb") as f:
@@ -24,77 +24,90 @@ def get_base64_img(img_path):
         return base64.b64encode(data).decode()
     return None
 
-# --- 3. CUSTOM CSS (MINIMALIS & RESPONSIF) ---
+# --- 3. THEME & RESPONSIVE CSS ---
 st.markdown(f"""
     <style>
-    /* Tema Utama */
+    /* Global Theme - Deep Crimson & Midnight Navy */
     .stApp {{
-        background: linear-gradient(135deg, #ff0033 0%, #0044ff 100%);
+        background: linear-gradient(135deg, #800000 0%, #000033 100%);
         background-attachment: fixed;
     }}
 
-    /* Container Login Minimalis */
+    /* Login Wrapper - Mengunci di Tengah Layar */
     .login-wrapper {{
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 80vh;
+        z-index: 999;
+        overflow: hidden;
     }}
 
+    /* Card Login Elegan */
     .login-card {{
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 30px;
-        padding: 40px;
-        width: 100%;
-        max-width: 400px;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 40px;
+        padding: 60px 40px;
+        width: 90%;
+        max-width: 420px;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.6);
         text-align: center;
     }}
 
-    /* Input Minimalis */
+    /* Logo Responsive di Login */
+    .login-logo {{
+        width: 100%;
+        max-width: 250px;
+        height: auto;
+        margin-bottom: 30px;
+        filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+    }}
+
+    /* Styling Input & Button Minimalis */
     .stTextInput>div>div>input {{
         background-color: white !important;
-        color: black !important;
-        border-radius: 12px !important;
+        color: #333 !important;
+        border-radius: 15px !important;
         height: 50px !important;
         text-align: center;
         font-weight: bold !important;
+        font-size: 1.1rem !important;
+        border: none !important;
     }}
 
-    /* Tombol Pro */
     .stButton>button {{
-        background: #000000 !important;
-        color: #ffffff !important;
+        background: #ffffff !important;
+        color: #000033 !important;
         border: none !important;
-        border-radius: 12px !important;
+        border-radius: 15px !important;
         font-weight: 800 !important;
-        font-size: 1rem !important;
+        font-size: 14px !important;
+        letter-spacing: 2px;
         height: 50px !important;
         width: 100%;
-        transition: 0.3s;
+        transition: all 0.4s ease-in-out;
+        margin-top: 20px;
     }}
     
     .stButton>button:hover {{
-        background: #ffffff !important;
-        color: #000000 !important;
-        transform: translateY(-2px);
+        background: #ff4b4b !important;
+        color: white !important;
+        transform: scale(1.05);
+        box-shadow: 0 10px 30px rgba(255,75,75,0.4);
     }}
 
-    /* Logo Responsive */
-    .responsive-logo {{
-        width: 100%;
-        max-width: 300px;
+    /* Dashboard Header */
+    .dash-header img {{
+        max-width: 220px;
         height: auto;
-        margin-bottom: 20px;
     }}
 
-    /* Sembunyikan Header Streamlit */
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
+    /* Hilangkan Elemen Bawaan Streamlit */
+    header, footer, #MainMenu {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
@@ -106,35 +119,37 @@ if not st.session_state.authenticated:
     logo_b64 = get_base64_img("HEADER INVOICE.png")
     
     st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    
-    if logo_b64:
-        st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="responsive-logo">', unsafe_allow_html=True)
-    else:
-        st.markdown("<h2 style='color:white;'>3G LOGISTICS</h2>", unsafe_allow_html=True)
-    
-    pwd = st.text_input("ACCESS CODE", type="password", placeholder="••••", label_visibility="collapsed")
-    
-    if st.button("SIGN IN"):
-        if pwd == PASSWORD_AKSES:
-            st.session_state.authenticated = True
-            st.rerun()
+    with st.container():
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        
+        if logo_b64:
+            st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="login-logo">', unsafe_allow_html=True)
         else:
-            st.error("Wrong Code")
-            
-    st.markdown('</div></div>', unsafe_allow_html=True)
+            st.markdown("<h1 style='color:white; margin-bottom:30px;'>3G LOGIN</h1>", unsafe_allow_html=True)
+        
+        pwd = st.text_input("ACCESS CODE", type="password", placeholder="PASSWORD", label_visibility="collapsed")
+        
+        if st.button("AUTHENTICATE"):
+            if pwd == PASSWORD_AKSES:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("ACCESS DENIED")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # --- 5. DASHBOARD UTAMA (SETELAH LOGIN) ---
-# Tampilkan kembali scroll untuk dashboard
+# Mengaktifkan kembali scroll untuk konten dashboard
 st.markdown("<style>.stApp { overflow: auto !important; }</style>", unsafe_allow_html=True)
 
-c_logo, c_out = st.columns([0.8, 0.2])
-with c_logo:
+c_header, c_spacer, c_logout = st.columns([0.3, 0.5, 0.2])
+with c_header:
     logo_dash = get_base64_img("HEADER INVOICE.png")
     if logo_dash:
-        st.markdown(f'<img src="data:image/png;base64,{logo_dash}" style="width:250px;">', unsafe_allow_html=True)
-with c_out:
+        st.markdown(f'<div class="dash-header"><img src="data:image/png;base64,{logo_dash}"></div>', unsafe_allow_html=True)
+
+with c_logout:
     st.write("##")
     if st.button("🚪 LOGOUT"):
         st.session_state.authenticated = False
@@ -142,7 +157,7 @@ with c_out:
 
 st.divider()
 
-# --- 6. FUNGSI LOGIK & PDF (Sesuai Kode Anda) ---
+# --- 6. FUNGSI BISNIS ---
 def generate_inv():
     return f"INV/{datetime.now().strftime('%Y%m%d/%H%M%S')}"
 
@@ -173,11 +188,11 @@ def render_pdf(data):
     pdf.cell(90, 6, f"Date: {data['waktu_tgl']}", 0, 1, 'R')
     pdf.ln(10)
     
-    # Table
+    # PDF Table
     pdf.set_font("Arial", 'B', 8)
     pdf.set_fill_color(240, 240, 240)
-    headers = [("Date Load", 25), ("Description", 50), ("Origin", 20), ("Dest", 25), ("Price", 20), ("Weight", 20), ("Total", 30)]
-    for txt, w in headers:
+    heads = [("Date Load", 25), ("Description", 50), ("Origin", 20), ("Dest", 25), ("Price", 20), ("Weight", 20), ("Total", 30)]
+    for txt, w in heads:
         pdf.cell(w, 10, txt, 1, 0, 'C', True)
     pdf.ln()
     
@@ -206,9 +221,9 @@ def render_pdf(data):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- 7. TAMPILAN TAB ---
-t1, t2 = st.tabs(["💎 CREATE INVOICE", "📂 DATABASE"])
+tab1, tab2 = st.tabs(["💎 CREATE INVOICE", "📂 DATABASE"])
 
-with t1:
+with tab1:
     with st.form("main_form", clear_on_submit=True):
         st.markdown("### 📝 Shipment Data")
         c1, c2 = st.columns(2)
@@ -235,9 +250,9 @@ with t1:
 
     if "preview" in st.session_state:
         pdf_data = render_pdf(st.session_state.preview)
-        st.download_button("📥 DOWNLOAD PDF", data=pdf_data, file_name=f"3G_Invoice.pdf", use_container_width=True)
+        st.download_button("📥 DOWNLOAD PDF INVOICE", data=pdf_data, file_name=f"3G_Invoice.pdf", use_container_width=True)
 
-with t2:
+with tab2:
     if st.button("🔄 REFRESH DATA"):
         try:
             res = requests.get(API_URL).json()
