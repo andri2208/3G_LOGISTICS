@@ -63,7 +63,7 @@ st.markdown(f"""
     .brand-text {{
         color: white;
         font-family: 'Inter', sans-serif;
-        font-size: 1.5rem;
+        font-size: 1rem;
         font-weight: 800;
         letter-spacing: 2px;
         margin-bottom: 10px;
@@ -165,6 +165,7 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
