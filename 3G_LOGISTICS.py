@@ -1,54 +1,74 @@
 import streamlit as st
 from PIL import Image
 
-# CSS untuk mematikan klik kanan dan menyembunyikan menu
-st.markdown("""
-    <style>
-        img { pointer-events: none; } /* Mencegah user klik kanan/drag gambar */
-        #MainMenu { visibility: hidden; } /* Sembunyikan menu 3 garis */
-        footer { visibility: hidden; } /* Sembunyikan footer "Made with Streamlit" */
-    </style>
-    """, unsafe_allow_html=True)
-
-
-# 1. Konfigurasi Halaman & Favicon
-# Pastikan nama file sama persis: 'FAVICON.png'
-im = Image.open("FAVICON.png")
+# 1. PROTEKSI UI & ANTI-DOWNLOAD
+# Script ini menyembunyikan menu dan mencegah klik kanan pada gambar
 st.set_page_config(
     page_title="3G Logistics",
-    page_icon=im,
+    page_icon="FAVICON.png",
     layout="wide"
 )
 
-# 2. Menampilkan Header Invoice
-# Gunakan use_column_width agar responsif
-st.image("HEADER INVOICE.png", use_column_width=True) 
+st.markdown("""
+    <style>
+    /* Mencegah klik kanan dan drag pada gambar */
+    img {
+        pointer-events: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* Menyembunyikan elemen Streamlit untuk tampilan bersih */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Pengaturan spasi untuk area tanda tangan manual */
+    .signature-space {
+        margin-top: 100px;
+        border-bottom: 1px solid #000;
+        width: 250px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.title("Aplikasi Invoice & Logistik")
+# 2. HEADER INVOICE
+try:
+    st.image("HEADER INVOICE.png", use_container_width=True)
+except:
+    st.warning("File HEADER INVOICE.png tidak ditemukan di repository.")
 
-# --- Logika Aplikasi Anda di sini ---
+# 3. KONTEN APLIKASI
+st.title("Sistem Manajemen Logistik")
+st.write("---")
 
+# Contoh Form Input Data (Bisa Anda sesuaikan)
+col1, col2 = st.columns(2)
 
+with col1:
+    customer_name = st.text_input("Nama Pelanggan")
+    no_invoice = st.text_input("Nomor Invoice")
 
-# Sembunyikan menu default, footer, dan matikan klik kanan pada gambar
-hide_menu_style = """
-        <style>
-        /* Sembunyikan Menu Streamlit (Hamburger & Footer) */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
+with col2:
+    tgl_kirim = st.date_input("Tanggal Pengiriman")
+    keterangan = st.text_area("Keterangan Barang")
 
-        /* Mencegah klik kanan pada gambar (pointer-events) */
-        img {
-            pointer-events: none;
-            -webkit-user-select: none; /* Safari */        
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE10+/Edge */
-            user-select: none; /* Standard */
-        }
-        </style>
-        """
-st.markdown(hide_menu_style, unsafe_allow_html=True)
+# Tabel Item (Contoh Sederhana)
+st.subheader("Rincian Pengiriman")
+# Anda bisa menambahkan logika tabel atau perhitungan harga di sini
 
+# 4. AREA TANDA TANGAN (KOSONG UNTUK MANUAL)
+st.write("##")
+st.write("##")
+col_sign1, col_sign2, col_sign3 = st.columns([1, 1, 1])
 
+with col_sign3:
+    st.write("Hormat Kami,")
+    # Memberikan ruang kosong untuk stempel/tanda tangan basah nantinya
+    st.markdown('<div class="signature-space"></div>', unsafe_allow_html=True)
+    st.write("Administrasi 3G Logistics")
 
+# Tombol Cetak (Hanya memicu fungsi print browser)
+if st.button("Persiapkan Cetak"):
+    st.info("Gunakan kombinasi tombol Ctrl+P atau Cmd+P untuk mencetak ke PDF.")
