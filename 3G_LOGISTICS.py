@@ -11,29 +11,53 @@ st.set_page_config(page_title="3G Logistics System", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS CUSTOM UNTUK MEMPERTEBAL TEKS DI ATAS KOLOM ---
+# --- CSS DARK MODE KONTRAS TINGGI ---
 st.markdown("""
     <style>
-    /* Mempertebal semua label (teks di atas kolom) */
-    .stWidgetLabel p {
-        font-weight: 900 !important; /* Sangat Tebal */
-        font-size: 16px !important;
-        color: #1E1E1E !important;
-        margin-bottom: 8px !important;
+    /* Latar belakang utama aplikasi */
+    .stApp {
+        background-color: #0E1117;
     }
     
-    /* Memberi warna latar pada kolom input agar menonjol */
+    /* Mempertebal label dan warna putih cerah agar kontras */
+    .stWidgetLabel p {
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        color: #00FF41 !important; /* Warna Hijau Matrix agar sangat kontras */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Box Input: Latar Hitam, Border Abu Terang */
     .stTextInput input, .stNumberInput input, .stDateInput input {
-        background-color: #F8F9FA !important;
-        border: 2px solid #D1D5DB !important;
+        background-color: #161B22 !important;
+        color: white !important;
+        border: 2px solid #30363D !important;
         border-radius: 8px !important;
         padding: 10px !important;
     }
 
-    /* Warna saat kolom diklik */
+    /* Saat kolom diklik (Focus) */
     .stTextInput input:focus {
-        border-color: #28a745 !important;
-        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+        border-color: #00FF41 !important;
+        background-color: #0D1117 !important;
+    }
+
+    /* Mempercantik Tab */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: #0E1117;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        background-color: #161B22;
+        border-radius: 5px 5px 0px 0px;
+        color: white;
+        font-weight: bold;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #00FF41 !important;
+        color: black !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -65,15 +89,15 @@ def get_data():
 
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
-tab1, tab2 = st.tabs(["📄 Cetak Invoice (A5)", "➕ Tambah Data"])
+tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
     data = get_data()
     if not data:
-        st.info("Sedang mengambil data...")
+        st.info("Menunggu data...")
     else:
         df = pd.DataFrame(data)
-        selected_cust = st.selectbox("Pilih Nama Customer:", sorted(df['customer'].unique()))
+        selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
         row = df[df['customer'] == selected_cust].iloc[-1]
         
         b_val = extract_number(row['weight'])
@@ -91,8 +115,8 @@ with tab1:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; background-color: white; }}
-                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ccc; }}
+                body {{ font-family: Arial, sans-serif; background-color: #161B22; padding: 10px; }}
+                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
                 .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
@@ -101,7 +125,7 @@ with tab1:
                 .data-table th {{ background-color: #eee; }}
                 .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
                 .footer {{ width: 100%; margin-top: 20px; font-size: 11px; }}
-                .btn-download {{ width: 100%; background: #28a745; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
+                .btn-download {{ width: 100%; background: #00FF41; color: black; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
             </style>
         </head>
         <body>
@@ -148,7 +172,7 @@ with tab1:
                     </tr>
                 </table>
             </div>
-            <button class="btn-download" onclick="downloadA5()">📥 DOWNLOAD INVOICE (UKURAN A5)</button>
+            <button class="btn-download" onclick="downloadA5()">📥 DOWNLOAD INVOICE (A5)</button>
 
             <script>
                 function downloadA5() {{
@@ -169,7 +193,7 @@ with tab1:
         components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("### ➕ Input Data Pengiriman Baru")
+    st.markdown("<h2 style='color: white;'>➕ DATA ENTRY</h2>", unsafe_allow_html=True)
     with st.form("form_db", clear_on_submit=True):
         col1, col2 = st.columns(2)
         v_tgl = col1.date_input("TANGGAL PENGIRIMAN", datetime.now())
@@ -177,12 +201,12 @@ with tab2:
         v_desc = col1.text_input("DESKRIPSI BARANG")
         v_orig = col2.text_input("ORIGIN (ASAL)", value="SBY")
         v_dest = col2.text_input("DESTINATION (TUJUAN)")
-        v_kol = col2.text_input("JUMLAH KOLLI (Contoh: 10 Box)")
-        v_kg = col2.text_input("WEIGHT / BERAT (Angka Saja)")
-        v_hrg = col2.number_input("HARGA SATUAN (Rp)", 0)
+        v_kol = col2.text_input("JUMLAH KOLLI")
+        v_kg = col2.text_input("WEIGHT / BERAT")
+        v_hrg = col2.number_input("HARGA SATUAN", 0)
         
         st.markdown("---")
-        if st.form_submit_button("💾 SIMPAN DATA KE GOOGLE SHEETS"):
+        if st.form_submit_button("💾 SIMPAN DATA KE SISTEM"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -192,7 +216,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"✅ Berhasil Disimpan! Total Tagihan Otomatis: Rp {total_db:,}")
+                st.success(f"✅ Tersimpan! Total: Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("❌ Gagal terhubung ke database.")
+                st.error("❌ Koneksi Gagal.")
