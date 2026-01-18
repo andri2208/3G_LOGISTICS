@@ -9,8 +9,8 @@ from fpdf import FPDF
 API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
 
 st.set_page_config(
-    page_title="3G LOGISTICS - Invoice System", 
-    page_icon="🚚", 
+    page_title="3G LOGISTICS - Invoice System",
+    page_icon="FAVICON.png", 
     layout="wide"
 )
 
@@ -87,8 +87,8 @@ def buat_pdf_custom(data):
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
     
     y_ttd = pdf.get_y()
-    if os.path.exists("TANDA_TANGAN.png"):
-        pdf.image("TANDA_TANGAN.png", x=145, y=y_ttd, w=35)
+    if os.path.exists("STEMPEL TANDA TANGAN.png"):
+        pdf.image("STEMPEL TANDA TANGAN.png", x=145, y=y_ttd, w=35)
         pdf.ln(20)
     else:
         pdf.ln(20)
@@ -106,56 +106,63 @@ def buat_pdf_custom(data):
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-st.title("Sistem Cetak Invoice 3G LOGISTICS")
+st.title("INVOICE")
 
 # Inisialisasi session state
 if 'preview_data' not in st.session_state:
     st.session_state.preview_data = None
 
-# Fungsi untuk Reset
+# Fungsi untuk menghapus data (Reset)
 def reset_form():
     st.session_state.preview_data = None
 
-# FORM INPUT
+# FORM INPUT (clear_on_submit agar input kosong setelah diproses)
 with st.form("main_form", clear_on_submit=True):
     cust = st.text_input("Nama Customer")
     prod = st.text_input("Deskripsi Barang")
     c1, c2, c3, c4 = st.columns(4)
     with c1: ori = st.text_input("Origin")
     with c2: dest = st.text_input("Destination")
-    with c3: hrg = st.number_input("Harga", value=0)
-    with c4: wgt = st.number_input("Berat (Kg)", value=0)
+    with c3: hrg = st.number_input("Harga", value=8500)
+    with c4: wgt = st.number_input("Berat (Kg)", value=1)
     
     if st.form_submit_button("Proses & Preview"):
-        st.session_state.preview_data = {
-            "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
-            "penerima": cust,
-            "deskripsi": prod,
-            "asal": ori,
-            "tujuan": dest,
-            "harga": hrg,
-            "berat": wgt,
-            "total": int(hrg * wgt)
-        }
-        try:
-            requests.post(API_URL, json=st.session_state.preview_data)
-        except:
-            pass
+        if not cust or not prod:
+            st.error("Nama Customer dan Deskripsi tidak boleh kosong!")
+        else:
+            st.session_state.preview_data = {
+                "waktu_tgl": datetime.now().strftime("%d-%b-%y"),
+                "penerima": cust,
+                "deskripsi": prod,
+                "asal": ori,
+                "tujuan": dest,
+                "harga": hrg,
+                "berat": wgt,
+                "total": int(hrg * wgt)
+            }
+            try:
+                requests.post(API_URL, json=st.session_state.preview_data)
+            except:
+                pass
 
-# --- 5. PREVIEW & RESET ---
+# --- 5. PREVIEW & TOMBOL RESET ---
 if st.session_state.preview_data:
     d = st.session_state.preview_data
     st.divider()
     
-    col_pre, col_res = st.columns([0.85, 0.15])
-    with col_pre:
-        st.subheader("🔍 Preview Invoice")
-    with col_res:
-        # TOMBOL RESET
-        st.button("🗑️ Reset Form", on_click=reset_form)
+    # Membuat 2 kolom untuk Subheader dan Tombol Reset
+    col_head, col_btn = st.columns([0.8, 0.2])
+    with col_head:
+        st.subheader("🔍 Preview")
+    with col_btn:
+        # Tombol Reset untuk menghapus preview
+        st.button("🗑️ Reset Preview", on_click=reset_form, use_container_width=True)
     
     with st.container(border=True):
         st.write(f"**Customer:** {d['penerima']} | **Tanggal:** {d['waktu_tgl']}")
+        st.write(f"**Transfer To:** BCA - 6720422334 - A/N ADITYA GAMA SAPUTRI")
+        st.caption("NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200")
+        
         st.table(pd.DataFrame([d]))
         st.write(f"### Total Bayar: Rp {d['total']:,}")
 
