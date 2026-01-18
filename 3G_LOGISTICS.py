@@ -20,7 +20,7 @@ st.markdown("""
     <style>
     /* Background Gradien Merah-Biru */
     .stApp {
-        background: linear-gradient(90deg,rgba(255, 0, 30, 1) 0%, rgba(0, 34, 255, 1) 50%, rgba(255, 0, 26, 1) 100%););
+        background: linear-gradient(90deg,rgba(0, 157, 255, 1) 0%, rgba(0, 136, 255, 1) 50%, rgba(255, 0, 4, 1) 100%);
     }
 
     /* CONTAINER LOGO RESPONSIVE */
@@ -229,4 +229,5 @@ with t2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.error("Database Error")
+
 
