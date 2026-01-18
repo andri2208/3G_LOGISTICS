@@ -8,27 +8,16 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN (Merapikan jarak & Menghilangkan Header Streamlit)
+# 2. CSS UNTUK TAMPILAN
 st.markdown("""
     <style>
-    /* Menghilangkan header bawaan Streamlit (garis warna-warni dan bar kosong) */
     header {visibility: hidden;}
-    #root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}
-
-    /* Menarik konten ke atas tapi tetap memberi ruang untuk tombol logout */
     .block-container {
-        padding-top: 0.5rem;
+        padding-top: 1rem;
         padding-bottom: 0rem;
     }
-
-    /* Merapikan jarak Tabs agar naik */
     .stTabs {
         margin-top: -15px;
-    }
-    
-    /* Tombol Logout agar tidak terlalu jauh tapi tidak tertutup */
-    [data-testid="stVerticalBlock"] > div:first-child {
-        margin-top: 0px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -41,21 +30,18 @@ def login():
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
         if st.form_submit_button("Masuk"):
-            if user == "Admin" and pw == "2026":
+            if user == "admin3g" and pw == "gama2024":
                 st.session_state['logged_in'] = True
                 st.rerun()
             else:
                 st.error("Username atau Password Salah!")
 
-# Inisialisasi Session State
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 
 if not st.session_state['logged_in']:
     login()
 else:
-    # --- JIKA SUDAH LOGIN ---
-    
     API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
     def terbilang(n):
@@ -77,14 +63,13 @@ else:
             return r.json()
         except: return []
 
-    # Baris Logout (Di atas Header)
+    # Baris Logout
     c_kosong, c_out = st.columns([0.8, 0.2])
     with c_out:
         if st.button("Logout 🚪", use_container_width=True):
             st.session_state['logged_in'] = False
             st.rerun()
 
-    # Header Gambar Utama
     st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
     tab1, tab2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
@@ -92,20 +77,16 @@ else:
     with tab1:
         data = get_data()
         if not data:
-            st.warning("Database sedang memuat atau kosong...")
+            st.warning("Memuat data...")
         else:
             df = pd.DataFrame(data)
-            cust_list = df['customer'].unique()
-            selected_cust = st.selectbox("Cari Customer:", cust_list)
-            
+            selected_cust = st.selectbox("Cari Customer:", df['customer'].unique())
             row = df[df['customer'] == selected_cust].iloc[-1]
             tgl = str(row['date']).split('T')[0]
             total_harga = int(row['total'])
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # HTML INVOICE (ID: invoice-box)
-            # Tag HTML rapat kiri untuk menghindari deteksi kode mentah
             html_content = f"""<div id="invoice-box" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial, sans-serif;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size: 20px;">INVOICE</div>
@@ -126,7 +107,6 @@ Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS
             st.markdown(html_content, unsafe_allow_html=True)
             st.write("")
             
-            # Tombol Download PDF
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <button onclick="doDownload()" style="background-color:#4CAF50;color:white;padding:15px;border:none;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;font-size:16px;">📥 DOWNLOAD INVOICE (PDF)</button>
@@ -158,16 +138,21 @@ function doDownload() {{
             f_hrg = c2.number_input("Harga Satuan", 0)
             
             if st.form_submit_button("🚀 SIMPAN KE DATABASE"):
-             # Hapus double kurung kurawal, gunakan satu saja { }
-payload = {
-    "date": str(f_tgl),
-    "customer": f_cust.upper(),
-    "description": f_desc.upper(),
-    "origin": f_orig.upper(),
-    "destination": f_dest.upper(),
-    "kolli": f_kol,
-    "harga": f_hrg,
-    "weight": f_kg,
-    "total": f_hrg * f_kg
-}
-
+                # PERBAIKAN DI SINI: Menggunakan kurung tunggal { }
+                payload = {
+                    "date": str(f_tgl),
+                    "customer": f_cust.upper(),
+                    "description": f_desc.upper(),
+                    "origin": f_orig.upper(),
+                    "destination": f_dest.upper(),
+                    "kolli": f_kol,
+                    "harga": f_hrg,
+                    "weight": f_kg,
+                    "total": f_hrg * f_kg
+                }
+                try:
+                    requests.post(API_URL, data=json.dumps(payload))
+                    st.success("Berhasil Disimpan!")
+                    st.cache_data.clear()
+                except:
+                    st.error("Gagal simpan.")
