@@ -8,13 +8,12 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB (Merapikan Header & Jarak)
+# 2. CSS UNTUK TAMPILAN WEB
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stTabs { margin-top: -15px; }
-    /* Supaya preview di HP bisa di-scroll tapi tidak merusak layout */
     [data-testid="stMarkdownContainer"] > div > div { overflow-x: auto; }
     </style>
     """, unsafe_allow_html=True)
@@ -39,7 +38,6 @@ if 'logged_in' not in st.session_state:
 if not st.session_state['logged_in']:
     login()
 else:
-    # --- JIKA SUDAH LOGIN ---
     API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
     def terbilang(n):
@@ -85,7 +83,7 @@ else:
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE KHUSUS PDF (UKURAN TETAP 800PX) ---
+            # --- DESAIN INVOICE PAS A4 (800PX) ---
             html_content = f"""
 <div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #000; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
     <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
@@ -111,7 +109,11 @@ else:
     <table style="width:100%; font-size:13px; line-height:1.6;">
         <tr>
             <td style="width:60%; vertical-align:top;">
-                <b>TRANSFER TO :</b><br>Bank Central Asia (BCA)<br><span style="font-size:16px; font-weight:bold;">6720422334</span><br>A/N ADITYA GAMA SAPUTRI<br>Finance: 082179799200<br><i>NB : Jika sudah transfer mohon konfirmasi ke Finance</i>
+                <b style="font-size:14px;">TRANSFER TO :</b><br>
+                Bank Central Asia 6720422334<br>
+                A/N ADITYA GAMA SAPUTRI<br>
+                NB : Jika sudah transfer mohon konfirmasi ke<br>
+                Finance 082179799200
             </td>
             <td style="width:40%; text-align:center; vertical-align:top;">
                 Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
@@ -123,7 +125,7 @@ else:
             st.markdown(html_content, unsafe_allow_html=True)
             st.write("---")
 
-            # 4. SCRIPT DOWNLOAD (UKURAN A4 PAS)
+            # 4. SCRIPT DOWNLOAD
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px;">📥 SIMPAN SEBAGAI PDF</button>
