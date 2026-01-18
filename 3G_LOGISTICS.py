@@ -1,102 +1,79 @@
 import streamlit as st
 import requests
-import pandas as pd
 from datetime import datetime
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(
-    page_title="3G LOGISTICS - Sistem Invoice", 
-    page_icon="FAVICON.png", 
-    layout="wide"
-)
+# --- FUNGSI TERBILANG OTOMATIS ---
+def terbilang(n):
+    bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
+    if n < 12:
+        return bilangan[n]
+    elif n < 20:
+        return terbilang(n - 10) + " Belas"
+    elif n < 100:
+        return terbilang(n // 10) + " Puluh " + terbilang(n % 10)
+    elif n < 200:
+        return "Seratus " + terbilang(n - 100)
+    elif n < 1000:
+        return terbilang(n // 100) + " Ratus " + terbilang(n % 100)
+    elif n < 2000:
+        return "Seribu " + terbilang(n - 1000)
+    elif n < 1000000:
+        return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
+    elif n < 1000000000:
+        return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
+    return "Angka Terlalu Besar"
 
-# --- LOAD ASET GAMBAR ---
-# Mengambil logo dan header dari folder project Anda
-st.image("HEADER INVOICE.png", use_container_width=True)
-
-# --- AMBIL URL DARI SECRETS ---
-try:
-    # Baris di bawah ini harus menjorok ke dalam (4 spasi)
-    API_URL = st.secrets["general"]["api_url"]
-except Exception as e:
-    st.error("PENTING: Masukkan 'api_url' di Settings > Secrets Streamlit Cloud Anda!")
-    st.stop()
-
-# --- FUNGSI AMBIL DATA ---
-def get_data():
-    try:
-        response = requests.get(API_URL)
-        if response.status_code == 200:
-            return pd.DataFrame(response.json())
-        return pd.DataFrame()
-    except:
-        return pd.DataFrame()
-
-# --- TAMPILAN UTAMA ---
-st.title("Sistem Logistik PT. GAMA GEMAH GEMILANG")
-
-tabs = st.tabs(["📊 Dashboard Data", "📝 Input Invoice Baru"])
-
-# TAB 1: DASHBOARD (Melihat data yang sudah ada di Google Sheets)
-with tabs[0]:
-    st.subheader("Data Pengiriman Terdaftar")
-    df = get_data()
-    if not df.empty:
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info("Belum ada data atau koneksi Apps Script sedang bermasalah.")
-
-# TAB 2: FORM INPUT (Sesuai format dokumen INVOICE PT HARVI)
-with tabs[1]:
-    st.subheader("Form Pembuatan Invoice")
+# --- TAMPILAN FORM ---
+with st.form("invoice_form", clear_on_submit=True):
+    st.subheader("📝 Input Invoice Baru")
     
-    with st.form("invoice_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Tanggal Otomatis dari Sistem 
+        tgl_skrng = datetime.now()
+        st.info(f"Tanggal Hari Ini: {tgl_skrng.strftime('%d-%b-%Y')}")
         
-        with col1:
-            customer = st.text_input("CUSTOMER", value="PT HARVI")
-            tgl_muat = st.date_input("Date of Load", datetime.now())
-            origin = st.text_input("Origin", value="TUAL")
-            destination = st.text_input("Destination", value="LARAT")
-            
-        with col2:
-            produk = st.text_input("Product Description", value="3 UNIT CDD")
-            harga = st.number_input("Harga (Rp)", min_value=0, value=27000000, step=1000)
-            terbilang = st.text_input("Terbilang", value="Dua puluh tujuh juta rupiah")
-            tgl_invoice = st.date_input("DATE (Tanggal Invoice)", datetime.now())
+        customer = st.text_input("Customer", placeholder="Contoh: PT HARVI") [cite: 3]
+        produk = st.text_area("Product Description", placeholder="Contoh: 3 UNIT CDD") [cite: 5]
+        kolli = st.number_input("KOLLI", min_value=0, step=1) [cite: 5]
+        berat = st.text_input("WEIGHT", placeholder="Contoh: 10 Ton atau -") [cite: 5]
+        
+    with col2:
+        origin = st.text_input("Origin", value="TUAL") [cite: 5]
+        destination = st.text_input("Destination", value="LARAT") [cite: 5]
+        harga = st.number_input("Harga Satuan (Rp)", min_value=0, value=0, step=1000) [cite: 5]
+        
+        # Kalkulasi Otomatis: Yang Harus Dibayar 
+        total_bayar = harga # Anda bisa ubah menjadi (harga * kolli) jika diperlukan
+        st.markdown(f"**YANG HARUS DIBAYAR:**")
+        st.subheader(f"Rp {total_bayar:,.0f}")
+        
+        # Terbilang Otomatis 
+        hasil_terbilang = f"{terbilang(total_bayar)} Rupiah" if total_bayar > 0 else "-"
+        st.write(f"*Terbilang: {hasil_terbilang}*")
 
-        submitted = st.form_submit_button("Simpan Data ke Google Sheets")
+    submitted = st.form_submit_button("Simpan & Kirim Invoice")
 
-        if submitted:
-            # Data dikirim dalam format JSON ke Apps Script
-            payload = {
-                "date_load": tgl_muat.strftime("%d-%b-%y"),
-                "customer": customer,
-                "description": produk,
-                "origin": origin,
-                "destination": destination,
-                "harga": harga,
-                "terbilang": terbilang,
-                "date_invoice": tgl_invoice.strftime("%d/%m/%Y")
-            }
-            
-            try:
-                res = requests.post(API_URL, json=payload)
-                if res.status_code == 200:
-                    st.success("✅ Data berhasil tersimpan ke Google Sheets!")
-                    st.balloons()
-                else:
-                    st.error("Gagal mengirim data. Cek koneksi Web App Anda.")
-            except Exception as e:
-                st.error(f"Terjadi kesalahan teknis: {e}")
-
-# --- FOOTER ---
-st.markdown("---")
-col_f1, col_f2 = st.columns([2, 1])
-with col_f2:
-    st.write("Sincerely,")
-    st.image("STEMPEL TANDA TANGAN.png", width=150)
-    st.write("**KELVINITO JAYADI**")
-    st.caption("DIREKTUR")
-
-
+    if submitted:
+        payload = {
+            "date": tgl_skrng.strftime("%d-%b-%Y"),
+            "customer": customer,
+            "description": produk,
+            "origin": origin,
+            "destination": destination,
+            "kolli": kolli,
+            "weight": berat,
+            "total": total_bayar,
+            "terbilang": hasil_terbilang
+        }
+        
+        # Mengirim ke Apps Script
+        try:
+            res = requests.post(st.secrets["general"]["api_url"], json=payload)
+            if res.status_code == 200:
+                st.success("✅ Invoice Berhasil Dicatat!")
+            else:
+                st.error("Gagal mengirim ke Google Sheets.")
+        except Exception as e:
+            st.error(f"Error: {e}")
