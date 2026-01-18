@@ -65,7 +65,7 @@ st.markdown(f"""
     .brand-text {{
         color: white;
         font-family: 'Inter', sans-serif;
-        font-size: 1.4rem;
+        font-size: 1rem;
         font-weight: 700;
         letter-spacing: 1.5px;
         margin-bottom: 8px;
@@ -252,6 +252,7 @@ with tab2:
     }
     df = pd.DataFrame(data)
     st.dataframe(df)
+
 
 
 
