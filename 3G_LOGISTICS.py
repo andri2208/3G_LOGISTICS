@@ -16,7 +16,7 @@ st.markdown("""
     /* Menghilangkan jarak atas pada aplikasi */
     .block-container {
         padding-top: 1rem;
-        padding-bottom: 0rem;
+        padding-bottom: 2,2rem;
         margin-top: -20px;
     }
     /* Menghilangkan ruang kosong di atas tabs */
@@ -161,6 +161,7 @@ function downloadPDF() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal menyimpan data.")
+
 
 
 
