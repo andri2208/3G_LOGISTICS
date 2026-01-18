@@ -5,12 +5,12 @@ from datetime import datetime
 import os
 from fpdf import FPDF
 
-# --- 1. KONFIGURASI API & HALAMAN (Update Favicon di sini) ---
+# --- 1. KONFIGURASI API & HALAMAN ---
 API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
 
 st.set_page_config(
-    page_title="3G LOGISTICS - Invoice System",
-    page_icon="FAVICON.png", # Nama file gambar kamu
+    page_title="3G LOGISTICS - Invoice System", 
+    page_icon="🚚", 
     layout="wide"
 )
 
@@ -27,12 +27,11 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- 3. FUNGSI PDF DENGAN HEADER, TTD, & INFO TRANSFER ---
+# --- 3. FUNGSI PDF ---
 def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
     
-    # --- HEADER GAMBAR ---
     if os.path.exists("HEADER INVOICE.png"):
         pdf.image("HEADER INVOICE.png", x=10, y=8, w=190)
         pdf.ln(35)
@@ -41,7 +40,6 @@ def buat_pdf_custom(data):
         pdf.cell(190, 7, "PT. GAMA GEMAH GEMILANG", ln=True)
         pdf.ln(10)
     
-    # Detail Customer
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(100, 6, f"CUSTOMER: {data['penerima'].upper()}", 0)
     pdf.cell(90, 6, "INVOICE", 0, 1, 'R')
@@ -50,7 +48,6 @@ def buat_pdf_custom(data):
     pdf.cell(90, 6, f"DATE: {data['waktu_tgl']}", 0, 1, 'R')
     pdf.ln(5)
     
-    # Tabel Header
     pdf.set_font("Arial", 'B', 8)
     pdf.set_fill_color(230, 230, 230)
     pdf.cell(25, 10, "Date of Load", 1, 0, 'C', True)
@@ -61,7 +58,6 @@ def buat_pdf_custom(data):
     pdf.cell(20, 10, "Weight", 1, 0, 'C', True)
     pdf.cell(30, 10, "Total", 1, 1, 'C', True)
     
-    # Isi Tabel
     pdf.set_font("Arial", size=8)
     pdf.cell(25, 10, data['waktu_tgl'], 1, 0, 'C')
     pdf.cell(50, 10, data['deskripsi'].upper(), 1, 0, 'C')
@@ -71,7 +67,6 @@ def buat_pdf_custom(data):
     pdf.cell(20, 10, f"{data['berat']} Kg", 1, 0, 'C')
     pdf.cell(30, 10, f"Rp {data['total']:,}", 1, 1, 'C')
     
-    # Total & Terbilang
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(140, 10, "YANG HARUS DI BAYAR", 0, 0, 'R')
@@ -79,7 +74,6 @@ def buat_pdf_custom(data):
     pdf.set_font("Arial", 'I', 9)
     pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])} Rupiah")
 
-    # --- INFORMASI TRANSFER (UPDATE) ---
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "TRANSFER TO :", ln=True)
@@ -88,14 +82,13 @@ def buat_pdf_custom(data):
     pdf.set_font("Arial", 'I', 8)
     pdf.cell(190, 5, "NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200", ln=True)
     
-    # --- BAGIAN TANDA TANGAN ---
     pdf.ln(10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
     
     y_ttd = pdf.get_y()
-    if os.path.exists("STEMPEL TANDA TANGAN.png"):
-        pdf.image("STEMPEL TANDA TANGAN.png", x=145, y=y_ttd, w=35)
+    if os.path.exists("TANDA_TANGAN.png"):
+        pdf.image("TANDA_TANGAN.png", x=145, y=y_ttd, w=35)
         pdf.ln(20)
     else:
         pdf.ln(20)
@@ -113,19 +106,25 @@ def buat_pdf_custom(data):
 if os.path.exists("HEADER INVOICE.png"):
     st.image("HEADER INVOICE.png", use_container_width=True)
 
-st.title("INVOICE")
+st.title("Sistem Cetak Invoice 3G LOGISTICS")
 
+# Inisialisasi session state
 if 'preview_data' not in st.session_state:
     st.session_state.preview_data = None
 
-with st.form("main_form"):
+# Fungsi untuk Reset
+def reset_form():
+    st.session_state.preview_data = None
+
+# FORM INPUT
+with st.form("main_form", clear_on_submit=True):
     cust = st.text_input("Nama Customer")
     prod = st.text_input("Deskripsi Barang")
     c1, c2, c3, c4 = st.columns(4)
     with c1: ori = st.text_input("Origin")
     with c2: dest = st.text_input("Destination")
-    with c3: hrg = st.number_input("Harga", value=8500)
-    with c4: wgt = st.number_input("Berat (Kg)", value=1)
+    with c3: hrg = st.number_input("Harga", value=0)
+    with c4: wgt = st.number_input("Berat (Kg)", value=0)
     
     if st.form_submit_button("Proses & Preview"):
         st.session_state.preview_data = {
@@ -143,16 +142,20 @@ with st.form("main_form"):
         except:
             pass
 
+# --- 5. PREVIEW & RESET ---
 if st.session_state.preview_data:
     d = st.session_state.preview_data
     st.divider()
-    st.subheader("🔍 Preview")
+    
+    col_pre, col_res = st.columns([0.85, 0.15])
+    with col_pre:
+        st.subheader("🔍 Preview Invoice")
+    with col_res:
+        # TOMBOL RESET
+        st.button("🗑️ Reset Form", on_click=reset_form)
     
     with st.container(border=True):
         st.write(f"**Customer:** {d['penerima']} | **Tanggal:** {d['waktu_tgl']}")
-        st.write(f"**Transfer To:** BCA - 6720422334 - A/N ADITYA GAMA SAPUTRI")
-        st.caption("NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200")
-        
         st.table(pd.DataFrame([d]))
         st.write(f"### Total Bayar: Rp {d['total']:,}")
 
@@ -163,6 +166,3 @@ if st.session_state.preview_data:
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
     )
-
-
-
