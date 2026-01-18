@@ -4,13 +4,10 @@ import requests
 import json
 from datetime import datetime
 
-# 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
-# URL API Apps Script Anda
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# FUNGSI TERBILANG
 def terbilang(n):
     bil = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"]
     if n < 12: return bil[int(n)]
@@ -23,93 +20,51 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " juta " + terbilang(n % 1000000)
     return ""
 
-# 2. AMBIL DATA
-@st.cache_data(ttl=10)
+@st.cache_data(ttl=5)
 def get_data():
     try:
         r = requests.get(API_URL, timeout=10)
         return r.json()
-    except:
-        return []
+    except: return []
 
-# 3. TAMPILAN UTAMA
 st.title("PT. GAMA GEMAH GEMILANG")
-
 t1, t2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
 
 with t1:
     data = get_data()
     if not data:
-        st.error("Gagal memuat database.")
+        st.error("Database Kosong")
     else:
         df = pd.DataFrame(data)
         st.sidebar.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png")
         cust = st.sidebar.selectbox("Pilih Customer", df['customer'].unique())
-        
-        # Ambil data terbaru customer
         row = df[df['customer'] == cust].iloc[-1]
         tgl = str(row['date']).split('T')[0]
         total = int(row['total'])
         kata = terbilang(total).title() + " Rupiah"
 
-        # --- HTML RESPONSIVE DIMULAI DI SINI ---
-        html_code = f"""
-<div style="background-color:white; padding:15px; border:1px solid black; color:black; font-family:Arial; width:100%; max-width:850px; margin:auto; box-sizing:border-box;">
-    <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
-    <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold; font-size:clamp(16px, 5vw, 20px);">INVOICE</div>
-    
-    <div style="display:flex; justify-content:space-between; font-size:clamp(10px, 3vw, 14px); margin-bottom:10px;">
-        <span><b>CUSTOMER : {row['customer']}</b></span>
-        <span><b>DATE : {tgl}</b></span>
-    </div>
-
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; border:1px solid black; font-size:clamp(9px, 2.5vw, 12px); text-align:center;">
-            <tr style="background-color:#316395; color:white;">
-                <th style="border:1px solid black; padding:8px;">Date of Load</th>
-                <th style="border:1px solid black;">Product Description</th>
-                <th style="border:1px solid black;">Origin</th>
-                <th style="border:1px solid black;">Destination</th>
-                <th style="border:1px solid black;">KOLLI</th>
-                <th style="border:1px solid black;">HARGA</th>
-                <th style="border:1px solid black;">WEIGHT</th>
-            </tr>
-            <tr>
-                <td style="border:1px solid black; padding:10px;">{tgl}</td>
-                <td style="border:1px solid black;">{row['description']}</td>
-                <td style="border:1px solid black;">{row['origin']}</td>
-                <td style="border:1px solid black;">{row['destination']}</td>
-                <td style="border:1px solid black;">{row['kolli']}</td>
-                <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
-                <td style="border:1px solid black;">{row['weight']} Kg</td>
-            </tr>
-            <tr style="font-weight:bold; background-color:#f2f2f2;">
-                <td colspan="6" style="border:1px solid black; text-align:center; padding:5px;">YANG HARUS DI BAYAR</td>
-                <td style="border:1px solid black;">Rp {total:,}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div style="border:1px solid black; margin-top:5px; padding:8px; font-size:clamp(10px, 3vw, 13px); font-style:italic;"><b>Terbilang :</b> {kata}</div>
-    
-    <div style="margin-top:20px; display:flex; flex-wrap:wrap; justify-content:space-between; font-size:clamp(10px, 3vw, 12px);">
-        <div style="flex:1; min-width:200px; margin-bottom:15px;">
-            <b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Konfirmasi Finance 082179799200</small>
-        </div>
-        <div style="flex:1; text-align:center; min-width:200px;">
-            Sincerely,<br>
-            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; height:auto; margin:5px 0;"><br>
-            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-        </div>
-    </div>
+        # Kunci Perbaikan: HTML diletakkan tanpa spasi sama sekali di awal baris
+        st.markdown(f"""
+<div style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:850px;margin:auto;">
+<center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;"></center>
+<div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size:20px;">INVOICE</div>
+<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><b>CUSTOMER : {row['customer']}</b><b>DATE : {tgl}</b></div>
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;border:1px solid black;font-size:12px;text-align:center;">
+<tr style="background-color:#316395;color:white;"><th style="border:1px solid black;padding:8px;">Date of Load</th><th style="border:1px solid black;">Product Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Destination</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th></tr>
+<tr><td style="border:1px solid black;padding:10px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td></tr>
+<tr style="font-weight:bold;background-color:#f2f2f2;"><td colspan="6" style="border:1px solid black;text-align:center;padding:5px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total:,}</td></tr>
+</table>
 </div>
-"""
-        # --- SELESAI HTML ---
-        st.markdown(html_code, unsafe_allow_html=True)
-        st.button("Print Invoice (Ctrl+P)")
+<div style="border:1px solid black;margin-top:5px;padding:8px;font-size:13px;font-style:italic;"><b>Terbilang :</b> {kata}</div>
+<div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;font-size:12px;">
+<div style="flex:1;min-width:200px;margin-bottom:15px;"><b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Konfirmasi Finance 082179799200</small></div>
+<div style="flex:1;text-align:center;min-width:200px;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</div>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
 with t2:
-    st.subheader("Input Transaksi Baru")
     with st.form("f1", clear_on_submit=True):
         c1, c2 = st.columns(2)
         d_tgl = c1.date_input("Tanggal")
@@ -120,19 +75,8 @@ with t2:
         d_kol = c2.number_input("Kolli", 0)
         d_kg = c2.number_input("Weight (Kg)", 1)
         d_hrg = c2.number_input("Harga", 0)
-        
-        if st.form_submit_button("Simpan Ke Database"):
-            payload = {
-                "date": str(d_tgl),
-                "customer": d_cust.upper(),
-                "description": d_item.upper(),
-                "origin": d_ori.upper(),
-                "destination": d_dest.upper(),
-                "kolli": d_kol,
-                "harga": d_hrg,
-                "weight": d_kg,
-                "total": d_hrg * d_kg
-            }
+        if st.form_submit_button("Simpan"):
+            payload = {"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}
             requests.post(API_URL, data=json.dumps(payload))
-            st.success("Data Berhasil Disimpan!")
+            st.success("Tersimpan!")
             st.cache_data.clear()
