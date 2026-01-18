@@ -11,38 +11,37 @@ st.set_page_config(page_title="3G Logistics", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS PERBAIKAN HEADER & KONTRAS ---
+# --- CSS: HEADER AMAN, BACKGROUND ELEGAN, LABEL TEBAL ---
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
     
-    /* Memberi ruang di atas agar header tidak tertutup TAB Streamlit */
-    .block-container { padding-top: 3.5rem !important; }
+    /* Ruang atas agar tidak tertutup tab Streamlit */
+    .block-container { padding-top: 4rem !important; }
 
-    /* Ukuran Header yang Pas (Tidak kekecilan, tidak tertutup) */
+    /* Header Image Tengah & Proporsional */
     [data-testid="stImage"] img {
-        max-width: 600px !important; 
-        border-radius: 10px;
-        margin-bottom: 20px;
+        max-width: 550px !important; 
+        margin: 0 auto;
+        display: block;
+        border-radius: 8px;
     }
 
-    /* Label Input Tebal & Jelas */
+    /* Label Input Sangat Tebal (Midnight Blue) */
     .stWidgetLabel p {
         font-weight: 900 !important;
         font-size: 14px !important;
         color: #1A2A3A !important;
-        margin-bottom: 2px !important;
     }
     
-    /* Input Field Putih Bersih */
+    /* Input Field Putih */
     .stTextInput input, .stNumberInput input, .stDateInput input {
         background-color: #FFFFFF !important;
         border: 2px solid #BCC6CC !important;
         border-radius: 8px !important;
-        font-weight: bold !important;
     }
 
-    /* Tab Menu Lebih Menonjol */
+    /* Tab Menu Besar & Tegas */
     .stTabs [data-baseweb="tab-list"] { gap: 20px; }
     .stTabs [data-baseweb="tab"] {
         font-size: 18px !important;
@@ -76,7 +75,7 @@ def get_data():
         return r.json()
     except: return []
 
-# Header diletakkan di tengah dengan margin atas yang aman
+# Header Web
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png")
 
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
@@ -84,7 +83,7 @@ tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 with tab1:
     data = get_data()
     if not data:
-        st.info("Menunggu Data...")
+        st.info("Loading Data...")
     else:
         df = pd.DataFrame(data)
         selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
@@ -98,62 +97,101 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
+        # HTML INVOICE YANG SUDAH DIPERBAIKI (TETAP PROFESIONAL)
         invoice_html = f"""
-        <div id="inv" style="background:white; padding:15px; max-width:700px; margin:auto; border:1px solid #ddd; color:black; font-family:Arial;">
-            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;">
-            <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold;">INVOICE</div>
-            <table style="width:100%; font-size:12px; font-weight:bold; margin-bottom:5px;">
-                <tr><td>CUST: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-            </table>
-            <table style="width:100%; border-collapse:collapse; border:1px solid black; font-size:10px; text-align:center;">
-                <tr style="background:#f0f0f0;">
-                    <th style="border:1px solid black; padding:5px;">Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
-                </tr>
-                <tr>
-                    <td style="border:1px solid black; padding:8px;">{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
-                    <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
-                </tr>
-                <tr style="font-weight:bold; background:#f9f9f9;">
-                    <td colspan="6" style="border:1px solid black; text-align:right; padding:5px;">TOTAL BAYAR</td><td style="border:1px solid black;">Rp {t_val:,}</td>
-                </tr>
-            </table>
-            <div style="border:1px solid black; padding:5px; margin-top:8px; font-size:10px; font-style:italic;"><b>Terbilang:</b> {kata_terbilang}</div>
-            <table style="width:100%; margin-top:15px; font-size:10px;">
-                <tr>
-                    <td><b>TRANSFER TO:</b><br>BCA 6720422334<br>A/N ADITYA GAMA SAPUTRI<br>Finance: 082179799200</td>
-                    <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:85px;"><br><b><u>KELVINITO JAYADI</u></b></td>
-                </tr>
-            </table>
-        </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <button onclick="savePDF()" style="width:100%; background:#1A2A3A; color:white; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">📥 DOWNLOAD PDF A5</button>
-        <script>
-        function savePDF() {{
-            const element = document.getElementById('inv');
-            const opt = {{ margin: 0.1, filename: 'Inv_{selected_cust}.pdf', html2canvas: {{ scale: 3 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }};
-            html2pdf().set(opt).from(element).save();
-        }}
-        </script>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <style>
+                body {{ font-family: Arial, sans-serif; background-color: transparent; }}
+                .container {{ background: white; padding: 20px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
+                .header-img {{ width: 100%; height: auto; }}
+                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
+                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
+                .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
+                .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
+                .data-table th {{ background-color: #eee; }}
+                .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
+                .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; }}
+                .btn-dl {{ width: 100%; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container" id="printable-inv">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" class="header-img">
+                <div class="title">INVOICE</div>
+                <table class="info-table">
+                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
+                </table>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td>
+                            <td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td>
+                        </tr>
+                        <tr style="font-weight:bold; background:#f9f9f9;">
+                            <td colspan="6" style="text-align:right;">YANG HARUS DIBAYAR</td><td>Rp {t_val:,}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                <table class="footer-table">
+                    <tr>
+                        <td style="width:60%; vertical-align:top;">
+                            <b>TRANSFER TO :</b><br>Bank Central Asia <b>6720422334</b><br>A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
+                            <i>NB : Jika sudah transfer mohon konfirmasi ke Finance <b>082179799200</b></i>
+                        </td>
+                        <td style="text-align:center;">
+                            Sincerely,<br>
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:110px;"><br>
+                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <button class="btn-dl" onclick="downloadInv()">📥 DOWNLOAD INVOICE (A5)</button>
+            <script>
+                function downloadInv() {{
+                    const element = document.getElementById('printable-inv');
+                    const opt = {{
+                        margin: 0.1,
+                        filename: 'Inv_{selected_cust}.pdf',
+                        html2canvas: {{ scale: 3 }},
+                        jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
+                    }};
+                    html2pdf().set(opt).from(element).save();
+                }}
+            </script>
+        </body>
+        </html>
         """
-        components.html(invoice_html, height=800, scrolling=True)
+        components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    with st.form("f_input", clear_on_submit=True):
-        # Susunan Minimalis 2 Baris
-        r1_c1, r1_c2, r1_c3 = st.columns([1, 2, 2])
-        v_tgl = r1_c1.date_input("TGL")
-        v_cust = r1_c2.text_input("CUSTOMER")
-        v_desc = r1_c3.text_input("BARANG")
+    with st.form("input_form", clear_on_submit=True):
+        # Baris 1: Informasi Utama
+        c1, c2, c3 = st.columns([1, 2, 2])
+        v_tgl = c1.date_input("TANGGAL", datetime.now())
+        v_cust = c2.text_input("NAMA CUSTOMER")
+        v_desc = c3.text_input("DESKRIPSI BARANG")
         
-        r2_c1, r2_c2, r2_c3, r2_c4, r2_c5 = st.columns([1, 1, 1, 1, 1.5])
-        v_orig = r2_c1.text_input("DARI", value="SBY")
-        v_dest = r2_c2.text_input("KE")
-        v_kol = r2_c3.text_input("KOLLI")
-        v_kg = r2_c4.text_input("KG")
-        v_hrg = r2_c5.number_input("HARGA", 0)
+        # Baris 2: Detail Teknis
+        c4, c5, c6, c7, c8 = st.columns([1, 1, 1, 1, 1.5])
+        v_orig = c4.text_input("DARI", value="SBY")
+        v_dest = c5.text_input("TUJUAN")
+        v_kol = c6.text_input("KOLLI")
+        v_kg = c7.text_input("WEIGHT")
+        v_hrg = c8.number_input("HARGA", 0)
         
-        st.write("")
-        if st.form_submit_button("💾 SIMPAN DATA"):
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.form_submit_button("💾 SIMPAN DATA KE SISTEM"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -163,7 +201,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Tersimpan: Rp {total_db:,}")
+                st.success(f"✅ Berhasil! Total Tagihan: Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("Gagal!")
+                st.error("❌ Gagal terhubung!")
