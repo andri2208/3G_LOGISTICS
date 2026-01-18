@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd  # Diperbaiki dari 'import pd as pd'
+import pandas as pd
 import requests
 import json
 from datetime import datetime
@@ -15,11 +15,12 @@ API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzg
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
-    .block-container { padding-top: 4rem !important; }
+    .block-container { padding: 2rem 1rem !important; }
 
     /* Header Image Web */
     [data-testid="stImage"] img {
-        max-width: 550px !important; 
+        max-width: 100% !important; 
+        height: auto;
         margin: 0 auto;
         display: block;
         border-radius: 8px;
@@ -39,7 +40,7 @@ st.markdown("""
     }
 
     .stTabs [data-baseweb="tab"] {
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: bold !important;
     }
     </style>
@@ -70,7 +71,7 @@ def get_data():
         return r.json()
     except: return []
 
-# Header Utama Web (Menggunakan nama file baru Bapak)
+# Header Utama Web
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png")
 
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
@@ -92,23 +93,49 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        # HTML INVOICE (Menggunakan HEADER.png & STEMPEL.png sesuai modifikasi Bapak)
+        # HTML INVOICE RESPONSIVE
         invoice_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                .container {{ background: white; padding: 20px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial, sans-serif; }}
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: transparent; }}
+                .container {{ 
+                    background: white; 
+                    padding: 15px; 
+                    width: 95%; 
+                    max-width: 750px; 
+                    margin: 10px auto; 
+                    border: 1px solid #ccc; 
+                    color: black; 
+                }}
                 .header-img {{ width: 100%; height: auto; display: block; }}
-                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
-                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
-                .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
-                .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
+                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 18px; }}
+                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
+                .table-wrapper {{ overflow-x: auto; }}
+                .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; min-width: 500px; }}
+                .data-table th, .data-table td {{ border: 1px solid black; padding: 6px; }}
                 .data-table th {{ background-color: #f2f2f2; }}
-                .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
-                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
-                .btn-dl {{ width: 100%; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
+                .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
+                .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; }}
+                .btn-dl {{ 
+                    width: 100%; 
+                    background: #1A2A3A; 
+                    color: white; 
+                    padding: 15px; 
+                    border: none; 
+                    border-radius: 8px; 
+                    font-weight: bold; 
+                    cursor: pointer; 
+                    margin-top: 15px; 
+                    font-size: 14px; 
+                }}
+                @media only screen and (max-width: 600px) {{
+                    .info-table td {{ display: block; text-align: left !important; width: 100%; }}
+                    .title {{ font-size: 16px; }}
+                }}
             </style>
         </head>
         <body>
@@ -118,38 +145,40 @@ with tab1:
                 <table class="info-table">
                     <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
                 </table>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td>
-                            <td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td>
-                        </tr>
-                        <tr style="font-weight:bold;">
-                            <td colspan="6" style="text-align:right;">YANG HARUS DIBAYAR</td><td>Rp {t_val:,}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td>
+                                <td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td>
+                            </tr>
+                            <tr style="font-weight:bold;">
+                                <td colspan="6" style="text-align:right;">YANG HARUS DIBAYAR</td><td>Rp {t_val:,}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                 <table class="footer-table">
                     <tr>
-                        <td style="width:60%; vertical-align:top;">
-                            <b>TRANSFER TO :</b><br>Bank Central Asia <b>6720422334</b><br>A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
-                            <i>NB : Jika sudah transfer mohon konfirmasi ke Finance <b>082179799200</b></i>
+                        <td style="width:55%; vertical-align:top;">
+                            <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>
+                            <i>Konfirmasi: 082179799200</i>
                         </td>
                         <td style="text-align:center;">
                             Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:130px; margin: 10px 0;"><br>
-                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br>
+                            <b><u>KELVINITO JAYADI</u></b>
                         </td>
                     </tr>
                 </table>
             </div>
-            <button class="btn-dl" onclick="generatePDF()">📥 DOWNLOAD INVOICE (UKURAN A5)</button>
+            <button class="btn-dl" onclick="generatePDF()">📥 DOWNLOAD INVOICE (A5)</button>
             <script>
                 function generatePDF() {{
                     const element = document.getElementById('invoice-box');
@@ -157,7 +186,7 @@ with tab1:
                         margin: 0,
                         filename: 'Inv_{selected_cust}.pdf',
                         image: {{ type: 'jpeg', quality: 0.98 }},
-                        html2canvas: {{ scale: 3, useCORS: true, logging: false, allowTaint: true }},
+                        html2canvas: {{ scale: 3, useCORS: true, allowTaint: true }},
                         jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
                     }};
                     html2pdf().set(opt).from(element).save();
@@ -166,7 +195,7 @@ with tab1:
         </body>
         </html>
         """
-        components.html(invoice_html, height=850, scrolling=True)
+        components.html(invoice_html, height=800, scrolling=True)
 
 with tab2:
     with st.form("input_form", clear_on_submit=True):
@@ -192,7 +221,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Berhasil Simpan! Rp {total_db:,}")
+                st.success(f"Berhasil! Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("Gagal menyimpan!")
+                st.error("Gagal!")
