@@ -136,9 +136,6 @@ if not st.session_state.authenticated:
     # Menggunakan HTML murni untuk wrapper agar center sempurna
     st.markdown('<div class="main-login-container">', unsafe_allow_html=True)
     
-    # Memulai Card
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    
     # Menampilkan Logo jika ada
     if logo_b64:
         st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">', unsafe_allow_html=True)
@@ -170,6 +167,7 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
