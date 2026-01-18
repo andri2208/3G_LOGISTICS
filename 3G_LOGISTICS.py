@@ -88,9 +88,9 @@ if not st.session_state.authenticated:
     c1, c2, c3 = st.columns([1, 1.2, 1])
     with c2:
         with st.container():
-            st.markdown("<h1 style='text-align:center;'>🔐 SECURE LOGIN</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align:center;'>🔐 3G LOGISTICS</h1>", unsafe_allow_html=True)
             pwd = st.text_input("Password", type="password")
-            if st.button("UNLOCK"):
+            if st.button("MASUK"):
                 if pwd == PASSWORD_AKSES:
                     st.session_state.authenticated = True
                     st.rerun()
@@ -229,5 +229,6 @@ with t2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.error("Database Error")
+
 
 
