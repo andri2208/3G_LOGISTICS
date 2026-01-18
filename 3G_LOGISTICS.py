@@ -24,7 +24,7 @@ def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
     hasil = ""
     n = int(n)
-    if n == 0: return "Rupiah"
+    if n == 0: return "Nol Rupiah"
     if n < 12: hasil = bilangan[n]
     elif n < 20: hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
     elif n < 100: hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
@@ -120,25 +120,21 @@ with tab1:
         st.session_state.preview_data = None
 
     with st.form("main_form", clear_on_submit=True):
-        st.subheader("Form Pengiriman")
-        cust = st.text_input("Nama Customer (Wajib)")
-        prod = st.text_input("Deskripsi Barang (Wajib)")
+        st.subheader("Form Pengiriman (Semua Kolom Wajib Diisi)")
+        cust = st.text_input("Nama Customer *")
+        prod = st.text_input("Deskripsi Barang *")
         c1, c2, c3, c4 = st.columns(4)
-        with c1: ori = st.text_input("Origin")
-        with c2: dest = st.text_input("Destination")
-        with c3: hrg = st.number_input("Harga", min_value=0, value=8500)
-        with c4: wgt = st.number_input("Berat (Kg)", min_value=0.0, value=1.0, step=0.1)
+        with c1: ori = st.text_input("Origin *")
+        with c2: dest = st.text_input("Destination *")
+        with c3: hrg = st.number_input("Harga *", min_value=0, value=0)
+        with c4: wgt = st.number_input("Berat (Kg) *", min_value=0.0, value=0.0, step=0.1)
         
         btn_proses = st.form_submit_button("Proses & Simpan")
 
         if btn_proses:
-            # --- VALIDASI INPUT ---
-            if not cust.strip():
-                st.error("❌ Nama Customer tidak boleh kosong!")
-            elif not prod.strip():
-                st.error("❌ Deskripsi Barang tidak boleh kosong!")
-            elif hrg <= 0 or wgt <= 0:
-                st.error("❌ Harga dan Berat harus lebih dari 0!")
+            # --- VALIDASI SEMUA KOLOM WAJIB ---
+            if not cust.strip() or not prod.strip() or not ori.strip() or not dest.strip() or hrg <= 0 or wgt <= 0:
+                st.error("⚠️ SEMUA KOLOM WAJIB DIISI! Pastikan Nama, Deskripsi, Origin, Destination, Harga, dan Berat sudah benar.")
             else:
                 inv_no = generate_invoice_number()
                 st.session_state.preview_data = {
@@ -154,10 +150,10 @@ with tab1:
                 }
                 try:
                     requests.post(API_URL, json=st.session_state.preview_data)
-                    st.success(f"✅ Berhasil! Data {inv_no} tersimpan.")
+                    st.success(f"✅ Berhasil! Data {inv_no} tersimpan di database.")
                     st.balloons()
                 except:
-                    st.error("❌ Gagal terhubung ke database Google Sheets.")
+                    st.error("❌ Gagal terhubung ke database. Cek koneksi internet atau API.")
 
     if st.session_state.preview_data:
         d = st.session_state.preview_data
@@ -193,4 +189,4 @@ with tab2:
             else:
                 st.info("Belum ada data.")
         except:
-            st.error("Gagal mengambil data.")
+            st.error("Gagal mengambil data dari Google Sheets.")
