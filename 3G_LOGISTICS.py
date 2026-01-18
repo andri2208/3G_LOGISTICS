@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 # --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="3G LOGISTICS", page_icon="FAVICON.png", layout="wide")
+st.set_page_config(page_title="3G LOGISTICS - Sistem Invoice", page_icon="FAVICON.png", layout="wide")
 
 # --- FUNGSI TERBILANG INDONESIA ---
 def terbilang(n):
@@ -28,93 +28,99 @@ def terbilang(n):
     return "Angka Terlalu Besar"
 
 # --- TAMPILAN HEADER ---
-# Memastikan header invoice muncul di paling atas [cite: 1, 4]
 st.image("HEADER INVOICE.png", use_container_width=True)
 
-# --- AMBIL URL API DARI SECRETS ---
+# --- AMBIL URL API ---
 try:
     API_URL = st.secrets["general"]["api_url"]
-except Exception:
-    st.error("Error: Masukkan 'api_url' di Settings > Secrets Streamlit Cloud!")
+except:
+    st.error("Error: Pastikan 'api_url' sudah diisi di Secrets Streamlit Cloud!")
     st.stop()
 
 # --- TABS ---
-tab1, tab2 = st.tabs(["📊 Data Monitoring", "📝 Buat Invoice"])
+tab1, tab2 = st.tabs(["📊 Monitoring Data", "📝 Buat Invoice Baru"])
 
 with tab1:
-    st.subheader("Database Pengiriman")
+    st.subheader("Data Pengiriman Terdaftar")
     try:
         res = requests.get(API_URL)
         if res.status_code == 200:
             st.dataframe(pd.DataFrame(res.json()), use_container_width=True)
-    except Exception:
-        st.info("Koneksi ke Google Sheets belum tersedia.")
+    except:
+        st.info("Koneksi ke database sedang diproses.")
 
 with tab2:
-    st.subheader("Form Input Invoice")
+    st.subheader("Form Input Sesuai Format Invoice")
     
     with st.form("invoice_form"):
-        col1, col2 = st.columns(2)
+        # Header Info Otomatis
+        tgl_skrng = datetime.now()
+        tgl_format = tgl_skrng.strftime("%d/%m/%Y")
+        tgl_load_format = tgl_skrng.strftime("%d-%b-%y")
         
+        st.info(f"📅 DATE : {tgl_format}")
+        
+        col1, col2 = st.columns(2)
         with col1:
-            # Tanggal otomatis sistem hari ini [cite: 5, 13]
-            tgl_otomatis = datetime.now().strftime("%d-%b-%Y")
-            st.info(f"📅 Tanggal Sistem: {tgl_otomatis}")
-            
-            # Input data customer dan produk [cite: 3, 5]
-            customer = st.text_input("Customer", placeholder="Contoh: PT HARVI")
-            produk = st.text_area("Produk Deskripsi", placeholder="Contoh: 3 UNIT CDD")
-            kolli = st.number_input("Kolli", min_value=0, step=1)
-            berat = st.text_input("Berat (Weight)", placeholder="Contoh: 20 Ton")
+            customer = st.text_input("CUSTOMER", placeholder="Contoh: BAPAK ANDI")
+            produk = st.text_input("Product Description", placeholder="Contoh: SATU SET ALAT TAMBANG")
+            origin = st.text_input("Origin", value="SBY")
+            destination = st.text_input("Destination", value="MEDAN")
             
         with col2:
-            # Input rute pengiriman 
-            origin = st.text_input("Origin", value="TUAL")
-            destinasi = st.text_input("Destination", value="LARAT")
-            harga = st.number_input("Harga (Rp)", min_value=0, value=0, step=1000)
+            kolli = st.text_input("KOLLI", placeholder="Isi jika ada")
+            weight = st.text_input("WEIGHT", placeholder="Contoh: 290 Kg")
+            harga_satuan = st.number_input("HARGA SATUAN (Rp)", min_value=0, value=0)
+            jumlah_barang = st.number_input("JUMLAH / QUANTITY", min_value=1, value=1)
             
-            # Kalkulasi otomatis untuk pembayaran 
-            total_bayar = harga
-            teks_terbilang = f"{terbilang(total_bayar)} Rupiah" if total_bayar > 0 else "-"
-            
-            st.markdown("---")
-            st.markdown(f"**YANG HARUS DIBAYAR:**")
+        # Kalkulasi Otomatis Berdasarkan Format Gambar
+        total_bayar = harga_satuan * jumlah_barang
+        teks_terbilang = f"{terbilang(total_bayar)} rupiah" if total_bayar > 0 else ""
+        
+        st.markdown("---")
+        col_res1, col_res2 = st.columns(2)
+        with col_res1:
+            st.markdown(f"**YANG HARUS DI BAYAR:**")
             st.subheader(f"Rp {total_bayar:,.0f}")
-            st.write(f"*Terbilang: {teks_terbilang}*")
+        with col_res2:
+            st.markdown(f"**Terbilang :**")
+            st.write(f"*{teks_terbilang.lower()}*")
 
-        # Tombol untuk mengirim data ke Google Sheets
-        submitted = st.form_submit_button("Simpan & Kirim Invoice")
+        submitted = st.form_submit_button("Simpan Data Invoice")
 
         if submitted:
-            if not customer or harga == 0:
-                st.warning("Mohon isi Nama Customer dan Harga!")
+            if not customer:
+                st.warning("Nama Customer tidak boleh kosong!")
             else:
                 payload = {
-                    "tanggal": tgl_otomatis,
-                    "customer": customer,
-                    "produk": produk,
-                    "origin": origin,
-                    "destinasi": destinasi,
+                    "date": tgl_format,
+                    "date_load": tgl_load_format,
+                    "customer": customer.upper(),
+                    "description": produk.upper(),
+                    "origin": origin.upper(),
+                    "destination": destination.upper(),
                     "kolli": kolli,
-                    "berat": berat,
-                    "harga": total_bayar,
-                    "terbilang": teks_terbilang
+                    "harga": harga_satuan,
+                    "weight": weight,
+                    "total": total_bayar,
+                    "terbilang": teks_terbilang.lower()
                 }
                 
                 try:
                     response = requests.post(API_URL, json=payload)
                     if response.status_code == 200:
-                        st.success("✅ Data Berhasil Disimpan!")
+                        st.success("✅ Data Invoice Berhasil Disimpan!")
                         st.balloons()
                     else:
-                        st.error("Gagal mengirim data ke Google Sheets.")
+                        st.error("Gagal mengirim data.")
                 except Exception as e:
                     st.error(f"Terjadi kesalahan: {e}")
 
 # --- FOOTER ---
-# Bagian tanda tangan direktur [cite: 15, 16, 17]
 st.markdown("---")
-st.write("Sincerely,")
-st.image("STEMPEL TANDA TANGAN.png", width=150)
-st.write("**KELVINITO JAYADI**")
-st.caption("DIREKTUR")
+col_f1, col_f2 = st.columns([2, 1])
+with col_f2:
+    st.write("Sincerely,")
+    st.image("STEMPEL TANDA TANGAN.png", width=150)
+    st.write("**KELVINITO JAYADI**")
+    st.caption("DIREKTUR")
