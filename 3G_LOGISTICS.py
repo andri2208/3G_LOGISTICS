@@ -8,7 +8,7 @@ from datetime import datetime
 st.set_page_config(page_title="3G Logistics Invoice System", page_icon="🚚", layout="wide")
 
 # URL API Google Apps Script Anda
-API_URL = "https://script.google.com/macros/s/AKfycbw0EeMRVPlTCDwuTRsSuIaFUOo0EcYMpZKuc3IlLtrR03ind4kxT67IQt74zt5hEZ7t/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
 # --- FUNGSI TERBILANG (Konversi Angka ke Teks) ---
 def terbilang(n):
@@ -172,3 +172,4 @@ with tab2:
                     st.error("Gagal mengirim data.")
             except Exception as e:
                 st.error(f"Error: {e}")
+
