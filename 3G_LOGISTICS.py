@@ -25,7 +25,7 @@ logo_b64 = get_base64_img("FAVICON.png")
 
 st.markdown(f"""
     <style>
-    .stApp {{ background: linear-gradient(135deg, #0A4A4A 0%, #1A1A1A 100%); }}
+    .stApp {{ background: linear-gradient(0deg,rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%); }}
     
        
     /* Input & Button Styling */
@@ -192,4 +192,5 @@ with tab2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.info("Klik tombol refresh untuk menarik data.")
+
 
