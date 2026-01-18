@@ -125,7 +125,7 @@ with tab1:
                 <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                 <table class="footer-table">
                     <tr>
-                        <td style="width:60%;"><b>TRANSFER TO:</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke <br>Finance: 082179799200</td>
+                        <td style="width:60%;"><b>TRANSFER TO:</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke <br><th>Finance: 082179799200</td>
                         <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px;"><br><b><u>KELVINITO JAYADI</u></b></td>
                     </tr>
                 </table>
@@ -179,5 +179,6 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("Gagal terhubung!")
+
 
 
