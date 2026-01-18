@@ -183,4 +183,18 @@ if st.session_state.preview_data:
         mime="application/pdf"
     )
 
+st.divider()
+if st.checkbox("📊 Lihat Riwayat Invoice Terakhir"):
+    try:
+        # Mengambil data dari Google Sheets melalui fungsi doGet
+        response = requests.get(API_URL)
+        data_sheet = response.json()
+        
+        # Mengubah data menjadi Tabel (DataFrame)
+        df = pd.DataFrame(data_sheet[1:], columns=data_sheet[0])
+        st.dataframe(df.tail(10), use_container_width=True) # Menampilkan 10 data terakhir
+    except:
+        st.info("Belum ada data di database atau gagal mengambil data.")
+
+
 
