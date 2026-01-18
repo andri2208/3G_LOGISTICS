@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pandas as pd  # Diperbaiki dari 'import pd as pd'
 import requests
 import json
 from datetime import datetime
@@ -11,13 +11,13 @@ st.set_page_config(page_title="3G Logistics", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS: HEADER AMAN, BACKGROUND ELEGAN, LABEL TEBAL ---
+# --- CSS: HEADER AMAN & TEMA ELEGAN ---
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
     .block-container { padding-top: 4rem !important; }
 
-    /* Header Image Tengah */
+    /* Header Image Web */
     [data-testid="stImage"] img {
         max-width: 550px !important; 
         margin: 0 auto;
@@ -25,7 +25,7 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    /* Label Input Sangat Tebal */
+    /* Label Input & Field */
     .stWidgetLabel p {
         font-weight: 900 !important;
         font-size: 14px !important;
@@ -70,7 +70,7 @@ def get_data():
         return r.json()
     except: return []
 
-# Header Utama Web
+# Header Utama Web (Menggunakan nama file baru Bapak)
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png")
 
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
@@ -92,7 +92,7 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        # HTML INVOICE DENGAN PERBAIKAN LINK GAMBAR
+        # HTML INVOICE (Menggunakan HEADER.png & STEMPEL.png sesuai modifikasi Bapak)
         invoice_html = f"""
         <!DOCTYPE html>
         <html>
@@ -157,7 +157,7 @@ with tab1:
                         margin: 0,
                         filename: 'Inv_{selected_cust}.pdf',
                         image: {{ type: 'jpeg', quality: 0.98 }},
-                        html2canvas: {{ scale: 3, useCORS: true, logging: false }},
+                        html2canvas: {{ scale: 3, useCORS: true, logging: false, allowTaint: true }},
                         jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
                     }};
                     html2pdf().set(opt).from(element).save();
@@ -195,6 +195,4 @@ with tab2:
                 st.success(f"Berhasil Simpan! Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("Gagal!")
-
-
+                st.error("Gagal menyimpan!")
