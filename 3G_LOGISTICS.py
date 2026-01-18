@@ -16,9 +16,9 @@ st.image("HEADER INVOICE.png", use_container_width=True)
 
 # --- AMBIL URL DARI SECRETS ---
 try:
-st.secrets["general"]["api_url"]
-
-except:
+    # Baris di bawah ini harus menjorok ke dalam (4 spasi)
+    API_URL = st.secrets["general"]["api_url"]
+except Exception as e:
     st.error("PENTING: Masukkan 'api_url' di Settings > Secrets Streamlit Cloud Anda!")
     st.stop()
 
@@ -98,4 +98,5 @@ with col_f2:
     st.image("STEMPEL TANDA TANGAN.png", width=150)
     st.write("**KELVINITO JAYADI**")
     st.caption("DIREKTUR")
+
 
