@@ -7,10 +7,10 @@ from datetime import datetime
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="3G Logistics Invoice System", page_icon="🚚", layout="wide")
 
-# URL API Google Apps Script
+# URL API Google Apps Script Terbaru Anda
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- FUNGSI TERBILANG ---
+# --- FUNGSI TERBILANG (Konversi Angka ke Teks) ---
 def terbilang(n):
     bilangan = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"]
     if n < 12:
@@ -34,7 +34,8 @@ def terbilang(n):
 # --- FUNGSI AMBIL DATA ---
 def get_data():
     try:
-        response = requests.get(API_URL, timeout=15)
+        # Menambahkan parameter 'cache-busting' agar data selalu terbaru
+        response = requests.get(f"{API_URL}?t={datetime.now().timestamp()}", timeout=15)
         return response.json()
     except Exception:
         return []
@@ -49,44 +50,46 @@ with tab1:
     data_json = get_data()
     
     if not data_json:
-        st.error("Koneksi gagal! Pastikan Apps Script sudah di-deploy sebagai 'Anyone'.")
+        st.error("Data tidak ditemukan. Pastikan Google Sheet sudah terisi dan Apps Script sudah di-deploy sebagai 'Anyone'.")
     else:
         df = pd.DataFrame(data_json)
         
-        # Sidebar Filter
+        # Sidebar Filter (Mengacu pada file FAVICON.png di GitHub Anda)
         st.sidebar.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", width=80)
         customer_list = df['customer'].unique()
         selected_customer = st.sidebar.selectbox("Pilih Nama Customer", customer_list)
         
-        # Filter Data
+        # Ambil data customer (baris terbaru)
         inv = df[df['customer'] == selected_customer].iloc[-1]
         
-        # Format Tanggal (Menghapus format T17:00:00.000Z jika ada)
-        tgl_bersih = str(inv['date']).split('T')[0]
+        # Format Tanggal agar bersih (misal: 2026-01-18)
+        tgl_raw = str(inv['date'])
+        tgl_bersih = tgl_raw.split('T')[0] if 'T' in tgl_raw else tgl_raw
         
         # Perhitungan
         total_bayar = int(inv['total'])
         teks_terbilang = terbilang(total_bayar).title() + " Rupiah"
 
-        # TEMPLATE HTML (Sesuai image_4283e1.png)
+        # TEMPLATE HTML (Sangat krusial untuk rendering visual)
+        # Sesuai struktur di image_389d67.png
         invoice_html = f"""
         <div style="background-color: white; padding: 25px; border: 1.5px solid black; color: black; font-family: 'Arial'; max-width: 900px; margin: auto;">
             <div style="text-align: center; margin-bottom: 10px;">
                 <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width: 100%;">
             </div>
             
-            <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 18px; letter-spacing: 2px;">
+            <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 18px;">
                 INVOICE
             </div>
             
-            <table style="width: 100%; font-size: 14px; margin-bottom: 15px; border: none;">
+            <table style="width: 100%; font-size: 14px; margin-bottom: 10px; border: none;">
                 <tr style="border: none;">
                     <td style="border: none; text-align: left;"><b>CUSTOMER : {inv['customer']}</b></td>
                     <td style="border: none; text-align: right;"><b>DATE : {tgl_bersih}</b></td>
                 </tr>
             </table>
 
-            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid black; font-size: 13px; text-align: center;">
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid black; font-size: 12px; text-align: center;">
                 <tr style="background-color: #316395; color: white; font-weight: bold;">
                     <th style="border: 1.5px solid black; padding: 10px;">Date of Load</th>
                     <th style="border: 1.5px solid black;">Product Description</th>
@@ -115,7 +118,7 @@ with tab1:
                 <b>Terbilang :</b> {teks_terbilang}
             </div>
 
-            <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 13px;">
+            <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px;">
                 <div style="flex: 1.5; line-height: 1.6;">
                     <b>TRANSFER TO :</b><br>
                     Bank Central Asia<br>
@@ -125,19 +128,20 @@ with tab1:
                 </div>
                 <div style="text-align: center; flex: 1;">
                     Sincerely,<br>
-                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width: 160px; margin: 10px 0;"><br>
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width: 150px; margin: 5px 0;"><br>
                     <b><u>KELVINITO JAYADI</u></b><br>
                     DIREKTUR
                 </div>
             </div>
         </div>
         """
-        # INI ADALAH BAGIAN PENTING AGAR HTML TER-RENDER
+        # Render HTML ke Streamlit
         st.markdown(invoice_html, unsafe_allow_html=True)
+        st.info("💡 Tekan Ctrl+P di browser untuk menyimpan sebagai PDF.")
 
 # --- TAB 2: INPUT DATA BARU ---
 with tab2:
-    st.subheader("Input Transaksi Baru")
+    st.subheader("Form Input Transaksi Baru")
     with st.form("form_input", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -168,7 +172,7 @@ with tab2:
             try:
                 res = requests.post(API_URL, data=json.dumps(payload))
                 if res.status_code == 200:
-                    st.success("Berhasil simpan! Silakan cek di tab 'Cetak Invoice'.")
+                    st.success("✅ Berhasil simpan! Silakan buka Tab 'Cetak Invoice'.")
                     st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"Terjadi kesalahan: {e}")
