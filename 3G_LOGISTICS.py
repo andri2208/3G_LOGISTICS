@@ -8,13 +8,25 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB
+# 2. CSS UNTUK TAMPILAN WEB (Auto-Zoom untuk HP)
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stTabs { margin-top: -15px; }
-    [data-testid="stMarkdownContainer"] > div > div { overflow-x: auto; }
+    
+    /* Mencegah scroll horizontal pada container utama */
+    .main .block-container { overflow-x: hidden; }
+
+    /* Responsif khusus layar HP (lebar di bawah 600px) */
+    @media only screen and (max-width: 600px) {
+        #invoice-preview-container {
+            zoom: 0.45; 
+            -moz-transform: scale(0.45);
+            -moz-transform-origin: 0 0;
+            width: 100%;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -83,8 +95,9 @@ else:
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE PAS A4 (800PX) ---
+            # --- DESAIN INVOICE PAS A4 ---
             html_content = f"""
+<div id="invoice-preview-container">
 <div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #000; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
     <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
     <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:5px; font-weight:bold; font-size: 24px;">INVOICE</div>
@@ -120,6 +133,7 @@ else:
             </td>
         </tr>
     </table>
+</div>
 </div>
 """
             st.markdown(html_content, unsafe_allow_html=True)
