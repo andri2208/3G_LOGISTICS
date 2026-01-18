@@ -7,74 +7,46 @@ import streamlit.components.v1 as components
 
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
-# 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# --- CSS UNTUK TATA LETAK ---
+# 2. CSS UNTUK TAMPILAN (Merapikan jarak & responsivitas)
 st.markdown("""
     <style>
-    /* Menghilangkan jarak default Streamlit */
     .block-container {
-        padding-top: 1rem;
+        padding-top: 1.5rem;
         padding-bottom: 0rem;
     }
-    
-    /* Memberikan jarak khusus untuk tombol logout agar tidak mepet */
-    .logout-container {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 10px;
-        margin-top: 5px;
-    }
-    
-    /* Merapatkan jarak antar elemen utama */
     .stTabs {
         margin-top: -10px;
+    }
+    /* Mengatur tombol logout agar tidak menempel */
+    .stButton > button {
+        margin-bottom: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# ... (kode login tetap sama) ...
-
-if st.session_state['logged_in']:
-    # --- HEADER DENGAN TOMBOL LOGOUT YANG RAPI ---
-    # Kita gunakan container khusus agar tombol punya ruang
-    col_kosong, col_logout = st.columns([0.8, 0.2])
-    with col_logout:
-        if st.button("Logout 🚪", use_container_width=True):
-            st.session_state['logged_in'] = False
-            st.rerun()
-
-    # Tampilkan Header Utama
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
-    st.write("---") # Garis pemisah tipis agar lebih rapi
-    
-# --- SISTEM LOGIN SEDERHANA ---
+# 3. FUNGSI LOGIN
 def login():
     st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
-    st.subheader("🔐 Login System")
-    
+    st.write("### 🔐 Akses Sistem")
     with st.form("login_form"):
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
-        submit = st.form_submit_button("Masuk")
-        
-        if submit:
-            # GANTI USERNAME & PASSWORD DI SINI
-            if user == "admin" and pw == "2026":
+        if st.form_submit_button("Masuk"):
+            if user == "Admin" and pw == "2026":
                 st.session_state['logged_in'] = True
                 st.rerun()
             else:
                 st.error("Username atau Password Salah!")
 
-# Cek status login
+# Inisialisasi Session State
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 
 if not st.session_state['logged_in']:
     login()
 else:
-    # --- JIKA SUDAH LOGIN, TAMPILKAN APLIKASI ---
+    # --- JIKA SUDAH LOGIN ---
     
     API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
@@ -97,13 +69,14 @@ else:
             return r.json()
         except: return []
 
-    # Tombol Logout di pojok kanan atas
-    col_header, col_logout = st.columns([0.8, 0.2])
-    with col_logout:
-        if st.button("Logout"):
+    # Baris Logout (Di atas Header)
+    c_kosong, c_out = st.columns([0.8, 0.2])
+    with c_out:
+        if st.button("Logout 🚪", use_container_width=True):
             st.session_state['logged_in'] = False
             st.rerun()
 
+    # Header Gambar Utama
     st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
     tab1, tab2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
@@ -111,18 +84,21 @@ else:
     with tab1:
         data = get_data()
         if not data:
-            st.error("Database Kosong")
+            st.warning("Database sedang memuat atau kosong...")
         else:
             df = pd.DataFrame(data)
-            selected_cust = st.selectbox("Pilih Customer:", df['customer'].unique())
+            cust_list = df['customer'].unique()
+            selected_cust = st.selectbox("Cari Customer:", cust_list)
+            
             row = df[df['customer'] == selected_cust].iloc[-1]
             tgl = str(row['date']).split('T')[0]
             total_harga = int(row['total'])
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # HTML INVOICE
-            html_desain = f"""<div id="invoice-box" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial, sans-serif;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
+            # HTML INVOICE (ID: invoice-box)
+            # Tag HTML rapat kiri untuk menghindari deteksi kode mentah
+            html_content = f"""<div id="invoice-box" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial, sans-serif;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size: 20px;">INVOICE</div>
 <div style="display:flex;justify-content:space-between;font-size: 14px;margin-bottom:10px;font-weight:bold;"><span>CUSTOMER : {row['customer']}</span><span>DATE : {tgl}</span></div>
@@ -131,22 +107,23 @@ else:
 <tr><td style="border:1px solid black;padding:8px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td></tr>
 <tr style="font-weight:bold;background-color:#f2f2f2;"><td colspan="6" style="border:1px solid black;text-align:center;padding:5px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td></tr></table></div>
 <div style="border:1px solid black;margin-top:5px;padding:8px;font-size: 12px;font-style:italic;"><b>Terbilang :</b> {teks_terbilang}</div>
-<div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;font-size: 12px;">
+<div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;font-size: 11px;">
 <div style="flex:1;min-width:200px;margin-bottom:15px;">
-<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</small>
+<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>Finance 082179799200<br><b>NB : Jika sudah transfer mohon konfirmasi ke Finance</b>
 </div>
 <div style="flex:1;text-align:center;min-width:150px;">
-Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:120px; height:auto;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
 </div></div></div>"""
 
-            st.markdown(html_desain, unsafe_allow_html=True)
-
-            st.write("---")
+            st.markdown(html_content, unsafe_allow_html=True)
+            st.write("")
+            
+            # Tombol Download PDF
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<button onclick="downloadPDF()" style="background-color:#4CAF50;color:white;padding:15px;border:none;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;font-size:16px;">📥 DOWNLOAD INVOICE (PDF)</button>
+<button onclick="doDownload()" style="background-color:#4CAF50;color:white;padding:15px;border:none;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;font-size:16px;">📥 DOWNLOAD INVOICE (PDF)</button>
 <script>
-function downloadPDF() {{
+function doDownload() {{
   const element = window.parent.document.getElementById('invoice-box');
   const opt = {{
     margin: [0.2, 0.2, 0.2, 0.2],
@@ -160,37 +137,23 @@ function downloadPDF() {{
 </script>""", height=80)
 
     with tab2:
-        st.subheader("➕ Input Data Baru")
+        st.subheader("➕ Input Data Pengiriman")
         with st.form("form_entry", clear_on_submit=True):
             c1, c2 = st.columns(2)
-            in_tgl = c1.date_input("Tanggal")
-            in_cust = c1.text_input("Customer")
-            in_desc = c1.text_input("Barang")
-            in_orig = c2.text_input("Origin", value="SBY")
-            in_dest = c2.text_input("Destination")
-            in_kol = c2.number_input("Kolli", 0)
-            in_kg = c2.number_input("Weight (Kg)", 1)
-            in_hrg = c2.number_input("Harga Satuan", 0)
+            f_tgl = c1.date_input("Tanggal")
+            f_cust = c1.text_input("Customer")
+            f_desc = c1.text_input("Barang")
+            f_orig = c2.text_input("Origin", value="SBY")
+            f_dest = c2.text_input("Destination")
+            f_kol = c2.number_input("Kolli", 0)
+            f_kg = c2.number_input("Weight (Kg)", 1)
+            f_hrg = c2.number_input("Harga Satuan", 0)
             
-            if st.form_submit_button("SIMPAN KE DATABASE"):
-                payload = {{"date":str(in_tgl),"customer":in_cust.upper(),"description":in_desc.upper(),"origin":in_orig.upper(),"destination":in_dest.upper(),"kolli":in_kol,"harga":in_hrg,"weight":in_kg,"total":in_hrg*in_kg}}
+            if st.form_submit_button("🚀 SIMPAN KE DATABASE"):
+                payload = {{"date":str(f_tgl),"customer":f_cust.upper(),"description":f_desc.upper(),"origin":f_orig.upper(),"destination":f_dest.upper(),"kolli":f_kol,"harga":f_hrg,"weight":f_kg,"total":f_hrg*f_kg}}
                 try:
                     requests.post(API_URL, data=json.dumps(payload))
-                    st.success("Data Berhasil Disimpan!")
+                    st.success("Berhasil! Silakan cek di tab Cetak Invoice.")
                     st.cache_data.clear()
                 except:
-                    st.error("Gagal menyimpan data.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    st.error("Koneksi gagal.")
