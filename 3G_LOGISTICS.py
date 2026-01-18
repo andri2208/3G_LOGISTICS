@@ -5,7 +5,7 @@ from datetime import datetime
 from num2words import num2words
 
 # 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G Logistics - Auto Generator", page_icon="FAVICON.png", layout="wide")
+st.set_page_config(page_title="3G Logistics - Generator", page_icon="FAVICON.png", layout="wide")
 
 # CSS ANTI-DOWNLOAD & TAMPILAN CETAK
 st.markdown("""
@@ -23,6 +23,8 @@ st.markdown("""
 
 # FUNGSI TERBILANG (RUPIAH)
 def format_terbilang(angka):
+    if angka == 0:
+        return "-"
     try:
         hasil = num2words(angka, lang='id')
         return hasil.title() + " Rupiah"
@@ -33,60 +35,60 @@ def format_terbilang(angka):
 if 'preview' not in st.session_state:
     st.session_state.preview = False
 
-# 3. HALAMAN INPUT
+# 3. HALAMAN INPUT (KOLOM KOSONG)
 if not st.session_state.preview:
     try:
         st.image("HEADER INVOICE.png", use_container_width=True)
     except:
         pass
         
-    st.title("Input Data Invoice")
+    st.title("Buat Invoice Baru")
     
-    # OTOMATISASI DATA AWAL
+    # Hanya Tanggal yang Otomatis
     tgl_sekarang = datetime.now().strftime("%d/%m/%Y")
-    # Contoh format No Invoice otomatis: INV/20260119/001 (Bisa diubah manual jika perlu)
-    no_inv_auto = f"INV/{datetime.now().strftime('%Y%m%d')}/001"
+    tgl_load_def = datetime.now().strftime("%d-%b-%y")
 
     with st.form("invoice_form"):
         c1, c2 = st.columns(2)
         with c1:
-            cust_name = st.text_input("Customer", value="PT HARVI")
-            no_inv = st.text_input("Nomor Invoice", value=no_inv_auto)
+            cust_name = st.text_input("Customer", value="", placeholder="Masukkan nama PT/Perorangan")
+            no_inv = st.text_input("Nomor Invoice", value="", placeholder="Contoh: 001/INV/3G/2026")
         with c2:
             inv_date = st.text_input("Tanggal Invoice", value=tgl_sekarang)
-            load_date = st.text_input("Date of Load", value=datetime.now().strftime("%d-%b-%y"))
+            load_date = st.text_input("Date of Load", value=tgl_load_def)
 
-        st.subheader("Rincian Barang & Perhitungan Harga")
+        st.subheader("Rincian Pengiriman")
         c3, c4 = st.columns(2)
         with c3:
-            origin = st.text_input("Origin", value="TUAL")
-            dest = st.text_input("Destination", value="LARAT")
-            prod_desc = st.text_area("Product Description", value="3 UNIT CDD")
+            origin = st.text_input("Origin", value="", placeholder="Asal barang")
+            dest = st.text_input("Destination", value="", placeholder="Tujuan barang")
+            prod_desc = st.text_area("Product Description", value="", placeholder="Contoh: 3 UNIT CDD")
         with c4:
-            # INPUT UNTUK PERHITUNGAN OTOMATIS
-            berat = st.number_input("Weight / Unit / Kolli", min_value=1, value=1)
-            harga_satuan = st.number_input("Harga Satuan (Rp)", min_value=0, value=27000000)
+            berat = st.number_input("Weight / Qty", min_value=0.0, value=0.0, step=0.1)
+            harga_satuan = st.number_input("Harga Satuan (Rp)", min_value=0, value=0, step=1000)
             
-            # TOTAL OTOMATIS
-            total_harga = berat * harga_satuan
-            st.write(f"**Total Harga Otomatis:** Rp {total_harga:,.0f}")
+            # Perhitungan Otomatis tetap berjalan saat angka diisi
+            total_harga = int(berat * harga_satuan)
+            st.write(f"**Total Otomatis:** Rp {total_harga:,.0f}")
             
-            # TERBILANG OTOMATIS
             terbilang_auto = format_terbilang(total_harga)
             st.info(f"**Terbilang:** {terbilang_auto}")
 
         st.markdown("---")
         if st.form_submit_button("Preview Invoice", use_container_width=True):
-            st.session_state.data = {
-                "cust": cust_name, "inv": no_inv, "date": inv_date,
-                "load": load_date, "prod": prod_desc, "ori": origin,
-                "dest": dest, "total": total_harga, "said": terbilang_auto,
-                "weight": berat, "price": harga_satuan
-            }
-            st.session_state.preview = True
-            st.rerun()
+            if not cust_name or total_harga == 0:
+                st.error("Mohon isi minimal Nama Customer dan Harga.")
+            else:
+                st.session_state.data = {
+                    "cust": cust_name, "inv": no_inv, "date": inv_date,
+                    "load": load_date, "prod": prod_desc, "ori": origin,
+                    "dest": dest, "total": total_harga, "said": terbilang_auto,
+                    "weight": berat, "price": harga_satuan
+                }
+                st.session_state.preview = True
+                st.rerun()
 
-# 4. HALAMAN PREVIEW (SIAP CETAK)
+# 4. HALAMAN PREVIEW
 else:
     col_nav = st.columns(2)
     if col_nav[0].button("⬅️ Edit Data"):
@@ -107,14 +109,15 @@ else:
     st.markdown("<h2 style='text-align: center;'>INVOICE</h2>", unsafe_allow_html=True)
     st.write(f"**No. Invoice:** {st.session_state.data['inv']}")
 
-    # Tabel Rincian
+    # Tabel
     df = pd.DataFrame({
         "Date of Load": [st.session_state.data['load']],
         "Product Description": [st.session_state.data['prod']],
         "Origin": [st.session_state.data['ori']],
         "Destination": [st.session_state.data['dest']],
         "Weight/Qty": [st.session_state.data['weight']],
-        "Total Harga": [f"Rp {st.session_state.data['total']:,.0f}"]
+        "Harga Satuan": [f"Rp {st.session_state.data['price']:,.0f}"],
+        "Total": [f"Rp {st.session_state.data['total']:,.0f}"]
     })
     st.table(df)
 
