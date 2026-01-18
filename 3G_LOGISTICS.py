@@ -1,6 +1,16 @@
 import streamlit as st
 from PIL import Image
 
+# CSS untuk mematikan klik kanan dan menyembunyikan menu
+st.markdown("""
+    <style>
+        img { pointer-events: none; } /* Mencegah user klik kanan/drag gambar */
+        #MainMenu { visibility: hidden; } /* Sembunyikan menu 3 garis */
+        footer { visibility: hidden; } /* Sembunyikan footer "Made with Streamlit" */
+    </style>
+    """, unsafe_allow_html=True)
+
+
 # 1. Konfigurasi Halaman & Favicon
 # Pastikan nama file sama persis: 'FAVICON.png'
 im = Image.open("FAVICON.png")
@@ -41,4 +51,5 @@ hide_menu_style = """
         </style>
         """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
+
 
