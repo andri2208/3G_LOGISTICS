@@ -8,24 +8,38 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB (Auto-Zoom untuk HP)
+# 2. CSS UNTUK TAMPILAN WEB (Biar Pas di HP & Laptop)
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stTabs { margin-top: -15px; }
     
-    /* Mencegah scroll horizontal pada container utama */
-    .main .block-container { overflow-x: hidden; }
+    /* Container Utama Preview */
+    #invoice-preview-container {
+        width: 100%;
+        overflow-x: hidden;
+    }
 
-    /* Responsif khusus layar HP (lebar di bawah 600px) */
+    /* Box Invoice: Lebar otomatis di web, tapi dikunci 800px saat download */
+    #invoice-box {
+        background-color: white;
+        padding: 20px;
+        border: 1px solid #000;
+        color: black;
+        font-family: Arial, sans-serif;
+        width: 100%; /* Melebar sesuai layar HP */
+        max-width: 800px; /* Maksimal selebar standar A4 di Laptop */
+        margin: auto;
+        box-sizing: border-box;
+    }
+
+    /* Ukuran teks lebih kecil di HP agar tidak meluber */
     @media only screen and (max-width: 600px) {
-        #invoice-preview-container {
-            zoom: 0.45; 
-            -moz-transform: scale(0.45);
-            -moz-transform-origin: 0 0;
-            width: 100%;
-        }
+        #invoice-box { padding: 10px; }
+        .inv-text { font-size: 10px !important; }
+        .inv-title { font-size: 18px !important; }
+        table { font-size: 9px !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -71,7 +85,6 @@ else:
             return r.json()
         except: return []
 
-    # Baris Logout
     c_kosong, c_out = st.columns([0.8, 0.2])
     with c_out:
         if st.button("Logout 🚪", use_container_width=True):
@@ -88,48 +101,50 @@ else:
             st.warning("Memuat data...")
         else:
             df = pd.DataFrame(data)
-            selected_cust = st.selectbox("Pilih Nama Customer:", df['customer'].unique())
+            selected_cust = st.selectbox("Pilih Customer:", df['customer'].unique())
             row = df[df['customer'] == selected_cust].iloc[-1]
             tgl = str(row['date']).split('T')[0]
             total_harga = int(row['total'])
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE PAS A4 ---
+            # --- DESAIN INVOICE RESPONSIVE ---
             html_content = f"""
 <div id="invoice-preview-container">
-<div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #000; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
+<div id="invoice-box">
     <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
-    <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:5px; font-weight:bold; font-size: 24px;">INVOICE</div>
-    <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px;">
+    <div class="inv-title" style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold; font-size: 22px;">INVOICE</div>
+    <table class="inv-text" style="width:100%; font-weight:bold; font-size:14px; margin-bottom:10px;">
         <tr><td style="width:50%;">CUSTOMER : {row['customer']}</td><td style="width:50%; text-align:right;">DATE : {tgl}</td></tr>
     </table>
-    <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size: 13px; text-align:center;">
+    <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size: 11px; text-align:center;">
         <tr style="background-color:#316395; color:white;">
-            <th style="border:1px solid black; padding:12px;">Date of Load</th><th style="border:1px solid black;">Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th>
+            <th style="border:1px solid black; padding:8px;">Date of Load</th><th style="border:1px solid black;">Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th>
         </tr>
         <tr>
-            <td style="border:1px solid black; padding:20px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td>
+            <td style="border:1px solid black; padding:15px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td>
         </tr>
         <tr style="font-weight:bold; background-color:#f2f2f2;">
-            <td colspan="6" style="border:1px solid black; text-align:center; padding:12px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td>
+            <td colspan="6" style="border:1px solid black; text-align:center; padding:10px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td>
         </tr>
     </table>
-    <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic;">
+    </div>
+    <div class="inv-text" style="border:2px solid black; border-top:none; padding:10px; font-size: 12px; font-style:italic;">
         <b>Terbilang :</b> {teks_terbilang}
     </div>
-    <br><br>
-    <table style="width:100%; font-size:13px; line-height:1.6;">
+    <br>
+    <table class="inv-text" style="width:100%; font-size:12px; line-height:1.4;">
         <tr>
             <td style="width:60%; vertical-align:top;">
-                <b style="font-size:14px;">TRANSFER TO :</b><br>
+                <b>TRANSFER TO :</b><br>
                 Bank Central Asia 6720422334<br>
                 A/N ADITYA GAMA SAPUTRI<br>
                 NB : Jika sudah transfer mohon konfirmasi ke<br>
                 Finance 082179799200
             </td>
             <td style="width:40%; text-align:center; vertical-align:top;">
-                Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
             </td>
         </tr>
     </table>
@@ -139,13 +154,18 @@ else:
             st.markdown(html_content, unsafe_allow_html=True)
             st.write("---")
 
-            # 4. SCRIPT DOWNLOAD
+            # 4. SCRIPT DOWNLOAD (PAKSA LEBAR 800PX HANYA SAAT DOWNLOAD)
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px;">📥 SIMPAN SEBAGAI PDF</button>
 <script>
 function generatePDF() {{
   const element = window.parent.document.getElementById('invoice-box');
+  
+  // Trick: Paksa lebar ke 800px sebelum capture
+  const originalWidth = element.style.width;
+  element.style.width = '800px';
+
   const opt = {{
     margin: [0.3, 0.3, 0.3, 0.3],
     filename: '{nama_file}',
@@ -153,7 +173,10 @@ function generatePDF() {{
     html2canvas: {{ scale: 2, useCORS: true, width: 800 }},
     jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
   }};
-  html2pdf().set(opt).from(element).save();
+
+  html2pdf().set(opt).from(element).save().then(() => {{
+     element.style.width = originalWidth; // Kembalikan ke responsif setelah download
+  }});
 }}
 </script>""", height=100)
 
