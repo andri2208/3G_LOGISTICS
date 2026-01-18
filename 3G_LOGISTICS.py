@@ -190,3 +190,4 @@ with tab2:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
