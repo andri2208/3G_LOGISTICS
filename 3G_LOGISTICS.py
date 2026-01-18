@@ -127,15 +127,28 @@ def generate_inv():
 def terbilang(n):
     bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
     n = int(n)
-    if n == 0: return "Rupiah"
-    if n < 12: hasil = bilangan[n]
-    elif n < 20: hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
-    elif n < 100: hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
-    elif n < 200: hasil = "Seratus " + terbilang(n - 100).replace(" Rupiah", "")
-    elif n < 1000: hasil = terbilang(n // 100).replace(" Rupiah", "") + " Ratus " + terbilang(n % 100).replace(" Rupiah", "")
-    elif n < 2000: hasil = "Seribu " + terbilang(n - 1000).replace(" Rupiah", "")
-    elif n < 1000000: hasil = terbilang(n // 1000).replace(" Rupiah", "") + " Ribu " + terbilang(n % 1000).replace(" Rupiah", "")
-    return hasil.strip() + " Rupiah"
+    hasil = ""
+    if n < 12:
+        hasil = bilangan[n]
+    elif n < 20:
+        hasil = terbilang(n - 10).replace(" Rupiah", "") + " Belas"
+    elif n < 100:
+        hasil = terbilang(n // 10).replace(" Rupiah", "") + " Puluh " + terbilang(n % 10).replace(" Rupiah", "")
+    elif n < 200:
+        hasil = "Seratus " + terbilang(n - 100).replace(" Rupiah", "")
+    elif n < 1000:
+        hasil = terbilang(n // 100).replace(" Rupiah", "") + " Ratus " + terbilang(n % 100).replace(" Rupiah", "")
+    elif n < 2000:
+        hasil = "Seribu " + terbilang(n - 1000).replace(" Rupiah", "")
+    elif n < 1000000:
+        hasil = terbilang(n // 1000).replace(" Rupiah", "") + " Ribu " + terbilang(n % 1000).replace(" Rupiah", "")
+    elif n < 1000000000:
+        hasil = terbilang(n // 1000000).replace(" Rupiah", "") + " Juta " + terbilang(n % 1000000).replace(" Rupiah", "")
+    else:
+        hasil = "Angka Terlalu Besar"
+        
+    return (hasil.strip() + " Rupiah") if n != 0 else "Rupiah"
+
 
 def render_pdf(data):
     pdf = FPDF()
@@ -229,6 +242,7 @@ with t2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.error("Database Error")
+
 
 
 
