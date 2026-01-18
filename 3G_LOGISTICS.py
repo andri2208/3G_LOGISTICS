@@ -59,7 +59,6 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        # INI ADALAH BAGIAN UTAMA: Gabungan HTML + CSS + JS dalam satu blok Iframe
         invoice_html = f"""
         <!DOCTYPE html>
         <html>
@@ -67,7 +66,7 @@ with tab1:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: white; }}
                 .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ccc; }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
@@ -110,10 +109,17 @@ with tab1:
                     </table>
                 </div>
                 <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                
                 <table class="footer">
                     <tr>
-                        <td style="width:60%;"><b>TRANSFER TO:</b><br>Bank Central Asia (BCA)<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>Finance: 082179799200</td>
-                        <td style="text-align:center;">
+                        <td style="width:60%; vertical-align: top;">
+                            <b>TRANSFER TO :</b><br>
+                            Bank Central Asia <b>6720422334</b><br>
+                            A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
+                            <i>NB : Jika sudah transfer mohon konfirmasi ke<br>
+                            Finance <b>082179799200</b></i>
+                        </td>
+                        <td style="text-align:center; vertical-align: top;">
                             Sincerely,<br>
                             <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:110px;"><br>
                             <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
@@ -139,8 +145,7 @@ with tab1:
         </body>
         </html>
         """
-        # Render seluruh HTML di dalam satu komponen tunggal
-        components.html(invoice_html, height=800, scrolling=True)
+        components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
     st.subheader("➕ Tambah Data Baru")
@@ -152,7 +157,7 @@ with tab2:
         v_orig = col2.text_input("Origin", value="SBY")
         v_dest = col2.text_input("Destination")
         v_kol = col2.text_input("Kolli")
-        v_kg = col2.text_input("Weight (Angka)")
+        v_kg = col2.text_input("Weight (Angka saja)")
         v_hrg = col2.number_input("Harga Satuan", 0)
         
         if st.form_submit_button("SIMPAN"):
