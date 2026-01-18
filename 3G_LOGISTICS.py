@@ -5,10 +5,14 @@ from datetime import datetime
 import os
 from fpdf import FPDF
 
-# --- 1. KONFIGURASI API & HALAMAN ---
+# --- 1. KONFIGURASI API & HALAMAN (Update Favicon di sini) ---
 API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
 
-st.set_page_config(page_title="3G LOGISTICS - Invoice System", layout="wide")
+st.set_page_config(
+    page_title="3G LOGISTICS - Invoice System",
+    page_icon="FAVICON.png", # Nama file gambar kamu
+    layout="wide"
+)
 
 # --- 2. FUNGSI TERBILANG ---
 def terbilang(n):
@@ -159,3 +163,4 @@ if st.session_state.preview_data:
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
     )
+
