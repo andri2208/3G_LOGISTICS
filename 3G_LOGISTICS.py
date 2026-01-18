@@ -114,7 +114,7 @@ if not st.session_state.authenticated:
 c_logo, c_empty, c_logout = st.columns([0.4, 0.4, 0.2])
 with c_logo:
     if os.path.exists("HEADER INVOICE.png"):
-        st.image("HEADER INVOICE.png", width=450)
+        st.image("HEADER INVOICE.png", width=800)
     else:
         st.title("3G LOGISTICS")
 
@@ -249,3 +249,4 @@ with t2:
                 st.info("No records found.")
         except:
             st.error("Connection failed.")
+
