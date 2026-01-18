@@ -23,7 +23,7 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- 3. FUNGSI PDF DENGAN HEADER & TANDA TANGAN ---
+# --- 3. FUNGSI PDF DENGAN HEADER, TTD, & INFO TRANSFER ---
 def buat_pdf_custom(data):
     pdf = FPDF()
     pdf.add_page()
@@ -75,26 +75,26 @@ def buat_pdf_custom(data):
     pdf.set_font("Arial", 'I', 9)
     pdf.multi_cell(190, 8, f"Terbilang: {terbilang(data['total'])} Rupiah")
 
-    # Info Bank
+    # --- INFORMASI TRANSFER (UPDATE) ---
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(190, 5, "TRANSFER TO :", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.cell(190, 5, "Bank Central Asia (BCA) - 6720422334 - A/N ADITYA GAMA SAPUTRI", ln=True)
+    pdf.set_font("Arial", 'I', 8)
+    pdf.cell(190, 5, "NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200", ln=True)
     
-    # --- BAGIAN TANDA TANGAN DENGAN GAMBAR ---
+    # --- BAGIAN TANDA TANGAN ---
     pdf.ln(10)
     pdf.cell(130, 5, "", 0)
     pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
     
-    # Posisi Gambar Tanda Tangan
     y_ttd = pdf.get_y()
     if os.path.exists("STEMPEL TANDA TANGAN.png"):
-        # Menyisipkan gambar TTD (x, y, lebar)
         pdf.image("STEMPEL TANDA TANGAN.png", x=145, y=y_ttd, w=35)
-        pdf.ln(20) # Ruang untuk gambar
+        pdf.ln(20)
     else:
-        pdf.ln(20) # Ruang kosong jika gambar tidak ada
+        pdf.ln(20)
         
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(130, 5, "", 0)
@@ -143,13 +143,19 @@ if st.session_state.preview_data:
     d = st.session_state.preview_data
     st.divider()
     st.subheader("🔍 Preview")
-    st.write(f"**Customer:** {d['penerima']} | **Total:** Rp {d['total']:,}")
     
+    with st.container(border=True):
+        st.write(f"**Customer:** {d['penerima']} | **Tanggal:** {d['waktu_tgl']}")
+        st.write(f"**Transfer To:** BCA - 6720422334 - A/N ADITYA GAMA SAPUTRI")
+        st.caption("NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200")
+        
+        st.table(pd.DataFrame([d]))
+        st.write(f"### Total Bayar: Rp {d['total']:,}")
+
     pdf_bytes = buat_pdf_custom(d)
     st.download_button(
-        label="📥 Download Invoice PDF (Header & TTD)",
+        label="📥 Download Invoice PDF",
         data=pdf_bytes,
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
     )
-
