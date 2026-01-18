@@ -8,26 +8,13 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB (Merapikan Preview di HP & Laptop)
+# 2. CSS UNTUK TAMPILAN WEB (Biar rapi di HP & Laptop)
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stTabs { margin-top: -15px; }
-    
-    /* Container untuk pratinjau agar tidak meluber di HP */
-    #invoice-preview-container {
-        width: 100%;
-        overflow-x: auto;
-        background-color: #f0f2f6;
-        padding: 10px 0;
-    }
-
-    /* Ukuran teks adaptif untuk tampilan layar web */
-    @media only screen and (max-width: 600px) {
-        .inv-text { font-size: 10px !important; }
-        .inv-title { font-size: 18px !important; }
-    }
+    #invoice-preview-container { width: 100%; overflow-x: auto; padding: 10px 0; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -72,7 +59,6 @@ else:
             return r.json()
         except: return []
 
-    # Baris Logout
     c_kosong, c_out = st.columns([0.8, 0.2])
     with c_out:
         if st.button("Logout 🚪", use_container_width=True):
@@ -96,52 +82,42 @@ else:
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE DENGAN GARIS MENYAMBUNG SEMPURNA ---
             html_content = f"""
 <div id="invoice-preview-container">
 <div id="invoice-box" style="background-color:white; padding:40px; border:2px solid black; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
     <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto; display:block;"></center>
-    
     <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:8px; font-weight:bold; font-size: 24px;">INVOICE</div>
-    
     <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px; border-collapse: collapse;">
-        <tr>
-            <td style="width:50%; padding:0;">CUSTOMER : {row['customer']}</td>
-            <td style="width:50%; text-align:right; padding:0;">DATE : {tgl}</td>
-        </tr>
+        <tr><td style="padding:0;">CUSTOMER : {row['customer']}</td><td style="text-align:right; padding:0;">DATE : {tgl}</td></tr>
     </table>
-
-    <table style="width:100%; border-collapse:collapse; margin:0; padding:0; border-spacing: 0;">
+    <table style="width:100%; border-collapse:collapse; border-spacing: 0; border:2px solid black;">
         <tr style="background-color:#316395; color:white; font-size:13px; text-align:center;">
-            <th style="border:2px solid black; padding:10px;">Date of Load</th>
-            <th style="border:2px solid black; padding:10px;">Description</th>
-            <th style="border:2px solid black; padding:10px;">Origin</th>
-            <th style="border:2px solid black; padding:10px;">Dest</th>
-            <th style="border:2px solid black; padding:10px;">KOLLI</th>
-            <th style="border:2px solid black; padding:10px;">HARGA</th>
-            <th style="border:2px solid black; padding:10px;">WEIGHT</th>
+            <th style="border:1px solid black; padding:10px;">Date of Load</th>
+            <th style="border:1px solid black; padding:10px;">Description</th>
+            <th style="border:1px solid black; padding:10px;">Origin</th>
+            <th style="border:1px solid black; padding:10px;">Dest</th>
+            <th style="border:1px solid black; padding:10px;">KOLLI</th>
+            <th style="border:1px solid black; padding:10px;">HARGA</th>
+            <th style="border:1px solid black; padding:10px;">WEIGHT</th>
         </tr>
         <tr style="font-size:13px; text-align:center;">
-            <td style="border:2px solid black; padding:15px;">{tgl}</td>
-            <td style="border:2px solid black; padding:15px;">{row['description']}</td>
-            <td style="border:2px solid black; padding:15px;">{row['origin']}</td>
-            <td style="border:2px solid black; padding:15px;">{row['destination']}</td>
-            <td style="border:2px solid black; padding:15px;">{row['kolli']}</td>
-            <td style="border:2px solid black; padding:15px;">Rp {int(row['harga']):,}</td>
-            <td style="border:2px solid black; padding:15px;">{row['weight']} Kg</td>
+            <td style="border:1px solid black; padding:15px;">{tgl}</td>
+            <td style="border:1px solid black; padding:15px;">{row['description']}</td>
+            <td style="border:1px solid black; padding:15px;">{row['origin']}</td>
+            <td style="border:1px solid black; padding:15px;">{row['destination']}</td>
+            <td style="border:1px solid black; padding:15px;">{row['kolli']}</td>
+            <td style="border:1px solid black; padding:15px;">Rp {int(row['harga']):,}</td>
+            <td style="border:1px solid black; padding:15px;">{row['weight']} Kg</td>
         </tr>
         <tr style="font-weight:bold; background-color:#f2f2f2; font-size:13px; text-align:center;">
-            <td colspan="6" style="border:2px solid black; padding:12px;">YANG HARUS DI BAYAR</td>
-            <td style="border:2px solid black; padding:12px;">Rp {total_harga:,}</td>
+            <td colspan="6" style="border:1px solid black; padding:12px;">YANG HARUS DI BAYAR</td>
+            <td style="border:1px solid black; padding:12px;">Rp {total_harga:,}</td>
         </tr>
     </table>
-
     <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic;">
         <b>Terbilang :</b> {teks_terbilang}
     </div>
-
     <br><br>
-
     <table style="width:100%; font-size:14px; line-height:1.6; border-collapse: collapse;">
         <tr>
             <td style="width:60%; vertical-align:top; padding:0;">
@@ -153,10 +129,8 @@ else:
             </td>
             <td style="width:40%; text-align:center; vertical-align:top; padding:0;">
                 Sincerely,<br>
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:5px 0;">
-                <br>
-                <b><u>KELVINITO JAYADI</u></b><br>
-                DIREKTUR
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;">
+                <br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
             </td>
         </tr>
     </table>
@@ -165,17 +139,14 @@ else:
 """
             st.markdown(html_content, unsafe_allow_html=True)
             st.write("---")
-
-            # 4. SCRIPT DOWNLOAD (KUNCI LEBAR 800PX)
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📥 DOWNLOAD INVOICE (PDF)</button>
+<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px;">📥 DOWNLOAD PDF</button>
 <script>
 function generatePDF() {{
   const element = window.parent.document.getElementById('invoice-box');
   const opt = {{
-    margin: [0.3, 0.3, 0.3, 0.3],
-    filename: '{nama_file}',
+    margin: [0.3, 0.3, 0.3, 0.3], filename: '{nama_file}',
     image: {{ type: 'jpeg', quality: 0.98 }},
     html2canvas: {{ scale: 2, useCORS: true, width: 800 }},
     jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
@@ -196,7 +167,6 @@ function generatePDF() {{
             f_kol = c2.number_input("Kolli", 0)
             f_kg = c2.number_input("Weight (Kg)", 1)
             f_hrg = c2.number_input("Harga Satuan", 0)
-            
             if st.form_submit_button("🚀 SIMPAN DATA"):
                 payload = {
                     "date": str(f_tgl), "customer": f_cust.upper(), "description": f_desc.upper(),
