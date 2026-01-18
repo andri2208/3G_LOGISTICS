@@ -17,11 +17,9 @@ st.markdown("""
     .stApp { background-color: #FDFCF0; }
     .block-container { padding-top: 5rem !important; }
 
-    /* Header Ramping */
     .custom-header { text-align: center; margin-bottom: 20px; }
     .custom-header img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
 
-    /* Label Tebal & Input Bersih */
     .stWidgetLabel p { font-weight: 900 !important; font-size: 14px !important; color: #1A2A3A !important; }
     
     .stTextInput input {
@@ -40,7 +38,6 @@ st.markdown("""
 
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
-    # Membersihkan karakter non-angka kecuali titik untuk desimal
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
     if match: return float(match[0])
     return 0
@@ -75,7 +72,6 @@ with tab1:
         selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
         row = df[df['customer'] == selected_cust].iloc[-1]
         
-        # Kalkulasi
         b_val = extract_number(row['weight'])
         h_val = extract_number(row['harga'])
         t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
@@ -99,7 +95,7 @@ with tab1:
                 .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
                 .data-table th {{ background-color: #f2f2f2; }}
                 .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
-                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
+                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
                 .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
             </style>
         </head>
@@ -125,8 +121,18 @@ with tab1:
                 <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                 <table class="footer-table">
                     <tr>
-                        <td style="width:60%;"><b>TRANSFER TO:</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke <br><th>Finance: 082179799200</td>
-                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px;"><br><b><u>KELVINITO JAYADI</u></b></td>
+                        <td style="width:65%; vertical-align:top;">
+                            <b>TRANSFER TO :</b><br>
+                            BCA <b>6720422334</b><br>
+                            <b>ADITYA GAMA SAPUTRI</b><br>
+                            NB: Jika sudah transfer mohon konfirmasi ke<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                        </td>
+                        <td style="text-align:center; vertical-align:top;">
+                            Sincerely,<br>
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
+                            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -153,18 +159,14 @@ with tab2:
         v_orig = c4.text_input("DARI", value="SBY")
         v_dest = c5.text_input("TUJUAN")
         v_kol = c6.text_input("KOLLI")
-        v_kg = c7.text_input("WEIGHT") # Input teks biasa
-        v_hrg = c8.text_input("HARGA") # Diubah jadi text_input agar tidak ada angka 0 dan -+
+        v_kg = c7.text_input("WEIGHT")
+        v_hrg = c8.text_input("HARGA")
         
         if st.form_submit_button("💾 SIMPAN DATA"):
-            # Membersihkan input agar bisa dikalkulasi
             h_num = extract_number(v_hrg)
             w_num = extract_number(v_kg)
-            
-            # Otomatis tambah " Kg" jika belum ada
             weight_final = str(v_kg)
-            if v_kg and "kg" not in v_kg.lower():
-                weight_final = f"{v_kg} Kg"
+            if v_kg and "kg" not in v_kg.lower(): weight_final = f"{v_kg} Kg"
             
             total_db = int(w_num * h_num) if w_num > 0 else int(h_num)
             
@@ -175,10 +177,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Berhasil Disimpan! Weight: {weight_final}")
+                st.success(f"Berhasil!")
                 st.cache_data.clear()
             except:
-                st.error("Gagal terhubung!")
-
-
-
+                st.error("Gagal!")
