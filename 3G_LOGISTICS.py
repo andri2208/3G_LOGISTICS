@@ -1,29 +1,48 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import requests
+from datetime import datetime
 
-# Menggunakan FAVICON.png yang ada di folder Anda
-st.set_page_config(page_title="3G LOGISTICS", page_icon="FAVICON.png", layout="wide")
+# URL Apps Script dari Secrets Anda
+API_URL = st.secrets["general"]["api_url"]
 
-# Menampilkan HEADER INVOICE.png
-st.image("HEADER INVOICE.png", use_container_width=True)
+st.subheader("📝 Buat Invoice Baru")
 
-st.title("Sistem Logistik PT. GAMA GEMAH GEMILANG")
-
-# Koneksi ke Google Sheets menggunakan Secrets
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-# Membaca data (Misal sheet bernama 'Data_Logistik')
-try:
-    df = conn.read(worksheet="Sheet1")
-    st.success("Koneksi ke Database Berhasil!")
+with st.form("invoice_form", clear_on_submit=True):
+    col1, col2 = st.columns(2)
     
-    # Menampilkan data dalam tabel
-    st.subheader("Daftar Pengiriman")
-    st.dataframe(df)
-    
-except Exception as e:
-    st.error(f"Gagal memuat data. Pastikan Secrets sudah disetting. Error: {e}")
+    with col1:
+        customer = st.text_input("Nama Customer", value="PT HARVI")
+        tgl_muat = st.date_input("Tanggal Muat", datetime.now())
+        origin = st.text_input("Asal (Origin)", value="TUAL")
+        destination = st.text_input("Tujuan (Destination)", value="LARAT")
+        
+    with col2:
+        produk = st.text_area("Deskripsi Produk", value="3 UNIT CDD")
+        harga = st.number_input("Harga (Rp)", min_value=0, step=1000)
+        tgl_invoice = st.date_input("Tanggal Invoice", datetime.now())
+        terbilang = st.text_input("Terbilang", placeholder="Contoh: Dua puluh tujuh juta rupiah")
 
-# Bagian Stempel (Contoh jika ingin ditampilkan di bawah)
-if st.button("Lihat Stempel"):
-    st.image("STEMPEL TANDA TANGAN.png", width=200)
+    submitted = st.form_submit_button("Simpan & Kirim ke Google Sheets")
+
+    if submitted:
+        # Data yang akan dikirim ke Apps Script
+        payload = {
+            "tanggal_muat": tgl_muat.strftime("%Y-%m-%d"),
+            "customer": customer,
+            "produk": produk,
+            "origin": origin,
+            "destination": destination,
+            "harga": harga,
+            "terbilang": terbilang,
+            "tanggal_invoice": tgl_invoice.strftime("%Y-%m-%d")
+        }
+        
+        try:
+            # Mengirim data menggunakan metode POST
+            response = requests.post(API_URL, json=payload)
+            if response.status_code == 200:
+                st.success("✅ Data Invoice berhasil disimpan ke Google Sheets!")
+            else:
+                st.error("❌ Gagal menyimpan data ke server.")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan: {e}")
