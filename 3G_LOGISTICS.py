@@ -10,26 +10,45 @@ st.set_page_config(page_title="3G Logistics System", layout="centered", initial_
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# --- TAMBAHKAN CSS INI UNTUK MENARIK TAMPILAN KE ATAS ---
+# --- CSS UNTUK TATA LETAK ---
 st.markdown("""
     <style>
-    /* Menghilangkan jarak atas pada aplikasi */
+    /* Menghilangkan jarak default Streamlit */
     .block-container {
-        padding-top: 2,2rem;
+        padding-top: 1rem;
         padding-bottom: 0rem;
-        margin-top: -20px;
     }
-    /* Menghilangkan ruang kosong di atas tabs */
+    
+    /* Memberikan jarak khusus untuk tombol logout agar tidak mepet */
+    .logout-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+        margin-top: 5px;
+    }
+    
+    /* Merapatkan jarak antar elemen utama */
     .stTabs {
-        margin-top: -20px;
-    }
-    /* Mengatur jarak header agar tidak terlalu besar */
-    [data-testid="stImage"] {
-        margin-top: -30px;
+        margin-top: -10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
+# ... (kode login tetap sama) ...
+
+if st.session_state['logged_in']:
+    # --- HEADER DENGAN TOMBOL LOGOUT YANG RAPI ---
+    # Kita gunakan container khusus agar tombol punya ruang
+    col_kosong, col_logout = st.columns([0.8, 0.2])
+    with col_logout:
+        if st.button("Logout 🚪", use_container_width=True):
+            st.session_state['logged_in'] = False
+            st.rerun()
+
+    # Tampilkan Header Utama
+    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
+    st.write("---") # Garis pemisah tipis agar lebih rapi
+    
 # --- SISTEM LOGIN SEDERHANA ---
 def login():
     st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
@@ -161,6 +180,7 @@ function downloadPDF() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal menyimpan data.")
+
 
 
 
