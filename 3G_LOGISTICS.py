@@ -5,8 +5,8 @@ import json
 from datetime import datetime
 import streamlit.components.v1 as components
 
-# 1. KONFIGURASI HALAMAN (Tanpa Sidebar secara default)
-st.set_page_config(page_title="3G Logistics", layout="centered", initial_sidebar_state="collapsed")
+# 1. KONFIGURASI HALAMAN
+st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
@@ -29,21 +29,21 @@ def get_data():
         return r.json()
     except: return []
 
-# HEADER UTAMA
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", width=60)
-st.title("PT. GAMA GEMAH GEMILANG")
+# --- HEADER WEB GANTI DENGAN GAMBAR ---
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
+st.write("---")
 
 t1, t2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
 
 with t1:
     data = get_data()
     if not data:
-        st.error("Database Kosong")
+        st.error("Database Kosong atau Koneksi Gagal")
     else:
         df = pd.DataFrame(data)
         
-        # PILIH CUSTOMER DI ATAS (Bukan di Sidebar)
-        selected_cust = st.selectbox("Pilih Nama Customer", df['customer'].unique())
+        # PILIH CUSTOMER DI ATAS
+        selected_cust = st.selectbox("Cari dan Pilih Nama Customer:", df['customer'].unique())
         
         # Ambil data terbaru customer
         row = df[df['customer'] == selected_cust].iloc[-1]
@@ -52,12 +52,12 @@ with t1:
         kata = terbilang(total).title() + " Rupiah"
         filename = f"INV_{selected_cust}_{tgl}.pdf"
 
-        # HTML INVOICE
+        # Tampilan Invoice HTML (ID: invoice-area untuk target PDF)
         invoice_html = f"""
-<div id="invoice-area" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
+<div id="invoice-area" style="background-color:white;padding:20px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size:20px;">INVOICE</div>
-<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><b>CUSTOMER : {row['customer']}</b><b>DATE : {tgl}</b></div>
+<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><span><b>CUSTOMER : {row['customer']}</b></span><span><b>DATE : {tgl}</b></span></div>
 <table style="width:100%;border-collapse:collapse;border:1px solid black;font-size:12px;text-align:center;">
 <tr style="background-color:#316395;color:white;"><th style="border:1px solid black;padding:8px;">Date of Load</th><th style="border:1px solid black;">Product Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Destination</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th></tr>
 <tr><td style="border:1px solid black;padding:10px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td></tr>
@@ -70,15 +70,15 @@ with t1:
 </div>
 </div>
 """
-        # Render Invoice
+        # Render tampilan invoice
         st.markdown(invoice_html, unsafe_allow_html=True)
         
-        # TOMBOL DOWNLOAD DI BAWAH (Menggunakan JavaScript html2pdf)
+        # TOMBOL DOWNLOAD DI BAWAH INVOICE
         st.write("")
         components.html(f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <script>
-            function download() {{
+            function downloadPDF() {{
                 const element = window.parent.document.getElementById('invoice-area');
                 const opt = {{
                     margin: [0.2, 0.2, 0.2, 0.2],
@@ -90,25 +90,39 @@ with t1:
                 html2pdf().set(opt).from(element).save();
             }}
             </script>
-            <button onclick="download()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">
-                📥 Simpan Invoice ke PDF
+            <button onclick="downloadPDF()" style="background-color: #4CAF50; color: white; padding: 15px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
+                📥 DOWNLOAD INVOICE (PDF)
             </button>
-        """, height=70)
+        """, height=80)
 
 with t2:
-    st.subheader("Input Transaksi Baru")
-    with st.form("f1", clear_on_submit=True):
+    st.subheader("📝 Input Data Transaksi Baru")
+    with st.form("input_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
         d_tgl = c1.date_input("Tanggal")
-        d_cust = c1.text_input("Customer")
-        d_item = c1.text_input("Barang")
-        d_ori = c2.text_input("Origin")
-        d_dest = c2.text_input("Destination")
-        d_kol = c2.number_input("Kolli", 0)
+        d_cust = c1.text_input("Customer (Nama PT/Orang)")
+        d_item = c1.text_input("Deskripsi Barang")
+        d_ori = c2.text_input("Origin (Asal)", value="SBY")
+        d_dest = c2.text_input("Destination (Tujuan)")
+        d_kol = c2.number_input("Jumlah Kolli", 0)
         d_kg = c2.number_input("Weight (Kg)", 1)
-        d_hrg = c2.number_input("Harga", 0)
-        if st.form_submit_button("Simpan"):
-            payload = {"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}
-            requests.post(API_URL, data=json.dumps(payload))
-            st.success("Tersimpan!")
-            st.cache_data.clear()
+        d_hrg = c2.number_input("Harga Satuan", 0)
+        
+        if st.form_submit_button("🚀 SIMPAN KE DATABASE"):
+            payload = {
+                "date": str(d_tgl),
+                "customer": d_cust.upper(),
+                "description": d_item.upper(),
+                "origin": d_ori.upper(),
+                "destination": d_dest.upper(),
+                "kolli": d_kol,
+                "harga": d_hrg,
+                "weight": d_kg,
+                "total": d_hrg * d_kg
+            }
+            try:
+                requests.post(API_URL, data=json.dumps(payload))
+                st.success("✅ Data berhasil disimpan! Klik tab 'Cetak Invoice' untuk melihat.")
+                st.cache_data.clear()
+            except:
+                st.error("❌ Gagal menyimpan data.")
