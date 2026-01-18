@@ -8,6 +8,14 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
+# CSS Dasar
+st.markdown("""
+    <style>
+    header {visibility: hidden;}
+    .stTabs { margin-top: -15px; }
+    </style>
+    """, unsafe_allow_html=True)
+
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
 def terbilang(n):
@@ -29,7 +37,7 @@ def get_data():
         return r.json()
     except: return []
 
-# TAMPILAN WEB
+# TAMPILAN UTAMA
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
 tab1, tab2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
@@ -37,90 +45,87 @@ tab1, tab2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
 with tab1:
     data = get_data()
     if not data:
-        st.error("Database Kosong atau Gagal Terhubung")
+        st.error("Gagal terhubung ke Database.")
     else:
         df = pd.DataFrame(data)
-        selected_cust = st.selectbox("Pilih Nama Customer:", df['customer'].unique())
+        selected_cust = st.selectbox("Pilih Customer:", df['customer'].unique())
         row = df[df['customer'] == selected_cust].iloc[-1]
         tgl = str(row['date']).split('T')[0]
         total_harga = int(row['total'])
         teks_terbilang = terbilang(total_harga).title() + " Rupiah"
         nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-        # HTML DESAIN (Garis Terkunci di Satu Tabel)
+        # KODE HTML INVOICE (Satu Tabel Solid)
         html_desain = f"""
-        <div id="invoice-box" style="background-color:white; padding:20px; border:2px solid black; color:black; font-family:Arial, sans-serif; width:100%; max-width:750px; margin:auto; box-sizing:border-box;">
-            <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto; display:block;"></center>
-            
+        <div id="invoice-box" style="background-color:white; padding:20px; border:2px solid black; color:black; font-family:Arial, sans-serif; width:750px; margin:auto; box-sizing:border-box;">
+            <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; display:block;"></center>
             <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold; font-size: 22px;">INVOICE</div>
-            
-            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-bottom:10px; padding:0 5px;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-bottom:10px;">
                 <span>CUSTOMER : {row['customer']}</span>
                 <span>DATE : {tgl}</span>
             </div>
-
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size:12px; text-align:center;">
-                    <tr style="background-color:#316395; color:white;">
-                        <th style="border:1px solid black; padding:8px;">Date of Load</th>
-                        <th style="border:1px solid black;">Description</th>
-                        <th style="border:1px solid black;">Origin</th>
-                        <th style="border:1px solid black;">Dest</th>
-                        <th style="border:1px solid black;">KOLLI</th>
-                        <th style="border:1px solid black;">HARGA</th>
-                        <th style="border:1px solid black;">WEIGHT</th>
-                    </tr>
-                    <tr>
-                        <td style="border:1px solid black; padding:15px;">{tgl}</td>
-                        <td style="border:1px solid black;">{row['description']}</td>
-                        <td style="border:1px solid black;">{row['origin']}</td>
-                        <td style="border:1px solid black;">{row['destination']}</td>
-                        <td style="border:1px solid black;">{row['kolli']}</td>
-                        <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
-                        <td style="border:1px solid black;">{row['weight']} Kg</td>
-                    </tr>
-                    <tr style="font-weight:bold; background-color:#f2f2f2;">
-                        <td colspan="6" style="border:1px solid black; text-align:center; padding:10px;">YANG HARUS DI BAYAR</td>
-                        <td style="border:1px solid black;">Rp {total_harga:,}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="7" style="border:1px solid black; padding:10px; text-align:left; font-style:italic; border-top:2px solid black;">
-                            <b>Terbilang :</b> {teks_terbilang}
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="margin-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:13px;">
-                <div style="flex:1; min-width:250px; line-height:1.6;">
+            <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size:12px; text-align:center;">
+                <tr style="background-color:#316395; color:white;">
+                    <th style="border:1px solid black; padding:8px;">Date</th>
+                    <th style="border:1px solid black;">Description</th>
+                    <th style="border:1px solid black;">Origin</th>
+                    <th style="border:1px solid black;">Dest</th>
+                    <th style="border:1px solid black;">KOLLI</th>
+                    <th style="border:1px solid black;">PRICE</th>
+                    <th style="border:1px solid black;">WEIGHT</th>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:15px;">{tgl}</td>
+                    <td style="border:1px solid black;">{row['description']}</td>
+                    <td style="border:1px solid black;">{row['origin']}</td>
+                    <td style="border:1px solid black;">{row['destination']}</td>
+                    <td style="border:1px solid black;">{row['kolli']}</td>
+                    <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
+                    <td style="border:1px solid black;">{row['weight']} Kg</td>
+                </tr>
+                <tr style="font-weight:bold; background-color:#f2f2f2;">
+                    <td colspan="6" style="border:1px solid black; text-align:center; padding:10px;">TOTAL</td>
+                    <td style="border:1px solid black;">Rp {total_harga:,}</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="border:1px solid black; padding:10px; text-align:left; font-style:italic;">
+                        <b>Terbilang :</b> {teks_terbilang}
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top:20px; display:flex; justify-content:space-between;">
+                <div style="font-size:12px; line-height:1.5;">
                     <b>TRANSFER TO :</b><br>
                     Bank Central Asia 6720422334<br>
                     A/N ADITYA GAMA SAPUTRI<br>
-                    <small>NB: Jika sudah transfer mohon konfirmasi ke<br>Finance 082179799200</small>
+                    Finance: 082179799200
                 </div>
-                <div style="flex:1; text-align:center; min-width:150px;">
+                <div style="text-align:center; font-size:12px;">
                     Sincerely,<br>
-                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:140px; margin:5px 0;"><br>
-                    <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; margin:5px 0;"><br>
+                    <b><u>KELVINITO JAYADI</u></b>
                 </div>
             </div>
         </div>
         """
+        
+        # MENGGUNAKAN MARKDOWN DENGAN UNSAFE_ALLOW_HTML=TRUE
         st.markdown(html_desain, unsafe_allow_html=True)
 
-        # TOMBOL DOWNLOAD PDF
         st.write("---")
+        
+        # TOMBOL DOWNLOAD
         components.html(f"""
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <button onclick="downloadPDF()" style="background-color:#4CAF50; color:white; padding:15px; border:none; border-radius:8px; cursor:pointer; width:100%; font-weight:bold; font-size:16px;">📥 DOWNLOAD PDF</button>
+        <button onclick="unduh()" style="background-color:#4CAF50; color:white; padding:15px; border:none; border-radius:8px; cursor:pointer; width:100%; font-weight:bold; font-size:16px;">📥 DOWNLOAD PDF</button>
         <script>
-        function downloadPDF() {{
+        function unduh() {{
           const element = window.parent.document.getElementById('invoice-box');
           const opt = {{
-            margin: [0.2, 0.2, 0.2, 0.2],
+            margin: 0.3,
             filename: '{nama_file}',
             image: {{ type: 'jpeg', quality: 0.98 }},
-            html2canvas: {{ scale: 3, useCORS: true, width: 750 }},
+            html2canvas: {{ scale: 2, useCORS: true }},
             jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
           }};
           html2pdf().set(opt).from(element).save();
@@ -140,11 +145,11 @@ with tab2:
         in_kg = c2.number_input("Weight (Kg)", 1)
         in_hrg = c2.number_input("Harga Satuan", 0)
         
-        if st.form_submit_button("SIMPAN KE DATABASE"):
+        if st.form_submit_button("SIMPAN DATA"):
             payload = {"date":str(in_tgl),"customer":in_cust.upper(),"description":in_desc.upper(),"origin":in_orig.upper(),"destination":in_dest.upper(),"kolli":in_kol,"harga":in_hrg,"weight":in_kg,"total":in_hrg*in_kg}
             try:
                 requests.post(API_URL, data=json.dumps(payload))
                 st.success("Data Berhasil Disimpan!")
                 st.cache_data.clear()
             except:
-                st.error("Gagal menyimpan ke Google Sheets.")
+                st.error("Gagal simpan.")
