@@ -89,9 +89,9 @@ def buat_pdf_custom(data):
     
     # Posisi Gambar Tanda Tangan
     y_ttd = pdf.get_y()
-    if os.path.exists("TANDA_TANGAN.png"):
+    if os.path.exists("STEMPEL TANDA TANGAN.png"):
         # Menyisipkan gambar TTD (x, y, lebar)
-        pdf.image("TANDA_TANGAN.png", x=145, y=y_ttd, w=35)
+        pdf.image("STEMPEL TANDA TANGAN.png", x=145, y=y_ttd, w=35)
         pdf.ln(20) # Ruang untuk gambar
     else:
         pdf.ln(20) # Ruang kosong jika gambar tidak ada
@@ -152,3 +152,4 @@ if st.session_state.preview_data:
         file_name=f"Invoice_{d['penerima']}.pdf",
         mime="application/pdf"
     )
+
