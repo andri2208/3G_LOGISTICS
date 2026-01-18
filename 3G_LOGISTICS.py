@@ -1,5 +1,5 @@
 import streamlit as st
-import pd as pd
+import pandas as pd
 import requests
 import json
 from datetime import datetime
@@ -196,4 +196,5 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("Gagal!")
+
 
