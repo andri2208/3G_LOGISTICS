@@ -55,7 +55,7 @@ st.markdown(f"""
 
     /* Logo Pro */
     .logo-img {{
-        width: 50%;
+        width: 30%;
         max-width: 250px; /* Logo sedikit lebih kecil */
         height: auto;
         margin-bottom: 25px;
@@ -252,6 +252,7 @@ with tab2:
     }
     df = pd.DataFrame(data)
     st.dataframe(df)
+
 
 
 
