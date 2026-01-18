@@ -15,7 +15,7 @@ st.markdown("""
     <style>
     /* Menghilangkan jarak atas pada aplikasi */
     .block-container {
-        padding-top: 40px;
+        padding-top: 50px;
         padding-bottom: 0rem;
         margin-top: -20px;
     }
@@ -161,6 +161,7 @@ function downloadPDF() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal menyimpan data.")
+
 
 
 
