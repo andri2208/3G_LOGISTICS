@@ -76,7 +76,7 @@ def get_data():
     except: return []
 
 # Header Web
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png")
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png")
 
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
@@ -120,7 +120,7 @@ with tab1:
         </head>
         <body>
             <div class="container" id="printable-inv">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" class="header-img">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                 <div class="title">INVOICE</div>
                 <table class="info-table">
                     <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
@@ -150,7 +150,7 @@ with tab1:
                         </td>
                         <td style="text-align:center;">
                             Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:110px;"><br>
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br>
                             <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
                         </td>
                     </tr>
@@ -205,3 +205,4 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("❌ Gagal terhubung!")
+
