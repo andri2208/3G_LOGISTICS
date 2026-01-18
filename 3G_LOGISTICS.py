@@ -76,17 +76,32 @@ st.markdown(f"""
         margin-bottom: 30px;
     }}
 
-    /* Styling Input */
-    .stTextInput > div > div > input {{
-        background-color: rgba(255,255,255,0.9) !important;
+    /* Mengecilkan Kotak Input */
+    .stTextInput {
+        width: 100% !important;
+        max-width: 300px !important; /* Ukuran kotak diperkecil */
+        margin: 0 auto !important; /* Menjaga tetap di tengah */
+    }
+
+    /* Style Khusus Isi Input */
+    .stTextInput > div > div > input {
+        background-color: rgba(255, 255, 255, 0.95) !important;
         color: #1a1a1a !important;
-        border-radius: 12px !important;
-        height: 50px !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
+        border-radius: 10px !important; /* Sudut lebih tegas */
+        height: 40px !important; /* Lebih pendek/kecil */
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
         text-align: center !important;
-        border: none !important;
-    }}
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        transition: 0.3s;
+    }
+
+    /* Efek saat diklik (Focus) */
+    .stTextInput > div > div > input:focus {
+        border: 1px solid #cc0000 !important;
+        box-shadow: 0 0 10px rgba(204, 0, 0, 0.2) !important;
+        background-color: #ffffff !important;
+    }
 
     /* Styling Button */
     .stButton > button {{
@@ -143,19 +158,21 @@ if not st.session_state.authenticated:
     
     # Input Password menggunakan Streamlit
     # Kita gunakan container kosong agar form streamlit masuk ke dalam div login-card
-    with st.container():
-        pwd = st.text_input("PASSWORD", type="password", placeholder="MASUKAN PASSWORD", label_visibility="collapsed")
-        
-        if st.button("LOGIN"):
-            if pwd == "2026":
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("Invalid Access Code")
-                
-    st.markdown('</div>', unsafe_allow_html=True) # Tutup login-card
-    st.markdown('</div>', unsafe_allow_html=True) # Tutup main-login-container
-    st.stop()
+    # --- DI DALAM CARD LOGIN ---
+with st.container():
+    # Input Password (Lebarnya otomatis mengikuti CSS max-width: 300px)
+    pwd = st.text_input("PASSWORD", type="password", placeholder="MASUKAN PASSWORD", label_visibility="collapsed")
+    
+    # Bungkus tombol dalam kolom atau container agar lebarnya sama dengan input
+    st.markdown('<div style="max-width: 300px; margin: 0 auto;">', unsafe_allow_html=True)
+    if st.button("UNLOCK SYSTEM"):
+        if pwd == "2026":
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Access Denied")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 
 # --- 5. HALAMAN DASHBOARD (SETELAH LOGIN) ---
 st.markdown("<style>.stApp { overflow: auto !important; }</style>", unsafe_allow_html=True)
@@ -187,6 +204,7 @@ st.markdown("""
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
