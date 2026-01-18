@@ -35,9 +35,7 @@ st.markdown(f"""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 90vh;
-        padding: 1px;
-    }}
+       }}
 
     /* Card Login Elegan */
     .login-card {{
@@ -167,6 +165,7 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
