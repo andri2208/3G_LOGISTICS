@@ -11,24 +11,29 @@ st.set_page_config(page_title="3G Logistics System", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS UNTUK MEWARNAI KOLOM INPUT & MEMPERTEBAL LABEL ---
+# --- CSS CUSTOM UNTUK MEMPERTEBAL TEKS DI ATAS KOLOM ---
 st.markdown("""
     <style>
-    /* Mempertebal label teks di atas kolom */
-    label {
-        font-weight: bold !important;
-        color: #31333F !important;
+    /* Mempertebal semua label (teks di atas kolom) */
+    .stWidgetLabel p {
+        font-weight: 900 !important; /* Sangat Tebal */
+        font-size: 16px !important;
+        color: #1E1E1E !important;
+        margin-bottom: 8px !important;
     }
-    /* Memberi warna latar belakang pada kolom input */
+    
+    /* Memberi warna latar pada kolom input agar menonjol */
     .stTextInput input, .stNumberInput input, .stDateInput input {
-        background-color: #F0F2F6 !important; /* Warna abu muda kebiruan */
-        border: 1px solid #D1D5DB !important;
-        border-radius: 5px !important;
+        background-color: #F8F9FA !important;
+        border: 2px solid #D1D5DB !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
     }
-    /* Warna saat kolom diklik/aktif */
+
+    /* Warna saat kolom diklik */
     .stTextInput input:focus {
         border-color: #28a745 !important;
-        background-color: #FFFFFF !important;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -60,7 +65,7 @@ def get_data():
 
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
 
-tab1, tab2 = st.tabs(["📄 Cetak Invoice (Responsif)", "➕ Tambah Data"])
+tab1, tab2 = st.tabs(["📄 Cetak Invoice (A5)", "➕ Tambah Data"])
 
 with tab1:
     data = get_data()
@@ -86,7 +91,7 @@ with tab1:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: white; }}
+                body {{ font-family: Arial, sans-serif; background-color: white; }}
                 .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ccc; }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
@@ -164,19 +169,20 @@ with tab1:
         components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.subheader("➕ Tambah Data Baru")
+    st.markdown("### ➕ Input Data Pengiriman Baru")
     with st.form("form_db", clear_on_submit=True):
         col1, col2 = st.columns(2)
-        v_tgl = col1.date_input("Tanggal", datetime.now())
-        v_cust = col1.text_input("Nama Customer")
-        v_desc = col1.text_input("Deskripsi Barang")
-        v_orig = col2.text_input("Origin (Asal)", value="SBY")
-        v_dest = col2.text_input("Destination (Tujuan)")
-        v_kol = col2.text_input("Kolli (Contoh: 10 Box)")
-        v_kg = col2.text_input("Weight (Berat - Angka Saja)")
-        v_hrg = col2.number_input("Harga Satuan", 0)
+        v_tgl = col1.date_input("TANGGAL PENGIRIMAN", datetime.now())
+        v_cust = col1.text_input("NAMA CUSTOMER")
+        v_desc = col1.text_input("DESKRIPSI BARANG")
+        v_orig = col2.text_input("ORIGIN (ASAL)", value="SBY")
+        v_dest = col2.text_input("DESTINATION (TUJUAN)")
+        v_kol = col2.text_input("JUMLAH KOLLI (Contoh: 10 Box)")
+        v_kg = col2.text_input("WEIGHT / BERAT (Angka Saja)")
+        v_hrg = col2.number_input("HARGA SATUAN (Rp)", 0)
         
-        if st.form_submit_button("SIMPAN KE DATABASE"):
+        st.markdown("---")
+        if st.form_submit_button("💾 SIMPAN DATA KE GOOGLE SHEETS"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -186,7 +192,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"Berhasil! Total: Rp {total_db:,} sudah masuk ke database.")
+                st.success(f"✅ Berhasil Disimpan! Total Tagihan Otomatis: Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("Gagal terhubung ke database.")
+                st.error("❌ Gagal terhubung ke database.")
