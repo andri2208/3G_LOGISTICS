@@ -6,7 +6,7 @@ import requests
 st.set_page_config(page_title="Sistem Invoice 3G Logistics", page_icon="🚚", layout="centered")
 
 # URL API Google Apps Script kamu
-API_URL = "ISI_DENGAN_URL_WEB_APP_KAMU"
+API_URL = "https://script.google.com/macros/s/AKfycbw0EeMRVPlTCDwuTRsSuIaFUOo0EcYMpZKuc3IlLtrR03ind4kxT67IQt74zt5hEZ7t/exec"
 
 # Fungsi Konversi Angka ke Terbilang
 def terbilang(n):
@@ -122,3 +122,4 @@ else:
     """, unsafe_allow_html=True)
 
     st.button("Cetak Invoice (Ctrl + P)")
+
