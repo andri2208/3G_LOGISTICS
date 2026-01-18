@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pd as pd
 import requests
 import json
 from datetime import datetime
@@ -15,11 +15,9 @@ API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzg
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
-    
-    /* Ruang atas agar tidak tertutup tab Streamlit */
     .block-container { padding-top: 4rem !important; }
 
-    /* Header Image Tengah & Proporsional */
+    /* Header Image Tengah */
     [data-testid="stImage"] img {
         max-width: 550px !important; 
         margin: 0 auto;
@@ -27,22 +25,19 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    /* Label Input Sangat Tebal (Midnight Blue) */
+    /* Label Input Sangat Tebal */
     .stWidgetLabel p {
         font-weight: 900 !important;
         font-size: 14px !important;
         color: #1A2A3A !important;
     }
     
-    /* Input Field Putih */
     .stTextInput input, .stNumberInput input, .stDateInput input {
         background-color: #FFFFFF !important;
         border: 2px solid #BCC6CC !important;
         border-radius: 8px !important;
     }
 
-    /* Tab Menu Besar & Tegas */
-    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
     .stTabs [data-baseweb="tab"] {
         font-size: 18px !important;
         font-weight: bold !important;
@@ -75,8 +70,8 @@ def get_data():
         return r.json()
     except: return []
 
-# Header Web
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png")
+# Header Utama Web
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png")
 
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
@@ -97,30 +92,28 @@ with tab1:
         tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
         kata_terbilang = terbilang(t_val) + " Rupiah"
 
-        # HTML INVOICE YANG SUDAH DIPERBAIKI (TETAP PROFESIONAL)
+        # HTML INVOICE DENGAN PERBAIKAN LINK GAMBAR
         invoice_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; background-color: transparent; }}
-                .container {{ background: white; padding: 20px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
-                .header-img {{ width: 100%; height: auto; }}
-                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
-                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
-                .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
+                .container {{ background: white; padding: 20px; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial, sans-serif; }}
+                .header-img {{ width: 100%; height: auto; display: block; }}
+                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                 .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
-                .data-table th {{ background-color: #eee; }}
-                .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
-                .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; }}
+                .data-table th {{ background-color: #f2f2f2; }}
+                .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
+                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
                 .btn-dl {{ width: 100%; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
             </style>
         </head>
         <body>
-            <div class="container" id="printable-inv">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+            <div id="invoice-box" class="container">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" class="header-img">
                 <div class="title">INVOICE</div>
                 <table class="info-table">
                     <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
@@ -136,7 +129,7 @@ with tab1:
                             <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td>
                             <td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td>
                         </tr>
-                        <tr style="font-weight:bold; background:#f9f9f9;">
+                        <tr style="font-weight:bold;">
                             <td colspan="6" style="text-align:right;">YANG HARUS DIBAYAR</td><td>Rp {t_val:,}</td>
                         </tr>
                     </tbody>
@@ -150,20 +143,21 @@ with tab1:
                         </td>
                         <td style="text-align:center;">
                             Sincerely,<br>
-                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br>
+                            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; margin: 10px 0;"><br>
                             <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
                         </td>
                     </tr>
                 </table>
             </div>
-            <button class="btn-dl" onclick="downloadInv()">📥 DOWNLOAD INVOICE (A5)</button>
+            <button class="btn-dl" onclick="generatePDF()">📥 DOWNLOAD INVOICE (UKURAN A5)</button>
             <script>
-                function downloadInv() {{
-                    const element = document.getElementById('printable-inv');
+                function generatePDF() {{
+                    const element = document.getElementById('invoice-box');
                     const opt = {{
-                        margin: 0.1,
+                        margin: 0,
                         filename: 'Inv_{selected_cust}.pdf',
-                        html2canvas: {{ scale: 3 }},
+                        image: {{ type: 'jpeg', quality: 0.98 }},
+                        html2canvas: {{ scale: 3, useCORS: true, logging: false }},
                         jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
                     }};
                     html2pdf().set(opt).from(element).save();
@@ -176,13 +170,11 @@ with tab1:
 
 with tab2:
     with st.form("input_form", clear_on_submit=True):
-        # Baris 1: Informasi Utama
         c1, c2, c3 = st.columns([1, 2, 2])
         v_tgl = c1.date_input("TANGGAL", datetime.now())
         v_cust = c2.text_input("NAMA CUSTOMER")
         v_desc = c3.text_input("DESKRIPSI BARANG")
         
-        # Baris 2: Detail Teknis
         c4, c5, c6, c7, c8 = st.columns([1, 1, 1, 1, 1.5])
         v_orig = c4.text_input("DARI", value="SBY")
         v_dest = c5.text_input("TUJUAN")
@@ -190,8 +182,7 @@ with tab2:
         v_kg = c7.text_input("WEIGHT")
         v_hrg = c8.number_input("HARGA", 0)
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.form_submit_button("💾 SIMPAN DATA KE SISTEM"):
+        if st.form_submit_button("💾 SIMPAN DATA"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -201,8 +192,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"✅ Berhasil! Total Tagihan: Rp {total_db:,}")
+                st.success(f"Berhasil Simpan! Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("❌ Gagal terhubung!")
-
+                st.error("Gagal!")
