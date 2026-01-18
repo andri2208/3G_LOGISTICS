@@ -28,13 +28,14 @@ def terbilang(n):
     return "Angka Terlalu Besar"
 
 # --- TAMPILAN HEADER ---
+# Memastikan header invoice muncul di paling atas [cite: 1, 4]
 st.image("HEADER INVOICE.png", use_container_width=True)
 
-# --- AMBIL URL API ---
+# --- AMBIL URL API DARI SECRETS ---
 try:
     API_URL = st.secrets["general"]["api_url"]
-except:
-    st.error("Pastikan 'api_url' sudah diisi di Secrets Streamlit Cloud!")
+except Exception:
+    st.error("Error: Masukkan 'api_url' di Settings > Secrets Streamlit Cloud!")
     st.stop()
 
 # --- TABS ---
@@ -46,40 +47,42 @@ with tab1:
         res = requests.get(API_URL)
         if res.status_code == 200:
             st.dataframe(pd.DataFrame(res.json()), use_container_width=True)
-    except:
-        st.info("Belum ada data yang ditampilkan.")
+    except Exception:
+        st.info("Koneksi ke Google Sheets belum tersedia.")
 
 with tab2:
     st.subheader("Form Input Invoice")
     
-    # Form harus diakhiri dengan st.form_submit_button
-    with st.form("my_form"):
+    with st.form("invoice_form"):
         col1, col2 = st.columns(2)
         
         with col1:
-            # Tanggal otomatis sistem 
+            # Tanggal otomatis sistem hari ini [cite: 5, 13]
             tgl_otomatis = datetime.now().strftime("%d-%b-%Y")
-            st.write(f"📅 **Tanggal:** {tgl_otomatis}")
+            st.info(f"📅 Tanggal Sistem: {tgl_otomatis}")
             
-            customer = st.text_input("Customer", placeholder="Contoh: PT HARVI") [cite: 3]
-            produk = st.text_area("Produk Deskripsi", placeholder="Contoh: 3 UNIT CDD") [cite: 5]
-            kolli = st.number_input("Kolli", min_value=0, step=1) [cite: 5]
-            berat = st.text_input("Berat (Weight)", placeholder="Contoh: 20 Ton") [cite: 5]
+            # Input data customer dan produk [cite: 3, 5]
+            customer = st.text_input("Customer", placeholder="Contoh: PT HARVI")
+            produk = st.text_area("Produk Deskripsi", placeholder="Contoh: 3 UNIT CDD")
+            kolli = st.number_input("Kolli", min_value=0, step=1)
+            berat = st.text_input("Berat (Weight)", placeholder="Contoh: 20 Ton")
             
         with col2:
-            origin = st.text_input("Origin", value="TUAL") [cite: 5]
-            destinasi = st.text_input("Destination", value="LARAT") [cite: 5]
-            harga = st.number_input("Harga (Rp)", min_value=0, value=0, step=1000) [cite: 5]
+            # Input rute pengiriman 
+            origin = st.text_input("Origin", value="TUAL")
+            destinasi = st.text_input("Destination", value="LARAT")
+            harga = st.number_input("Harga (Rp)", min_value=0, value=0, step=1000)
             
-            # Kalkulasi otomatis
+            # Kalkulasi otomatis untuk pembayaran 
             total_bayar = harga
             teks_terbilang = f"{terbilang(total_bayar)} Rupiah" if total_bayar > 0 else "-"
             
-            st.write("---")
-            st.write(f"💰 **Yang Harus Dibayar:** Rp {total_bayar:,.0f}") [cite: 5]
-            st.write(f"🗣️ **Terbilang:** *{teks_terbilang}*") [cite: 6]
+            st.markdown("---")
+            st.markdown(f"**YANG HARUS DIBAYAR:**")
+            st.subheader(f"Rp {total_bayar:,.0f}")
+            st.write(f"*Terbilang: {teks_terbilang}*")
 
-        # TOMBOL SUBMIT (Wajib ada di dalam blok 'with st.form')
+        # Tombol untuk mengirim data ke Google Sheets
         submitted = st.form_submit_button("Simpan & Kirim Invoice")
 
         if submitted:
@@ -99,18 +102,19 @@ with tab2:
                 }
                 
                 try:
-                    # Kirim ke Apps Script
                     response = requests.post(API_URL, json=payload)
                     if response.status_code == 200:
                         st.success("✅ Data Berhasil Disimpan!")
                         st.balloons()
                     else:
-                        st.error("Gagal mengirim data.")
+                        st.error("Gagal mengirim data ke Google Sheets.")
                 except Exception as e:
                     st.error(f"Terjadi kesalahan: {e}")
 
 # --- FOOTER ---
+# Bagian tanda tangan direktur [cite: 15, 16, 17]
 st.markdown("---")
+st.write("Sincerely,")
 st.image("STEMPEL TANDA TANGAN.png", width=150)
-st.write("**KELVINITO JAYADI**") [cite: 16]
-st.caption("DIREKTUR") [cite: 17]
+st.write("**KELVINITO JAYADI**")
+st.caption("DIREKTUR")
