@@ -43,12 +43,18 @@ with t1:
         tgl = str(row['date']).split('T')[0]
         total = int(row['total'])
         kata = terbilang(total).title() + " Rupiah"
-        inv_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{row.name}"
+        filename = f"INV_{cust}_{tgl}.pdf"
 
-        # HTML Kode Invoice (ID: 'invoice-content' ditambahkan untuk target PDF)
-        html_content = f"""
+        # Gabungkan HTML dan JavaScript Download dalam satu IFrame
+        html_template = f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<div id="invoice-content" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:800px;margin:auto;">
+<div style="margin-bottom: 20px;">
+    <button onclick="generatePDF()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">
+        📥 Download PDF Sekarang
+    </button>
+</div>
+
+<div id="invoice-box" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size:20px;">INVOICE</div>
 <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><b>CUSTOMER : {row['customer']}</b><b>DATE : {tgl}</b></div>
@@ -63,29 +69,23 @@ with t1:
 <div style="text-align:center;width:50%;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</div>
 </div>
 </div>
+
 <script>
-function downloadPDF() {{
-  const element = document.getElementById('invoice-content');
-  const opt = {{
-    margin: 0.5,
-    filename: '{inv_no}.pdf',
-    image: {{ type: 'jpeg', quality: 0.98 }},
-    html2canvas: {{ scale: 2, useCORS: true }},
-    jsPDF: {{ unit: 'in', format: 'letter', orientation: 'portrait' }}
-  }};
-  html2pdf().set(opt).from(element).save();
+function generatePDF() {{
+    const element = document.getElementById('invoice-box');
+    const opt = {{
+        margin: [0.2, 0.2, 0.2, 0.2],
+        filename: '{filename}',
+        image: {{ type: 'jpeg', quality: 0.98 }},
+        html2canvas: {{ scale: 2, useCORS: true, logging: false }},
+        jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
+    }};
+    html2pdf().set(opt).from(element).save();
 }}
 </script>
 """
-        st.markdown(html_content, unsafe_allow_html=True)
-        
-        # Tombol download menggunakan HTML Button agar bisa trigger JavaScript
-        st.write("---")
-        components.html(f"""
-            <button onclick="parent.downloadPDF()" style="background-color: #4CAF50; color: white; padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
-                📥 Download PDF Sekarang
-            </button>
-        """, height=70)
+        # Gunakan components.html agar JavaScript berjalan di lingkup yang benar
+        components.html(html_template, height=1000, scrolling=True)
 
 with t2:
     with st.form("f1", clear_on_submit=True):
@@ -99,7 +99,7 @@ with t2:
         d_kg = c2.number_input("Weight (Kg)", 1)
         d_hrg = c2.number_input("Harga", 0)
         if st.form_submit_button("Simpan"):
-            payload = {"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}
+            payload = {{"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}}
             requests.post(API_URL, data=json.dumps(payload))
             st.success("Tersimpan!")
             st.cache_data.clear()
