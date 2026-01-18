@@ -28,9 +28,7 @@ st.title("Aplikasi Invoice & Logistik")
 
 # --- Logika Aplikasi Anda di sini ---
 
-# 3. Menampilkan Stempel di bagian tanda tangan (misalnya di akhir invoice)
-st.write("Hormat Kami,")
-st.image("STEMPEL TANDA TANGAN.png", width=200) # Atur width sesuai kebutuhan
+
 
 # Sembunyikan menu default, footer, dan matikan klik kanan pada gambar
 hide_menu_style = """
@@ -51,5 +49,6 @@ hide_menu_style = """
         </style>
         """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
+
 
 
