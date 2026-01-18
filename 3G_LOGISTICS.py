@@ -11,14 +11,8 @@ from reportlab.lib.utils import ImageReader
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics - Invoice System", page_icon="FAVICON.png", layout="wide")
 
-# CSS ANTI-DOWNLOAD & PROTEKSI
-st.markdown("""
-    <style>
-    img { pointer-events: none; } 
-    #MainMenu { visibility: hidden; } 
-    footer { visibility: hidden; }
-    </style>
-    """, unsafe_allow_html=True)
+# CSS ANTI-DOWNLOAD
+st.markdown("<style>img { pointer-events: none; } #MainMenu {visibility: hidden;} footer {visibility: hidden;}</style>", unsafe_allow_html=True)
 
 def format_terbilang(angka):
     if angka == 0: return "-"
@@ -30,32 +24,32 @@ def generate_pdf(d):
     c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
     
+    # --- POSISI HEADER DIATAS TULISAN INVOICE ---
     try:
         header = ImageReader("HEADER INVOICE.png")
+        # Menempatkan gambar di bagian paling atas
         c.drawImage(header, 50, height - 100, width=500, preserveAspectRatio=True, mask='auto')
     except:
         c.setFont("Helvetica-Bold", 12)
         c.drawString(50, height - 50, "PT. GAMA GEMAH GEMILANG")
 
+    # Tulisan INVOICE tepat di bawah Header
     c.setFont("Helvetica-Bold", 14)
     c.drawCentredString(width/2, height - 130, "INVOICE")
     
+    # Detail Info Customer & Tanggal
     c.setFont("Helvetica", 10)
     c.drawString(50, height - 160, f"CUSTOMER: {d['cust']}")
     c.drawString(430, height - 160, f"DATE: {d['date']}")
     c.drawString(50, height - 175, f"NO. INVOICE: {d['inv']}")
 
-    # Tabel
+    # Struktur Tabel (Sesuai Contoh PT HARVI & BAPAK ANDI)
     c.line(50, height - 190, 550, height - 190)
     c.setFont("Helvetica-Bold", 8)
-    c.drawString(55, height - 205, "Date of Load")
-    c.drawString(130, height - 205, "Product Description")
-    c.drawString(260, height - 205, "Origin")
-    c.drawString(310, height - 205, "Dest")
-    c.drawString(360, height - 205, "Kolli")
-    c.drawString(410, height - 205, "Harga/Kg")
-    c.drawString(470, height - 205, "Weight")
-    c.drawString(515, height - 205, "Total")
+    headers = ["Date of Load", "Description", "Origin", "Dest", "Kolli", "Harga/Kg", "Weight", "Total"]
+    x_pos = [55, 130, 260, 310, 360, 410, 475, 515]
+    for i, h in enumerate(headers):
+        c.drawString(x_pos[i], height - 205, h)
     c.line(50, height - 210, 550, height - 210)
 
     # Isi Tabel
@@ -66,10 +60,10 @@ def generate_pdf(d):
     c.drawString(310, height - 225, d['dest'])
     c.drawString(360, height - 225, d['kolli'])
     c.drawString(410, height - 225, f"Rp {d['price']:,.0f}")
-    c.drawString(470, height - 225, f"{d['weight']} Kg")
+    c.drawString(475, height - 225, f"{d['weight']} Kg")
     c.drawString(515, height - 225, f"Rp {d['total']:,.0f}")
 
-    # Footer
+    # Garis Bawah Tabel & Total
     c.line(50, height - 240, 550, height - 240)
     c.setFont("Helvetica-Bold", 10)
     c.drawString(330, height - 255, "YANG HARUS DI BAYAR")
@@ -78,6 +72,7 @@ def generate_pdf(d):
     c.setFont("Helvetica-Oblique", 9)
     c.drawString(50, height - 275, f"Terbilang: {d['said']}")
 
+    # Footer Bank & Tanda Tangan
     c.setFont("Helvetica-Bold", 9)
     c.drawString(50, 150, "TRANSFER TO :")
     c.setFont("Helvetica", 9)
@@ -98,65 +93,56 @@ def generate_pdf(d):
     buf.seek(0)
     return buf
 
-# LOGIKA NOMOR INVOICE OTOMATIS
+# LOGIKA NOMOR INVOICE
 if 'inv_count' not in st.session_state:
     st.session_state.inv_count = 1
 auto_no_inv = f"INV/{datetime.now().strftime('%Y%m%d')}/{str(st.session_state.inv_count).zfill(3)}"
 
-# SISTEM TAB
-tab_input, tab_preview = st.tabs(["📝 Input Data", "👁️ Preview & Download"])
+# TAB SISTEM
+tab_in, tab_prev = st.tabs(["📝 Input Data", "👁️ Preview & Download"])
 
-with tab_input:
-    # Menggunakan form tunggal dengan tombol submit yang benar
-    with st.form(key="form_invoice"):
-        col_1, col_2 = st.columns(2)
-        cust_in = col_1.text_input("Customer", placeholder="Contoh: BAPAK ANDI")
-        date_in = col_1.date_input("Tanggal Invoice", datetime.now())
-        inv_no_in = col_2.text_input("Nomor Invoice", value=auto_no_inv)
-        load_date_in = col_2.date_input("Date of Load", datetime.now())
+with tab_in:
+    with st.form("form_3g"):
+        col1, col2 = st.columns(2)
+        c_name = col1.text_input("Customer", placeholder="Nama Customer")
+        i_date = col1.date_input("Tanggal Invoice", datetime.now())
+        i_no = col2.text_input("Nomor Invoice", value=auto_no_inv)
+        l_date = col2.date_input("Date of Load", datetime.now())
 
-        col_3, col_4 = st.columns(2)
-        prod_in = col_3.text_area("Product Description")
-        ori_in = col_3.text_input("Origin", value="SBY")
-        dest_in = col_3.text_input("Destination", value="MEDAN")
+        col3, col4 = st.columns(2)
+        p_desc = col3.text_area("Product Description")
+        origin = col3.text_input("Origin", value="SBY")
+        dest = col3.text_input("Destination", value="MEDAN")
         
-        kolli_in = col_4.text_input("KOLLI", value="")
-        weight_in = col_4.number_input("Weight (Kg)", min_value=0.0)
-        price_in = col_4.number_input("Harga per Kg (Rp)", min_value=0)
+        kolli = col4.text_input("KOLLI", value="")
+        weight = col4.number_input("Weight (Kg)", min_value=0.0)
+        price = col4.number_input("Harga Satuan (Rp)", min_value=0)
         
-        # Kalkulasi Total
-        total_val = int(weight_in * price_in)
-        terbilang_val = format_terbilang(total_val)
+        total = int(weight * price)
+        said = format_terbilang(total)
         
-        st.write(f"**Total Otomatis:** Rp {total_val:,.0f}")
-        
-        # Tombol Submit Form
-        btn_submit = st.form_submit_button("Simpan & Siapkan Preview")
-        
-        if btn_submit:
+        if st.form_submit_button("Simpan & Siapkan PDF"):
             st.session_state.data = {
-                "cust": cust_in, "inv": inv_no_in, "date": date_in.strftime("%d/%m/%Y"),
-                "load": load_date_in.strftime("%d-%b-%y"), "prod": prod_in, "ori": ori_in,
-                "dest": dest_in, "kolli": kolli_in, "weight": weight_in, "price": price_in,
-                "total": total_val, "said": terbilang_val
+                "cust": c_name, "inv": i_no, "date": i_date.strftime("%d/%m/%Y"),
+                "load": l_date.strftime("%d-%b-%y"), "prod": p_desc, "ori": origin,
+                "dest": dest, "kolli": kolli, "weight": weight, "price": price,
+                "total": total, "said": said
             }
-            st.success("Data disimpan. Buka Tab 'Preview & Download' untuk mengunduh PDF.")
+            st.success("Berhasil! Silakan klik Tab Preview.")
 
-with tab_preview:
+with tab_prev:
     if 'data' in st.session_state:
-        d_final = st.session_state.data
-        st.subheader("Konfirmasi Invoice")
-        st.write(f"**Customer:** {d_final['cust']} | **Total:** Rp {d_final['total']:,.0f}")
+        d = st.session_state.data
+        st.subheader("Siap Download")
+        st.write(f"Invoice untuk: **{d['cust']}**")
         
-        # Proses PDF
-        pdf_ready = generate_pdf(d_final)
-        
+        pdf = generate_pdf(d)
         st.download_button(
-            label="📥 Download Invoice PDF",
-            data=pdf_ready,
-            file_name=f"Invoice_{d_final['cust']}.pdf",
+            label="📥 Download PDF Sekarang",
+            data=pdf,
+            file_name=f"Invoice_{d['cust']}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
     else:
-        st.info("Silakan isi data di tab 'Input Data' dan klik Simpan.")
+        st.info("Isi data terlebih dahulu di tab Input.")
