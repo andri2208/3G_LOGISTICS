@@ -6,7 +6,7 @@ import os
 from fpdf import FPDF
 
 # --- 1. KONFIGURASI API & HALAMAN ---
-API_URL = "https://script.google.com/macros/s/AKfycbw7baLr4AgAxGyt6uQQk-G5lnVExcbTd-UMZdY9rwkCSbaZlvYPqLCX8-QENVebKa13/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbwS-CNDrMrnMPSxsuyayK3IOxbmraBjg1QByTMBtUFmu5fnn8yjT8z4EZrjURCuS0xZ/exec"
 
 st.set_page_config(
     page_title="3G LOGISTICS - Invoice System",
@@ -182,3 +182,4 @@ if st.session_state.preview_data:
         file_name=f"Invoice_{d['penerima']}_{d['no_inv']}.pdf",
         mime="application/pdf"
     )
+
