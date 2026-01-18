@@ -8,28 +8,21 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB (Agar nyaman di intip sebelum download)
+# 2. CSS UNTUK TAMPILAN WEB (Merapikan Header & Jarak)
 st.markdown("""
     <style>
     header {visibility: hidden;}
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 0rem;
-    }
-    .stTabs {
-        margin-top: -15px;
-    }
-    /* Memastikan pratinjau invoice di web tidak meluber ke samping di HP */
-    [data-testid="stMarkdownContainer"] > div > div {
-        overflow-x: auto;
-    }
+    .block-container { padding-top: 1rem; padding-bottom: 0rem; }
+    .stTabs { margin-top: -15px; }
+    /* Supaya preview di HP bisa di-scroll tapi tidak merusak layout */
+    [data-testid="stMarkdownContainer"] > div > div { overflow-x: auto; }
     </style>
     """, unsafe_allow_html=True)
 
 # 3. FUNGSI LOGIN
 def login():
     st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png", use_container_width=True)
-    st.write("### 🔐 Akses Sistem")
+    st.write("### 🔐 Akses Sistem 3G Logistics")
     with st.form("login_form"):
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
@@ -46,6 +39,7 @@ if 'logged_in' not in st.session_state:
 if not st.session_state['logged_in']:
     login()
 else:
+    # --- JIKA SUDAH LOGIN ---
     API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
     def terbilang(n):
@@ -84,90 +78,55 @@ else:
             st.warning("Memuat data...")
         else:
             df = pd.DataFrame(data)
-            selected_cust = st.selectbox("Cari Customer:", df['customer'].unique())
+            selected_cust = st.selectbox("Pilih Nama Customer:", df['customer'].unique())
             row = df[df['customer'] == selected_cust].iloc[-1]
             tgl = str(row['date']).split('T')[0]
             total_harga = int(row['total'])
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE ANTI POTONG ---
+            # --- DESAIN INVOICE KHUSUS PDF (UKURAN TETAP 800PX) ---
             html_content = f"""
-<div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #ccc; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
+<div id="invoice-box" style="background-color:white; padding:40px; border:1px solid #000; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
     <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
-    
     <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:5px; font-weight:bold; font-size: 24px;">INVOICE</div>
-    
     <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px;">
-        <tr>
-            <td style="width:50%;">CUSTOMER : {row['customer']}</td>
-            <td style="width:50%; text-align:right;">DATE : {tgl}</td>
-        </tr>
+        <tr><td style="width:50%;">CUSTOMER : {row['customer']}</td><td style="width:50%; text-align:right;">DATE : {tgl}</td></tr>
     </table>
-
     <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size: 13px; text-align:center;">
         <tr style="background-color:#316395; color:white;">
-            <th style="border:1px solid black; padding:12px;">Date of Load</th>
-            <th style="border:1px solid black;">Description</th>
-            <th style="border:1px solid black;">Origin</th>
-            <th style="border:1px solid black;">Dest</th>
-            <th style="border:1px solid black;">KOLLI</th>
-            <th style="border:1px solid black;">HARGA</th>
-            <th style="border:1px solid black;">WEIGHT</th>
+            <th style="border:1px solid black; padding:12px;">Date of Load</th><th style="border:1px solid black;">Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th>
         </tr>
         <tr>
-            <td style="border:1px solid black; padding:20px;">{tgl}</td>
-            <td style="border:1px solid black;">{row['description']}</td>
-            <td style="border:1px solid black;">{row['origin']}</td>
-            <td style="border:1px solid black;">{row['destination']}</td>
-            <td style="border:1px solid black;">{row['kolli']}</td>
-            <td style="border:1px solid black;">Rp {int(row['harga']):,}</td>
-            <td style="border:1px solid black;">{row['weight']} Kg</td>
+            <td style="border:1px solid black; padding:20px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td>
         </tr>
         <tr style="font-weight:bold; background-color:#f2f2f2;">
-            <td colspan="6" style="border:1px solid black; text-align:center; padding:12px;">YANG HARUS DI BAYAR</td>
-            <td style="border:1px solid black;">Rp {total_harga:,}</td>
+            <td colspan="6" style="border:1px solid black; text-align:center; padding:12px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td>
         </tr>
     </table>
-
-    <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic; background-color:#fdfdfd;">
+    <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic;">
         <b>Terbilang :</b> {teks_terbilang}
     </div>
-
     <br><br>
-
     <table style="width:100%; font-size:13px; line-height:1.6;">
         <tr>
             <td style="width:60%; vertical-align:top;">
-                <div style="padding-top:10px;">
-                    <b style="font-size:14px;">TRANSFER TO :</b><br>
-                    Bank Central Asia (BCA)<br>
-                    <span style="font-size:16px; font-weight:bold;">6720422334</span><br>
-                    A/N ADITYA GAMA SAPUTRI<br>
-                    Finance: 082179799200<br>
-                    <i style="color:#d32f2f;">NB : Jika sudah transfer mohon konfirmasi ke Finance</i>
-                </div>
+                <b>TRANSFER TO :</b><br>Bank Central Asia (BCA)<br><span style="font-size:16px; font-weight:bold;">6720422334</span><br>A/N ADITYA GAMA SAPUTRI<br>Finance: 082179799200<br><i>NB : Jika sudah transfer mohon konfirmasi ke Finance</i>
             </td>
             <td style="width:40%; text-align:center; vertical-align:top;">
-                Sincerely,<br>
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;">
-                <br>
-                <b><u>KELVINITO JAYADI</u></b><br>
-                DIREKTUR
+                Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:10px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
             </td>
         </tr>
     </table>
 </div>
 """
-            # Tampilkan Preview di Web
             st.markdown(html_content, unsafe_allow_html=True)
-            
             st.write("---")
 
-            # 4. SCRIPT DOWNLOAD (OPTIMAL)
+            # 4. SCRIPT DOWNLOAD (UKURAN A4 PAS)
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">📥 SIMPAN SEBAGAI PDF (A4)</button>
+<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px;">📥 SIMPAN SEBAGAI PDF</button>
 <script>
 function generatePDF() {{
   const element = window.parent.document.getElementById('invoice-box');
@@ -175,12 +134,7 @@ function generatePDF() {{
     margin: [0.3, 0.3, 0.3, 0.3],
     filename: '{nama_file}',
     image: {{ type: 'jpeg', quality: 0.98 }},
-    html2canvas: {{ 
-        scale: 2, 
-        useCORS: true, 
-        logging: false,
-        width: 800
-    }},
+    html2canvas: {{ scale: 2, useCORS: true, width: 800 }},
     jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
   }};
   html2pdf().set(opt).from(element).save();
@@ -202,19 +156,13 @@ function generatePDF() {{
             
             if st.form_submit_button("🚀 SIMPAN DATA"):
                 payload = {
-                    "date": str(f_tgl),
-                    "customer": f_cust.upper(),
-                    "description": f_desc.upper(),
-                    "origin": f_orig.upper(),
-                    "destination": f_dest.upper(),
-                    "kolli": f_kol,
-                    "harga": f_hrg,
-                    "weight": f_kg,
-                    "total": f_hrg * f_kg
+                    "date": str(f_tgl), "customer": f_cust.upper(), "description": f_desc.upper(),
+                    "origin": f_orig.upper(), "destination": f_dest.upper(), "kolli": f_kol,
+                    "harga": f_hrg, "weight": f_kg, "total": f_hrg * f_kg
                 }
                 try:
                     requests.post(API_URL, data=json.dumps(payload))
-                    st.success("Berhasil Disimpan! Cek tab Cetak Invoice.")
+                    st.success("Berhasil Disimpan!")
                     st.cache_data.clear()
                 except:
                     st.error("Gagal simpan.")
