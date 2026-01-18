@@ -159,12 +159,35 @@ if not st.session_state.authenticated:
 
 # --- 5. HALAMAN DASHBOARD (SETELAH LOGIN) ---
 st.markdown("<style>.stApp { overflow: auto !important; }</style>", unsafe_allow_html=True)
-st.success("Login Berhasil! Selamat Datang di Dashboard.")
+# Ganti st.success() standar dengan ini:
+st.markdown("""
+    <div style="
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-left: 5px solid #cc0000;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        margin: 20px 0;
+        animation: fadeIn 0.5s ease-out;
+    ">
+        <h3 style="color: white; margin: 0; font-size: 1.2rem;">✨ Login Berhasil!</h3>
+        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Selamat Datang di Dashboard PT. GAMA GEMAH GEMILANG.</p>
+    </div>
+    
+    <style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Tombol Logout sederhana di pojok
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
