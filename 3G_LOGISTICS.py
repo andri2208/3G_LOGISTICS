@@ -55,7 +55,7 @@ st.markdown(f"""
 
     /* Logo Pro */
     .logo-img {{
-        width: 100%;
+        width: 50%;
         max-width: 280px;
         height: auto;
         margin-bottom: 20px;
@@ -170,3 +170,4 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
