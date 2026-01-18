@@ -146,7 +146,7 @@ with tab1:
                     <tr>
                         <td style="width:60%; vertical-align:top;">
                             <b>TRANSFER TO :</b><br>Bank Central Asia <b>6720422334</b><br>A/N <b>ADITYA GAMA SAPUTRI</b><br><br>
-                            <i>NB : NB : Jika sudah transfer mohon konfirmasi ke ke Finance <b>082179799200</b></i>
+                            <i>NB : Jika sudah transfer mohon konfirmasi ke ke Finance <b>082179799200</b></i>
                         </td>
                         <td style="text-align:center;">
                             Sincerely,<br>
@@ -203,4 +203,5 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("Gagal!")
+
 
