@@ -8,19 +8,27 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN (Merapikan jarak & responsivitas)
+# 2. CSS UNTUK TAMPILAN (Merapikan jarak & Menghilangkan Header Streamlit)
 st.markdown("""
     <style>
+    /* Menghilangkan header bawaan Streamlit (garis warna-warni dan bar kosong) */
+    header {visibility: hidden;}
+    #root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}
+
+    /* Menarik konten ke atas tapi tetap memberi ruang untuk tombol logout */
     .block-container {
-        padding-top: 1.5rem;
+        padding-top: 0.5rem;
         padding-bottom: 0rem;
     }
+
+    /* Merapikan jarak Tabs agar naik */
     .stTabs {
-        margin-top: -10px;
+        margin-top: -15px;
     }
-    /* Mengatur tombol logout agar tidak menempel */
-    .stButton > button {
-        margin-bottom: 10px;
+    
+    /* Tombol Logout agar tidak terlalu jauh tapi tidak tertutup */
+    [data-testid="stVerticalBlock"] > div:first-child {
+        margin-top: 0px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -157,3 +165,4 @@ function doDownload() {{
                     st.cache_data.clear()
                 except:
                     st.error("Koneksi gagal.")
+
