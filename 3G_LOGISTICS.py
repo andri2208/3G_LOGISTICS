@@ -102,7 +102,7 @@ else:
 <table style="width:100%; font-size:12px;">
 <tr>
 <td style="width:60%; vertical-align:top;">
-<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>Finance 082179799200<br><b>NB : Jika sudah transfer mohon konfirmasi ke Finance</b>
+<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br>NB : Jika sudah transfer mohon konfirmasi ke<br>Finance 082179799200<br></b>
 </td>
 <td style="width:40%; text-align:center; vertical-align:top;">
 Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:150px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
@@ -168,5 +168,6 @@ function doDownload() {{
                     st.cache_data.clear()
                 except:
                     st.error("Gagal simpan.")
+
 
 
