@@ -144,9 +144,9 @@ if not st.session_state.authenticated:
     # Input Password menggunakan Streamlit
     # Kita gunakan container kosong agar form streamlit masuk ke dalam div login-card
     with st.container():
-        pwd = st.text_input("PASSWORD", type="password", placeholder="ENTER ACCESS CODE", label_visibility="collapsed")
+        pwd = st.text_input("PASSWORD", type="password", placeholder="MASUKAN PASSWORD", label_visibility="collapsed")
         
-        if st.button("UNLOCK SYSTEM"):
+        if st.button("LOGIN"):
             if pwd == "2026":
                 st.session_state.authenticated = True
                 st.rerun()
@@ -165,6 +165,7 @@ st.success("Login Berhasil! Selamat Datang di Dashboard.")
 if st.sidebar.button("🚪 LOGOUT"):
     st.session_state.authenticated = False
     st.rerun()
+
 
 
 
