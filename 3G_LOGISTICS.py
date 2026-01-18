@@ -11,53 +11,61 @@ st.set_page_config(page_title="3G Logistics System", layout="wide")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
-# --- CSS SILVER GLOSSY & HIGH CONTRAST ---
+# --- CSS ELEGANT LIGHT MODE (IVORY & SILVER) ---
 st.markdown("""
     <style>
-    /* Latar Belakang Gelap Elegan */
+    /* Latar Belakang Warna Cream Ivory Elegan */
     .stApp {
-        background-color: #1a1a1a;
+        background-color: #FDFCF0;
     }
     
-    /* Label Teks Silver Glossy */
+    /* Label Teks Tebal & Mewah (Midnight Blue) */
     .stWidgetLabel p {
         font-weight: 900 !important;
         font-size: 16px !important;
-        background: linear-gradient(to bottom, #ffffff 0%, #a6a6a6 50%, #ffffff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #1A2A3A !important; /* Biru Gelap Sangat Kontras */
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+        letter-spacing: 1px;
+        margin-bottom: 5px !important;
     }
     
-    /* Kolom Isian (Input) Putih Kristal agar Kontras */
+    /* Kolom Isian Putih Bersih dengan Border Perak Tegas */
     .stTextInput input, .stNumberInput input, .stDateInput input {
-        background-color: #ffffff !important;
+        background-color: #FFFFFF !important;
         color: #000000 !important;
-        border: 3px solid #c0c0c0 !important; /* Border Perak */
-        border-radius: 8px !important;
-        font-weight: bold !important;
+        border: 2px solid #BCC6CC !important; /* Silver Grey Border */
+        border-radius: 10px !important;
         padding: 12px !important;
+        font-weight: 600 !important;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
     }
 
-    /* Efek Glow saat kolom diklik */
+    /* Efek Fokus Hijau Lembut saat mengisi */
     .stTextInput input:focus {
-        border-color: #ffffff !important;
-        box-shadow: 0 0 10px #ffffff !important;
+        border-color: #28a745 !important;
+        box-shadow: 0 0 8px rgba(40, 167, 69, 0.2) !important;
     }
 
-    /* Mempercantik Tab */
+    /* Styling Form Container */
+    [data-testid="stForm"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E0E0E0 !important;
+        border-radius: 15px !important;
+        padding: 30px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    }
+
+    /* Styling Tab */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #1a1a1a;
+        gap: 15px;
     }
     .stTabs [data-baseweb="tab"] {
-        color: #c0c0c0;
         font-weight: bold;
+        color: #666666;
     }
     .stTabs [aria-selected="true"] {
-        color: #ffffff !important;
-        border-bottom: 4px solid #ffffff !important;
+        color: #1A2A3A !important;
+        border-bottom-color: #1A2A3A !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -94,7 +102,7 @@ tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 with tab1:
     data = get_data()
     if not data:
-        st.info("Menunggu data...")
+        st.info("Menghubungkan ke server...")
     else:
         df = pd.DataFrame(data)
         selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
@@ -115,17 +123,17 @@ with tab1:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ font-family: Arial, sans-serif; background-color: #1a1a1a; padding: 10px; }}
-                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 2px solid #c0c0c0; color: black; box-shadow: 0px 0px 20px rgba(255,255,255,0.1); }}
+                body {{ font-family: Arial, sans-serif; background-color: #FDFCF0; padding: 10px; }}
+                .container {{ background: white; padding: 15px; max-width: 750px; margin: auto; border: 1px solid #ddd; color: black; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 1.2rem; }}
                 .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
                 .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
                 .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
-                .data-table th {{ background-color: #eee; }}
+                .data-table th {{ background-color: #f8f9fa; }}
                 .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
                 .footer {{ width: 100%; margin-top: 20px; font-size: 11px; }}
-                .btn-download {{ width: 100%; background: linear-gradient(145deg, #ffffff, #a6a6a6); color: black; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; box-shadow: 0px 4px 10px rgba(0,0,0,0.5); }}
+                .btn-download {{ width: 100%; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }}
             </style>
         </head>
         <body>
@@ -172,7 +180,7 @@ with tab1:
                     </tr>
                 </table>
             </div>
-            <button class="btn-download" onclick="downloadA5()">📥 DOWNLOAD INVOICE (A5)</button>
+            <button class="btn-download" onclick="downloadA5()">📥 DOWNLOAD INVOICE (UKURAN A5)</button>
 
             <script>
                 function downloadA5() {{
@@ -193,20 +201,20 @@ with tab1:
         components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='color: white; text-align: center; border-bottom: 2px solid white; padding-bottom: 10px;'>➕ INPUT DATA BARU</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #1A2A3A; text-align: center;'>📦 INPUT DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("form_db", clear_on_submit=True):
         col1, col2 = st.columns(2)
-        v_tgl = col1.date_input("TANGGAL PENGIRIMAN", datetime.now())
-        v_cust = col1.text_input("NAMA CUSTOMER")
+        v_tgl = col1.date_input("TANGGAL INVOICE", datetime.now())
+        v_cust = col1.text_input("NAMA CUSTOMER (WAJIB)")
         v_desc = col1.text_input("DESKRIPSI BARANG")
         v_orig = col2.text_input("ORIGIN (ASAL)", value="SBY")
         v_dest = col2.text_input("DESTINATION (TUJUAN)")
         v_kol = col2.text_input("JUMLAH KOLLI")
-        v_kg = col2.text_input("WEIGHT / BERAT")
-        v_hrg = col2.number_input("HARGA SATUAN", 0)
+        v_kg = col2.text_input("WEIGHT (BERAT DALAM KG)")
+        v_hrg = col2.number_input("HARGA SATUAN (RP)", 0)
         
-        st.markdown("---")
-        if st.form_submit_button("💾 SIMPAN KE DATABASE"):
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.form_submit_button("💾 SIMPAN DATA SEKARANG"):
             w_num = extract_number(v_kg)
             total_db = int(w_num * v_hrg) if w_num > 0 else int(v_hrg)
             payload = {
@@ -216,7 +224,7 @@ with tab2:
             }
             try:
                 requests.post(API_URL, data=json.dumps(payload))
-                st.success(f"✅ Data Tersimpan! Total: Rp {total_db:,}")
+                st.success(f"✅ Data Tersimpan! Total Tagihan: Rp {total_db:,}")
                 st.cache_data.clear()
             except:
-                st.error("❌ Koneksi Gagal.")
+                st.error("❌ Gagal menyimpan data. Cek koneksi internet.")
