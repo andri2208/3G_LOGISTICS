@@ -2,10 +2,10 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 
-# 1. KONFIGURASI HALAMAN
+# --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="3G Logistics - Generator Invoice", page_icon="FAVICON.png", layout="wide")
 
-# CSS untuk Anti-Download & Tampilan Cetak
+# --- CSS ANTI-DOWNLOAD & TAMPILAN CETAK ---
 st.markdown("""
     <style>
     img { pointer-events: none; } 
@@ -14,15 +14,16 @@ st.markdown("""
     header { visibility: hidden; }
     @media print {
         .no-print, .stButton, [data-testid="stSidebar"] { display: none !important; }
+        .main { background-color: white !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. INISIALISASI STATE
+# --- INISIALISASI STATE ---
 if 'preview' not in st.session_state:
     st.session_state.preview = False
 
-# 3. SIDEBAR INPUT
+# --- SIDEBAR INPUT ---
 with st.sidebar:
     st.header("Input Data Invoice")
     
@@ -45,8 +46,9 @@ with st.sidebar:
         st.session_state.preview = False
         st.rerun()
 
-# 4. TAMPILAN UTAMA (PREVIEW)
+# --- TAMPILAN UTAMA (PREVIEW) ---
 if st.session_state.preview:
+    # 1. Header Invoice
     try:
         st.image("HEADER INVOICE.png", use_container_width=True)
     except:
@@ -60,7 +62,7 @@ if st.session_state.preview:
     with col_info2:
         st.write(f"**DATE:** {inv_date}")
 
-    # [cite_start]Tabel Rincian [cite: 5]
+    # 2. Tabel Rincian Berdasarkan Contoh PDF Anda
     df_data = {
         "Date of Load": [load_date],
         "Product Description": [prod_desc],
@@ -70,9 +72,11 @@ if st.session_state.preview:
     }
     st.table(pd.DataFrame(df_data))
 
+    # 3. Total & Terbilang
     st.write(f"**YANG HARUS DIBAYAR: Rp {price:,.0f}**")
     st.write(f"*Terbilang: {terbilang}*")
 
+    # 4. Footer & Bank Info
     st.markdown("---")
     col_f1, col_f2 = st.columns(2)
     with col_f1:
