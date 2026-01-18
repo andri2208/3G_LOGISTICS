@@ -1,122 +1,83 @@
 import streamlit as st
-import requests
 import pandas as pd
-from datetime import datetime
+import requests
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="3G LOGISTICS - Sistem Invoice", page_icon="FAVICON.png", layout="wide")
+# Konfigurasi Halaman
+st.set_page_config(layout="wide")
 
-# --- FUNGSI TERBILANG INDONESIA ---
-def terbilang(n):
-    bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
-    if n < 12:
-        return bilangan[int(n)]
-    elif n < 20:
-        return terbilang(n - 10) + " Belas"
-    elif n < 100:
-        return terbilang(n // 10) + " Puluh " + terbilang(n % 10)
-    elif n < 200:
-        return "Seratus " + terbilang(n - 100)
-    elif n < 1000:
-        return terbilang(n // 100) + " Ratus " + terbilang(n % 100)
-    elif n < 2000:
-        return "Seribu " + terbilang(n - 1000)
-    elif n < 1000000:
-        return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
-    elif n < 1000000000:
-        return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
-    return "Angka Terlalu Besar"
+# Masukkan URL dari Google Apps Script Anda di sini
+API_URL = "URL_APPS_SCRIPT_ANDA"
 
-# --- TAMPILAN HEADER ---
-# Menampilkan Header Invoice PT. GAMA GEMAH GEMILANG
-st.image("HEADER INVOICE.png", use_container_width=True)
+def get_data():
+    response = requests.get(API_URL)
+    return response.json()
 
-# --- AMBIL URL API DARI SECRETS ---
+st.title("🚚 Logistic Invoice Generator")
+
 try:
-    API_URL = st.secrets["general"]["api_url"]
-except:
-    st.error("Error: Pastikan 'api_url' sudah diisi di Secrets Streamlit Cloud!")
-    st.stop()
+    data = get_data()
+    df = pd.DataFrame(data)
 
-# --- TABS ---
-tab1, tab2 = st.tabs(["📊 Monitoring Data", "📝 Buat Invoice Baru"])
+    # Sidebar untuk memilih invoice berdasarkan Nama Customer atau Tanggal
+    customer_list = df['customer'].unique()
+    selected_customer = st.sidebar.selectbox("Pilih Customer", customer_list)
 
-with tab1:
-    st.subheader("Data Pengiriman Terdaftar")
-    try:
-        res = requests.get(API_URL)
-        if res.status_code == 200:
-            st.dataframe(pd.DataFrame(res.json()), use_container_width=True)
-    except:
-        st.info("Menunggu data dari Google Sheets...")
+    # Filter data berdasarkan pilihan
+    invoice_data = df[df['customer'] == selected_customer].iloc[0]
 
-with tab2:
-    st.subheader("Form Input Invoice")
+    # --- Tampilan Invoice (Template HTML) ---
+    invoice_html = f"""
+    <div style="border: 2px solid black; padding: 20px; font-family: Arial, sans-serif;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 30%;"><h2 style="color: blue;">BG</h2></td>
+                <td style="text-align: left;">
+                    <b style="color: blue;">PT. GAMA GEMAH GEMILANG</b><br>
+                    <small>Ruko Paragon Plaza Blok D - 6 Jalan Ngasinan, Menganti, Gresik. Telp 031-79973432</small>
+                </td>
+            </tr>
+        </table>
+        
+        <div style="text-align: center; border-top: 1px solid black; border-bottom: 1px solid black; margin: 10px 0; padding: 5px;">
+            <b>INVOICE</b>
+        </div>
+        
+        <table style="width: 100%; margin-bottom: 10px;">
+            <tr>
+                <td>CUSTOMER : {invoice_data['customer']}</td>
+                <td style="text-align: right;">DATE : {invoice_data['date']}</td>
+            </tr>
+        </table>
+
+        <table style="width: 100%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+            <tr style="background-color: #4A90E2; color: white;">
+                <th style="border: 1px solid black;">Date of Load</th>
+                <th style="border: 1px solid black;">Product Description</th>
+                <th style="border: 1px solid black;">Origin</th>
+                <th style="border: 1px solid black;">Destination</th>
+                <th style="border: 1px solid black;">HARGA</th>
+                <th style="border: 1px solid black;">WEIGHT</th>
+            </tr>
+            <tr>
+                <td style="border: 1px solid black;">{invoice_data['date']}</td>
+                <td style="border: 1px solid black;">{invoice_data['description']}</td>
+                <td style="border: 1px solid black;">{invoice_data['origin']}</td>
+                <td style="border: 1px solid black;">{invoice_data['destination']}</td>
+                <td style="border: 1px solid black;">Rp {invoice_data['harga']:,}</td>
+                <td style="border: 1px solid black;">{invoice_data['weight']} Kg</td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 20px;">
+            <b>TOTAL YANG HARUS DIBAYAR: Rp {invoice_data['total']:,}</b>
+        </div>
+    </div>
+    """
+
+    st.markdown(invoice_html, unsafe_allow_html=True)
     
-    with st.form("invoice_form"):
-        # Penentuan Tanggal Otomatis (DATE: 8/12/2024 format)
-        tgl_skrng = datetime.now()
-        tgl_format = tgl_skrng.strftime("%d/%m/%Y") 
-        tgl_load_format = tgl_skrng.strftime("%d-%b-%y") 
-        
-        st.info(f"📅 DATE : {tgl_format}")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            customer = st.text_input("CUSTOMER", placeholder="Contoh: PT HARVI")
-            produk = st.text_area("Product Description", placeholder="Contoh: 3 UNIT CDD")
-            origin = st.text_input("Origin", value="TUAL")
-            destination = st.text_input("Destination", value="LARAT")
-            
-        with col2:
-            kolli = st.text_input("KOLLI", placeholder="Boleh dikosongkan")
-            weight = st.text_input("WEIGHT", placeholder="Contoh: 290 Kg")
-            # Harga borongan langsung sesuai contoh PDF
-            total_bayar = st.number_input("HARGA TOTAL (Rp)", min_value=0, value=0, step=1000)
-            
-        # Terbilang Otomatis dari Total Bayar
-        teks_terbilang = f"{terbilang(total_bayar)} Rupiah" if total_bayar > 0 else ""
-        
-        st.markdown("---")
-        st.markdown("**YANG HARUS DI BAYAR:**")
-        st.subheader(f"Rp {total_bayar:,.0f}")
-        st.write(f"**Terbilang :** *{teks_terbilang.lower()}*")
+    if st.button("Cetak ke PDF"):
+        st.info("Gunakan fitur 'Print' (Ctrl+P) pada browser dan simpan sebagai PDF.")
 
-        submitted = st.form_submit_button("Simpan Data Invoice")
-
-        if submitted:
-            if not customer or total_bayar == 0:
-                st.warning("Mohon lengkapi Nama Customer dan Harga!")
-            else:
-                payload = {
-                    "date": tgl_format,
-                    "date_load": tgl_load_format,
-                    "customer": customer.upper(),
-                    "description": produk.upper(),
-                    "origin": origin.upper(),
-                    "destination": destination.upper(),
-                    "kolli": kolli,
-                    "weight": weight,
-                    "total": total_bayar,
-                    "terbilang": teks_terbilang.lower()
-                }
-                
-                try:
-                    response = requests.post(API_URL, json=payload)
-                    if response.status_code == 200:
-                        st.success("✅ Data Berhasil Disimpan ke Google Sheets!")
-                        st.balloons()
-                    else:
-                        st.error("Gagal mengirim data. Cek Deployment Apps Script.")
-                except Exception as e:
-                    st.error(f"Terjadi kesalahan: {e}")
-
-# --- FOOTER ---
-st.markdown("---")
-col_f1, col_f2 = st.columns([2, 1])
-with col_f2:
-    st.write("Sincerely,")
-    # Menampilkan Stempel dan Tanda Tangan Direktur
-    st.image("STEMPEL TANDA TANGAN.png", width=150)
-    st.write("**KELVINITO JAYADI**")
-    st.caption("DIREKTUR")
+except Exception as e:
+    st.error(f"Gagal memuat data: {e}")
