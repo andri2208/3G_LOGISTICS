@@ -158,11 +158,16 @@ function doDownload() {{
             f_hrg = c2.number_input("Harga Satuan", 0)
             
             if st.form_submit_button("🚀 SIMPAN KE DATABASE"):
-                payload = {{"date":str(f_tgl),"customer":f_cust.upper(),"description":f_desc.upper(),"origin":f_orig.upper(),"destination":f_dest.upper(),"kolli":f_kol,"harga":f_hrg,"weight":f_kg,"total":f_hrg*f_kg}}
-                try:
-                    requests.post(API_URL, data=json.dumps(payload))
-                    st.success("Berhasil! Silakan cek di tab Cetak Invoice.")
-                    st.cache_data.clear()
-                except:
-                    st.error("Koneksi gagal.")
+             # Hapus double kurung kurawal, gunakan satu saja { }
+payload = {
+    "date": str(f_tgl),
+    "customer": f_cust.upper(),
+    "description": f_desc.upper(),
+    "origin": f_orig.upper(),
+    "destination": f_dest.upper(),
+    "kolli": f_kol,
+    "harga": f_hrg,
+    "weight": f_kg,
+    "total": f_hrg * f_kg
+}
 
