@@ -28,7 +28,7 @@ if not st.session_state['auth']:
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
     if st.button("Masuk"):
-        if u == "admin3g" and p == "gama2024":
+        if u == "admin" and p == "2026":
             st.session_state['auth'] = True
             st.rerun()
         else: st.error("Salah!")
@@ -149,3 +149,4 @@ else:
                 requests.post(API, data=json.dumps(d))
                 st.success("Tersimpan!")
                 st.cache_data.clear()
+
