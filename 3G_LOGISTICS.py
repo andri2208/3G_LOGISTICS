@@ -5,7 +5,8 @@ import json
 from datetime import datetime
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="3G Logistics", layout="wide")
+# 1. KONFIGURASI HALAMAN (Tanpa Sidebar secara default)
+st.set_page_config(page_title="3G Logistics", layout="centered", initial_sidebar_state="collapsed")
 
 API_URL = "https://script.google.com/macros/s/AKfycbxRDbA4sWrueC3Vb2Sol8UzUYNTzgghWUksBxvufGEFgr7iM387ZNgj8JPZw_QQH5sO/exec"
 
@@ -28,7 +29,10 @@ def get_data():
         return r.json()
     except: return []
 
+# HEADER UTAMA
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", width=60)
 st.title("PT. GAMA GEMAH GEMILANG")
+
 t1, t2 = st.tabs(["📄 Cetak Invoice", "➕ Tambah Data"])
 
 with t1:
@@ -37,24 +41,20 @@ with t1:
         st.error("Database Kosong")
     else:
         df = pd.DataFrame(data)
-        st.sidebar.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png")
-        cust = st.sidebar.selectbox("Pilih Customer", df['customer'].unique())
-        row = df[df['customer'] == cust].iloc[-1]
+        
+        # PILIH CUSTOMER DI ATAS (Bukan di Sidebar)
+        selected_cust = st.selectbox("Pilih Nama Customer", df['customer'].unique())
+        
+        # Ambil data terbaru customer
+        row = df[df['customer'] == selected_cust].iloc[-1]
         tgl = str(row['date']).split('T')[0]
         total = int(row['total'])
         kata = terbilang(total).title() + " Rupiah"
-        filename = f"INV_{cust}_{tgl}.pdf"
+        filename = f"INV_{selected_cust}_{tgl}.pdf"
 
-        # Gabungkan HTML dan JavaScript Download dalam satu IFrame
-        html_template = f"""
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<div style="margin-bottom: 20px;">
-    <button onclick="generatePDF()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">
-        📥 Download PDF Sekarang
-    </button>
-</div>
-
-<div id="invoice-box" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
+        # HTML INVOICE
+        invoice_html = f"""
+<div id="invoice-area" style="background-color:white;padding:15px;border:1px solid black;color:black;font-family:Arial;width:100%;max-width:750px;margin:auto;box-sizing:border-box;">
 <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%;"></center>
 <div style="text-align:center;border-top:2px solid black;border-bottom:2px solid black;margin:10px 0;padding:5px;font-weight:bold;font-size:20px;">INVOICE</div>
 <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;"><b>CUSTOMER : {row['customer']}</b><b>DATE : {tgl}</b></div>
@@ -69,25 +69,34 @@ with t1:
 <div style="text-align:center;width:50%;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</div>
 </div>
 </div>
-
-<script>
-function generatePDF() {{
-    const element = document.getElementById('invoice-box');
-    const opt = {{
-        margin: [0.2, 0.2, 0.2, 0.2],
-        filename: '{filename}',
-        image: {{ type: 'jpeg', quality: 0.98 }},
-        html2canvas: {{ scale: 2, useCORS: true, logging: false }},
-        jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
-    }};
-    html2pdf().set(opt).from(element).save();
-}}
-</script>
 """
-        # Gunakan components.html agar JavaScript berjalan di lingkup yang benar
-        components.html(html_template, height=1000, scrolling=True)
+        # Render Invoice
+        st.markdown(invoice_html, unsafe_allow_html=True)
+        
+        # TOMBOL DOWNLOAD DI BAWAH (Menggunakan JavaScript html2pdf)
+        st.write("")
+        components.html(f"""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <script>
+            function download() {{
+                const element = window.parent.document.getElementById('invoice-area');
+                const opt = {{
+                    margin: [0.2, 0.2, 0.2, 0.2],
+                    filename: '{filename}',
+                    image: {{ type: 'jpeg', quality: 0.98 }},
+                    html2canvas: {{ scale: 2, useCORS: true }},
+                    jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
+                }};
+                html2pdf().set(opt).from(element).save();
+            }}
+            </script>
+            <button onclick="download()" style="background-color: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">
+                📥 Simpan Invoice ke PDF
+            </button>
+        """, height=70)
 
 with t2:
+    st.subheader("Input Transaksi Baru")
     with st.form("f1", clear_on_submit=True):
         c1, c2 = st.columns(2)
         d_tgl = c1.date_input("Tanggal")
@@ -99,7 +108,7 @@ with t2:
         d_kg = c2.number_input("Weight (Kg)", 1)
         d_hrg = c2.number_input("Harga", 0)
         if st.form_submit_button("Simpan"):
-            payload = {{"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}}
+            payload = {"date":str(d_tgl),"customer":d_cust.upper(),"description":d_item.upper(),"origin":d_ori.upper(),"destination":d_dest.upper(),"kolli":d_kol,"harga":d_hrg,"weight":d_kg,"total":d_hrg*d_kg}
             requests.post(API_URL, data=json.dumps(payload))
             st.success("Tersimpan!")
             st.cache_data.clear()
