@@ -151,7 +151,6 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
     
     if logo_b64:
         st.markdown(f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">', unsafe_allow_html=True)
@@ -253,4 +252,5 @@ with tab2:
     }
     df = pd.DataFrame(data)
     st.dataframe(df)
+
 
