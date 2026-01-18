@@ -60,7 +60,7 @@ with tab1:
 <div style="border:1px solid black;margin-top:5px;padding:8px;font-size: clamp(10px, 3vw, 12px);font-style:italic;"><b>Terbilang :</b> {teks_terbilang}</div>
 <div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;font-size: clamp(10px, 3vw, 12px);">
 <div style="flex:1;min-width:200px;margin-bottom:15px;">
-<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Jika sudah transfer mohon konfirmasi ke Finance 082179799200</small>
+<b>TRANSFER TO :</b><br>Bank Central Asia<br>6720422334<br>A/N ADITYA GAMA SAPUTRI<br><small>NB: Jika sudah transfer mohon konfirmasi ke<br> Finance 082179799200</small>
 </div>
 <div style="flex:1;text-align:center;min-width:150px;">
 Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
@@ -109,3 +109,4 @@ with tab2:
                 st.cache_data.clear()
             except:
                 st.error("Gagal menyimpan data.")
+
