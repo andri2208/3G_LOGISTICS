@@ -8,38 +8,25 @@ import streamlit.components.v1 as components
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics System", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. CSS UNTUK TAMPILAN WEB (Biar Pas di HP & Laptop)
+# 2. CSS UNTUK TAMPILAN WEB (Merapikan Preview di HP & Laptop)
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stTabs { margin-top: -15px; }
     
-    /* Container Utama Preview */
+    /* Container untuk pratinjau agar tidak meluber di HP */
     #invoice-preview-container {
         width: 100%;
-        overflow-x: hidden;
+        overflow-x: auto;
+        background-color: #f0f2f6;
+        padding: 10px 0;
     }
 
-    /* Box Invoice: Lebar otomatis di web, tapi dikunci 800px saat download */
-    #invoice-box {
-        background-color: white;
-        padding: 20px;
-        border: 1px solid #000;
-        color: black;
-        font-family: Arial, sans-serif;
-        width: 100%; /* Melebar sesuai layar HP */
-        max-width: 800px; /* Maksimal selebar standar A4 di Laptop */
-        margin: auto;
-        box-sizing: border-box;
-    }
-
-    /* Ukuran teks lebih kecil di HP agar tidak meluber */
+    /* Ukuran teks adaptif untuk tampilan layar web */
     @media only screen and (max-width: 600px) {
-        #invoice-box { padding: 10px; }
         .inv-text { font-size: 10px !important; }
         .inv-title { font-size: 18px !important; }
-        table { font-size: 9px !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -85,6 +72,7 @@ else:
             return r.json()
         except: return []
 
+    # Baris Logout
     c_kosong, c_out = st.columns([0.8, 0.2])
     with c_out:
         if st.button("Logout 🚪", use_container_width=True):
@@ -108,43 +96,67 @@ else:
             teks_terbilang = terbilang(total_harga).title() + " Rupiah"
             nama_file = f"INV_{selected_cust}_{tgl}.pdf"
 
-            # --- DESAIN INVOICE RESPONSIVE ---
+            # --- DESAIN INVOICE DENGAN GARIS MENYAMBUNG SEMPURNA ---
             html_content = f"""
 <div id="invoice-preview-container">
-<div id="invoice-box">
-    <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto;"></center>
-    <div class="inv-title" style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:10px 0; padding:5px; font-weight:bold; font-size: 22px;">INVOICE</div>
-    <table class="inv-text" style="width:100%; font-weight:bold; font-size:14px; margin-bottom:10px;">
-        <tr><td style="width:50%;">CUSTOMER : {row['customer']}</td><td style="width:50%; text-align:right;">DATE : {tgl}</td></tr>
-    </table>
-    <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; border:2px solid black; font-size: 11px; text-align:center;">
-        <tr style="background-color:#316395; color:white;">
-            <th style="border:1px solid black; padding:8px;">Date of Load</th><th style="border:1px solid black;">Description</th><th style="border:1px solid black;">Origin</th><th style="border:1px solid black;">Dest</th><th style="border:1px solid black;">KOLLI</th><th style="border:1px solid black;">HARGA</th><th style="border:1px solid black;">WEIGHT</th>
-        </tr>
+<div id="invoice-box" style="background-color:white; padding:40px; border:2px solid black; color:black; font-family:Arial, sans-serif; width:800px; margin:auto; box-sizing:border-box;">
+    <center><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER%20INVOICE.png" style="width:100%; height:auto; display:block;"></center>
+    
+    <div style="text-align:center; border-top:2px solid black; border-bottom:2px solid black; margin:15px 0; padding:8px; font-weight:bold; font-size: 24px;">INVOICE</div>
+    
+    <table style="width:100%; font-weight:bold; font-size:16px; margin-bottom:15px; border-collapse: collapse;">
         <tr>
-            <td style="border:1px solid black; padding:15px;">{tgl}</td><td style="border:1px solid black;">{row['description']}</td><td style="border:1px solid black;">{row['origin']}</td><td style="border:1px solid black;">{row['destination']}</td><td style="border:1px solid black;">{row['kolli']}</td><td style="border:1px solid black;">Rp {int(row['harga']):,}</td><td style="border:1px solid black;">{row['weight']} Kg</td>
-        </tr>
-        <tr style="font-weight:bold; background-color:#f2f2f2;">
-            <td colspan="6" style="border:1px solid black; text-align:center; padding:10px;">YANG HARUS DI BAYAR</td><td style="border:1px solid black;">Rp {total_harga:,}</td>
+            <td style="width:50%; padding:0;">CUSTOMER : {row['customer']}</td>
+            <td style="width:50%; text-align:right; padding:0;">DATE : {tgl}</td>
         </tr>
     </table>
-    </div>
-    <div class="inv-text" style="border:2px solid black; border-top:none; padding:10px; font-size: 12px; font-style:italic;">
+
+    <table style="width:100%; border-collapse:collapse; margin:0; padding:0; border-spacing: 0;">
+        <tr style="background-color:#316395; color:white; font-size:13px; text-align:center;">
+            <th style="border:2px solid black; padding:10px;">Date of Load</th>
+            <th style="border:2px solid black; padding:10px;">Description</th>
+            <th style="border:2px solid black; padding:10px;">Origin</th>
+            <th style="border:2px solid black; padding:10px;">Dest</th>
+            <th style="border:2px solid black; padding:10px;">KOLLI</th>
+            <th style="border:2px solid black; padding:10px;">HARGA</th>
+            <th style="border:2px solid black; padding:10px;">WEIGHT</th>
+        </tr>
+        <tr style="font-size:13px; text-align:center;">
+            <td style="border:2px solid black; padding:15px;">{tgl}</td>
+            <td style="border:2px solid black; padding:15px;">{row['description']}</td>
+            <td style="border:2px solid black; padding:15px;">{row['origin']}</td>
+            <td style="border:2px solid black; padding:15px;">{row['destination']}</td>
+            <td style="border:2px solid black; padding:15px;">{row['kolli']}</td>
+            <td style="border:2px solid black; padding:15px;">Rp {int(row['harga']):,}</td>
+            <td style="border:2px solid black; padding:15px;">{row['weight']} Kg</td>
+        </tr>
+        <tr style="font-weight:bold; background-color:#f2f2f2; font-size:13px; text-align:center;">
+            <td colspan="6" style="border:2px solid black; padding:12px;">YANG HARUS DI BAYAR</td>
+            <td style="border:2px solid black; padding:12px;">Rp {total_harga:,}</td>
+        </tr>
+    </table>
+
+    <div style="border:2px solid black; border-top:none; padding:12px; font-size: 14px; font-style:italic;">
         <b>Terbilang :</b> {teks_terbilang}
     </div>
-    <br>
-    <table class="inv-text" style="width:100%; font-size:12px; line-height:1.4;">
+
+    <br><br>
+
+    <table style="width:100%; font-size:14px; line-height:1.6; border-collapse: collapse;">
         <tr>
-            <td style="width:60%; vertical-align:top;">
+            <td style="width:60%; vertical-align:top; padding:0;">
                 <b>TRANSFER TO :</b><br>
                 Bank Central Asia 6720422334<br>
                 A/N ADITYA GAMA SAPUTRI<br>
                 NB : Jika sudah transfer mohon konfirmasi ke<br>
                 Finance 082179799200
             </td>
-            <td style="width:40%; text-align:center; vertical-align:top;">
-                Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:130px; height:auto; margin:5px 0;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+            <td style="width:40%; text-align:center; vertical-align:top; padding:0;">
+                Sincerely,<br>
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL%20TANDA%20TANGAN.png" style="width:160px; height:auto; margin:5px 0;">
+                <br>
+                <b><u>KELVINITO JAYADI</u></b><br>
+                DIREKTUR
             </td>
         </tr>
     </table>
@@ -154,18 +166,13 @@ else:
             st.markdown(html_content, unsafe_allow_html=True)
             st.write("---")
 
-            # 4. SCRIPT DOWNLOAD (PAKSA LEBAR 800PX HANYA SAAT DOWNLOAD)
+            # 4. SCRIPT DOWNLOAD (KUNCI LEBAR 800PX)
             components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px;">📥 SIMPAN SEBAGAI PDF</button>
+<button onclick="generatePDF()" style="background-color:#4CAF50; color:white; padding:18px; border:none; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; font-size:18px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📥 DOWNLOAD INVOICE (PDF)</button>
 <script>
 function generatePDF() {{
   const element = window.parent.document.getElementById('invoice-box');
-  
-  // Trick: Paksa lebar ke 800px sebelum capture
-  const originalWidth = element.style.width;
-  element.style.width = '800px';
-
   const opt = {{
     margin: [0.3, 0.3, 0.3, 0.3],
     filename: '{nama_file}',
@@ -173,10 +180,7 @@ function generatePDF() {{
     html2canvas: {{ scale: 2, useCORS: true, width: 800 }},
     jsPDF: {{ unit: 'in', format: 'a4', orientation: 'portrait' }}
   }};
-
-  html2pdf().set(opt).from(element).save().then(() => {{
-     element.style.width = originalWidth; // Kembalikan ke responsif setelah download
-  }});
+  html2pdf().set(opt).from(element).save();
 }}
 </script>""", height=100)
 
@@ -204,4 +208,4 @@ function generatePDF() {{
                     st.success("Berhasil Disimpan!")
                     st.cache_data.clear()
                 except:
-                    st.error("Gagal simpan.")
+                    st.error("Koneksi gagal.")
