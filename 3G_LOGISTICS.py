@@ -27,15 +27,7 @@ st.markdown(f"""
     <style>
     .stApp {{ background: linear-gradient(135deg, #0A4A4A 0%, #1A1A1A 100%); }}
     
-    /* Login Styling */
-    .login-card {{
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 25px; padding: 40px;
-        max-width: 400px; margin: auto; text-align: center;
-    }}
-    
+       
     /* Input & Button Styling */
     .stTextInput > div > div > input {{
         text-align: center; border-radius: 10px !important; height: 40px !important;
@@ -200,3 +192,4 @@ with tab2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.info("Klik tombol refresh untuk menarik data.")
+
