@@ -107,7 +107,7 @@ if not st.session_state.authenticated:
     st.write("#") # Spacer
     c1, c2, c3 = st.columns([1, 1.8, 1])
     with c2:
-        logo_data = get_base64_img("HEADER INVOICE.png")
+        logo_data = get_base64_img("FAVICON.png")
         if logo_data:
             st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{logo_data}"></div>', unsafe_allow_html=True)
         
@@ -243,3 +243,4 @@ with t2:
             st.dataframe(df.iloc[::-1], use_container_width=True)
         except:
             st.error("Database Gagal Dimuat")
+
