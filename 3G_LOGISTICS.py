@@ -13,36 +13,63 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (Diringkas agar lebih padat)
+# 2. CSS CUSTOM (TEKS EXTRA TEBAL)
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
-    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    .block-container { padding-top: 1rem !important; }
     
+    /* PANEL INPUT DATA */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
-        padding: 1.2rem !important;
+        padding: 1.5rem !important;
         border-radius: 12px !important;
-        border: 2px solid #B8860B !important;
+        border: 3px solid #B8860B !important;
     }
     
-    /* Label Putih & Kecil agar hemat tempat */
+    /* LABEL PUTIH EXTRA TEBAL */
     .stWidgetLabel p { 
         color: #FFFFFF !important; 
-        font-weight: 700 !important; 
-        font-size: 12px !important; 
-        margin-bottom: -15px !important; 
+        font-weight: 900 !important; /* Maksimal Tebal */
+        font-size: 15px !important; 
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: -10px !important;
     }
     
+    /* INPUT BOX DENGAN TEKS HITAM TEBAL */
     .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
-        background-color: #FFFFFF !important; color: #000000 !important; height: 38px !important;
+        background-color: #FFFFFF !important; 
+        color: #000000 !important; 
+        font-weight: 900 !important; /* Maksimal Tebal */
+        font-size: 16px !important;
+        border-radius: 8px !important;
     }
 
+    /* DROPDOWN & FILTER TEKS TEBAL */
+    div[data-baseweb="select"] span, div[data-baseweb="input"] input {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        font-weight: 900 !important;
+    }
+
+    /* TOMBOL SIMPAN */
     div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: #1A2A3A !important; font-weight: 900 !important; height: 45px; margin-top: 10px;
+        color: #000000 !important; 
+        font-weight: 900 !important; 
+        font-size: 18px !important;
+        width: 100% !important; 
+        height: 50px;
+        border: 2px solid #000 !important;
     }
     
+    /* Header Radio Filter */
+    div[data-testid="stMarkdownContainer"] p {
+        font-weight: 900 !important;
+        color: #1A2A3A !important;
+    }
+
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -80,20 +107,19 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.write("---")
-        # Baris Filter Sejajar
+        st.markdown("### **FILTER DATA INVOICE**")
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
-            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+            status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("Pilih Customer:", cust_list)
+            selected_cust = st.selectbox("**CUSTOMER:**", cust_list)
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("Pilih Transaksi:", sub_df['label'].tolist())
+                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
@@ -104,6 +130,7 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
+            # INVOICE ASLI TETAP AMAN
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -159,28 +186,24 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h3 style='text-align: center; color: #1A2A3A;'>DASHBOARD INPUT DATA</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>INPUT DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        # BARIS 1 (Tanggal, Customer, Barang)
         r1c1, r1c2, r1c3 = st.columns(3)
         with r1c1: v_tgl = st.date_input("📅 TANGGAL")
-        with r1c2: v_cust = st.text_input("🏢 CUSTOMER NAME")
-        with r1c3: v_desc = st.text_input("📦 ITEM DESCRIPTION")
+        with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
+        with r1c3: v_desc = st.text_input("📦 ITEM")
         
-        # BARIS 2 (Origin, Destination, Kolli)
         r2c1, r2c2, r2c3 = st.columns(3)
         with r2c1: v_orig = st.text_input("📍 ORIGIN")
         with r2c2: v_dest = st.text_input("🏁 DESTINATION")
         with r2c3: v_kol = st.text_input("📦 KOLLI")
         
-        # BARIS 3 (Harga, Weight, Status)
         r3c1, r3c2, r3c3 = st.columns(3)
-        with r3c1: v_harga = st.text_input("💰 PRICE/KG")
-        with r3c2: v_weight = st.text_input("⚖️ WEIGHT")
+        with r3c1: v_harga = st.text_input("💰 HARGA")
+        with r3c2: v_weight = st.text_input("⚖️ BERAT")
         with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        # Tombol Simpan di bawah
-        submit = st.form_submit_button("🚀 SIMPAN DATA & AUTO-UPDATE")
+        submit = st.form_submit_button("🚀 SIMPAN & UPDATE INVOICE")
         
         if submit:
             if v_cust and v_harga:
@@ -188,6 +211,6 @@ with tab2:
                     payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
-                    st.success("DATA TERSIMPAN!")
+                    st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
