@@ -13,60 +13,52 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (DIPERKETAT UNTUK CURSOR & HOVER)
+# 2. CSS RADIKAL (UNTUK MEMAKSA CURSOR & WARNA)
 st.markdown("""
     <style>
-    html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
-    
-    /* TARGET DROPDOWN AGAR JADI JARI */
-    div[data-baseweb="select"], .stSelectbox, div[role="button"] {
+    /* MEMAKSA CURSOR JADI JARI PADA SEMUA ELEMEN INTERAKTIF */
+    button, [role="button"], [data-baseweb="select"], .stSelectbox, select, input {
         cursor: pointer !important;
     }
 
-    /* TARGET TOMBOL SIMPAN (PRIMARY BUTTON) */
-    button[kind="primaryFormSubmit"], .stButton > button {
+    /* MEMAKSA TOMBOL SIMPAN BERUBAH HIJAU SAAT HOVER */
+    button[kind="primaryFormSubmit"], button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: #000000 !important; 
-        font-weight: 900 !important; 
-        font-size: 18px !important;
-        width: 100% !important; 
-        height: 50px !important;
+        transition: background-color 0.3s ease, transform 0.2s !important;
         border: 2px solid #000 !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease-in-out !important;
+        font-weight: 900 !important;
     }
 
-    /* HOVER BERUBAH HIJAU - DIPAKSA */
-    button[kind="primaryFormSubmit"]:hover, .stButton > button:hover {
-        background: #28a745 !important; /* HIJAU */
+    button[kind="primaryFormSubmit"]:hover, button:hover {
+        background: #28a745 !important; /* HIJAU POSITIF */
         background-color: #28a745 !important;
-        color: #FFFFFF !important;
-        border-color: #FFFFFF !important;
-        transform: scale(1.02) !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
     }
 
-    /* GAYA INPUT FORM */
+    /* FORM STYLE */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
-        border-radius: 12px !important;
-        border: 3px solid #B8860B !important;
-    }
-    
-    .stWidgetLabel p { 
-        color: #FFFFFF !important; 
-        font-weight: 900 !important; 
-        font-size: 15px !important; 
-        text-transform: uppercase;
-    }
-    
-    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
-        background-color: #FFFFFF !important; 
-        color: #000000 !important; 
-        font-weight: 900 !important; 
-        font-size: 16px !important;
+        border-radius: 15px !important;
+        border: 4px solid #B8860B !important;
     }
 
+    /* TEKS EXTRA TEBAL */
+    .stWidgetLabel p, label {
+        color: #FFFFFF !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        text-shadow: 1px 1px 2px #000;
+    }
+
+    input, [data-baseweb="select"] {
+        font-weight: 900 !important;
+        color: #000 !important;
+    }
+
+    /* SEMBUNYIKAN MENU STREAMLIT */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -104,19 +96,19 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.markdown("### **FILTER DATA INVOICE**")
+        st.markdown("### **PENCARIAN DATA**")
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
             status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("**CUSTOMER:**", cust_list)
+            selected_cust = st.selectbox("**NAMA CUSTOMER:**", cust_list)
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
+                selected_label = st.selectbox("**PILIH TRANSAKSI:**", sub_df['label'].tolist())
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
@@ -140,7 +132,6 @@ with tab1:
                     .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                     .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                    .data-table th {{ background-color: #f2f2f2; }}
                     .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
                     .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
@@ -150,9 +141,7 @@ with tab1:
                 <div id="inv">
                     <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                     <div class="title">INVOICE</div>
-                    <table class="info-table">
-                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                    </table>
+                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr></table>
                     <table class="data-table">
                         <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
                         <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
@@ -188,18 +177,15 @@ with tab2:
         with r1c1: v_tgl = st.date_input("📅 TANGGAL")
         with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
         with r1c3: v_desc = st.text_input("📦 ITEM")
-        
         r2c1, r2c2, r2c3 = st.columns(3)
         with r2c1: v_orig = st.text_input("📍 ORIGIN")
         with r2c2: v_dest = st.text_input("🏁 DESTINATION")
         with r2c3: v_kol = st.text_input("📦 KOLLI")
-        
         r3c1, r3c2, r3c3 = st.columns(3)
         with r3c1: v_harga = st.text_input("💰 HARGA")
         with r3c2: v_weight = st.text_input("⚖️ BERAT")
         with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        # Tombol Simpan
         submit = st.form_submit_button("🚀 SIMPAN & UPDATE INVOICE")
         
         if submit:
@@ -208,6 +194,6 @@ with tab2:
                     payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
-                    st.success("DATA BERHASIL DISIMPAN!")
+                    st.success("DATA TERSIMPAN!")
                     st.rerun()
-                except: st.error("CEK INPUT ANGKA!")
+                except: st.error("INPUT ERROR")
