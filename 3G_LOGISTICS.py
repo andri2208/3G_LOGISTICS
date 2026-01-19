@@ -21,7 +21,7 @@ st.markdown("""
 
     /* PANEL INPUT DATA BERWARNA GELAP */
     [data-testid="stForm"] {
-        background-color: #1A2A3A !important;
+        background-color: #719dc9 !important;
         padding: 20px !important;
         border-radius: 12px !important;
         border: 2px solid #B8860B !important;
@@ -215,3 +215,4 @@ with tab2:
                     st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
+
