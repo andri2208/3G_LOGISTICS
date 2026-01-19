@@ -90,22 +90,46 @@ with tab1:
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
             
-            # --- PANEL UBAH DATA (Expandable) ---
-            with st.expander("🛠️ KLIK DI SINI UNTUK UBAH DATA (EDIT MODE)"):
-                with st.form("edit_data_form"):
-                    c1, c2 = st.columns(2)
-                    e_desc = c1.text_input("ITEM", value=row['description'])
-                    e_orig = c1.text_input("ORIGIN", value=row['origin'])
-                    e_dest = c1.text_input("DEST", value=row['destination'])
-                    e_harga = c2.number_input("HARGA", value=float(extract_number(row['harga'])))
-                    e_weight = c2.text_input("WEIGHT", value=str(row['weight']))
-                    e_status = c2.selectbox("STATUS", ["Belum Bayar", "Lunas"], index=0 if row['status']=="Belum Bayar" else 1)
-                    if st.form_submit_button("💾 SIMPAN PERUBAHAN"):
-                        payload = {"action": "edit", "date": row['date'], "customer": row['customer'], "description": e_desc.upper(), "origin": e_orig.upper(), "destination": e_dest.upper(), "harga": e_harga, "weight": e_weight, "status": e_status}
-                        requests.post(API_URL, json=payload)
-                        st.cache_data.clear()
-                        st.success("Berhasil diupdate!")
-                        st.rerun()
+           # --- BAGIAN EDIT MODE YANG SUDAH DIPERBAIKI TOTALNYA ---
+with st.expander("🛠️ KLIK DI SINI UNTUK UBAH DATA (EDIT MODE)"):
+    with st.form("edit_data_form"):
+        c1, c2 = st.columns(2)
+        e_desc = c1.text_input("ITEM", value=row['description'])
+        e_orig = c1.text_input("ORIGIN", value=row['origin'])
+        e_dest = c1.text_input("DEST", value=row['destination'])
+        
+        # Ambil angka harga dan berat
+        curr_h = float(extract_number(row['harga']))
+        curr_w = float(extract_number(row['weight']))
+        
+        e_harga = c2.number_input("HARGA", value=curr_h)
+        e_weight = c2.number_input("WEIGHT", value=curr_w)
+        e_status = c2.selectbox("STATUS", ["Belum Bayar", "Lunas"], index=0 if row['status']=="Belum Bayar" else 1)
+        
+        if st.form_submit_button("💾 SIMPAN PERUBAHAN"):
+            # HITUNG TOTAL DI SINI SEBELUM KIRIM
+            total_baru = e_harga * e_weight
+            
+            payload = {
+                "action": "edit", 
+                "date": row['date'], 
+                "customer": row['customer'], 
+                "description": e_desc.upper(), 
+                "origin": e_orig.upper(), 
+                "destination": e_dest.upper(), 
+                "harga": e_harga, 
+                "weight": e_weight, 
+                "total": total_baru, # <--- SEKARANG TOTAL DIKIRIM!
+                "status": e_status
+            }
+            
+            try:
+                requests.post(API_URL, json=payload)
+                st.cache_data.clear()
+                st.success(f"Berhasil! Total baru: Rp {total_baru:,.0f}")
+                st.rerun()
+            except:
+                st.error("Gagal terhubung ke database!")
 
             # --- KEMBALI KE DESAIN INVOICE ASLI BAPAK ---
             b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
@@ -191,3 +215,4 @@ with tab2:
                     st.success("DATA TERSIMPAN!")
                     st.rerun()
                 except: st.error("ERROR!")
+
