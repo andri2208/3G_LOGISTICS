@@ -9,33 +9,63 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (DIPERBAIKI AGAR TIDAK RENGGANG)
+# 2. CSS FINAL (MEMAKSA WARNA KELUAR)
 st.markdown("""
-   <style>
+    <style>
+    /* Sembunyikan Header Asli */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 1.5rem !important; } /* Jarak atas dari logo */
-    
-    [data-testid="stImage"] { margin-bottom: 20px !important; } /* Jarak logo ke Tab */
-    
-    /* Area Tab */
+    .block-container { padding-top: 1.5rem !important; }
+
+    /* PAKSA WARNA BACKGROUND TAB & HALAMAN */
+    .stApp {
+        background-color: white !important;
+    }
+
+    /* GAYA TAB */
     div[data-testid="stTabs"] { 
         position: sticky; top: 0; z-index: 999; 
-        background: white; padding-top: 10px; 
-        border-bottom: 3px solid #B8860B; 
-        margin-bottom: 25px !important; /* Kasih jarak ke bawah tab */
+        background-color: white !important; 
+        padding-top: 10px; 
+        border-bottom: 4px solid #B8860B !important; 
+        margin-bottom: 25px !important;
     }
-    
-    .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; font-size: 18px; }
-
-    /* Area Filter (Status, Customer, Transaksi) agar punya ruang */
-    .stWidgetLabel p { 
+    .stTabs [data-baseweb="tab"] p { 
         color: #1A2A3A !important; 
-        font-weight: 900 !important; 
-        margin-bottom: 5px !important; /* Teks judul filter tidak nempel ke input */
+        font-weight: 800 !important; 
+        font-size: 18px; 
     }
-    
-    /* Jarak antar widget filter */
-    [data-testid="stVerticalBlock"] > div { margin-top: 5px !important; } 
+
+    /* PAKSA WARNA FORM JADI BIRU LAGI */
+    [data-testid="stForm"] { 
+        background-color: #719dc9 !important; /* WARNA BIRU */
+        padding: 2.5rem !important; 
+        border-radius: 20px !important; 
+        border: 5px solid #B8860B !important; /* BORDER EMAS TEBAL */
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* WARNA TEKS LABEL DI DALAM FORM */
+    [data-testid="stForm"] .stMarkdown p, 
+    [data-testid="stForm"] label p { 
+        color: white !important; 
+        font-weight: 900 !important; 
+        font-size: 14px !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* TOMBOL SIMPAN */
+    button[kind="primaryFormSubmit"] {
+        background-color: #B8860B !important;
+        color: white !important;
+        border: 2px solid white !important;
+        font-weight: bold !important;
+    }
+
+    /* ATUR JARAK FILTER AGAR TIDAK POLOS */
+    .stRadio label p, .stSelectbox label p {
+        color: #1A2A3A !important;
+        font-weight: bold !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -181,4 +211,5 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
 
