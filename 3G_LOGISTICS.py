@@ -9,8 +9,19 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
-# URL API BARU BAPAK
-API_URL = "https://script.google.com/macros/s/AKfycbxy6yXgkJgp9yo73SvkhAegi2NX8uWFomG8xlacvx8XkLMlXf5KD_Vkki9AE6Uh7Qjr/exec"
+# Masukkan URL hasil Deploy terbaru di sini
+API_URL = "https://script.google.com/macros/s/AKfycbxy6yXgkJgp9yo73SvkhAegi2NX8uWFomG8xlacvx8XkLMlXf5KD_Vkki9AE6Uh7Qjr/exec" 
+
+@st.cache_data(ttl=1)
+def get_data():
+    try:
+        # Menambahkan parameter timestamp agar data tidak nyangkut di cache browser
+        r = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
+        if r.status_code == 200:
+            return r.json()
+        return []
+    except:
+        return []
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
 st.markdown("""
@@ -190,6 +201,7 @@ with tab2:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
 
 
 
