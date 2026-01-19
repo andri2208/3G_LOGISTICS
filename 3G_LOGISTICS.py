@@ -13,20 +13,45 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS SAKTI UNTUK MINIMALIS (Rapat & Bersih)
+# 2. CSS SAKTI: WARNA INPUT, TEKS TEBAL, & JARAK RAPAT
 st.markdown("""
     <style>
+    /* Background Utama */
     .stApp { background-color: #FDFCF0; }
-    .block-container { padding-top: 1rem !important; }
-    .stRadio > div { margin-top: -30px; gap: 10px; }
-    .stSelectbox { margin-top: -30px; }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stStatusWidget"] { display: none !important; }
     
-    .custom-header { text-align: left; margin-bottom: 5px; }
+    /* Header & Navigasi */
+    header, footer, #MainMenu {visibility: hidden;}
+    .block-container { padding-top: 1rem !important; }
+    
+    /* TEKS LABEL TEBAL & HITAM */
+    .stWidgetLabel p { 
+        font-weight: 900 !important; 
+        color: #000000 !important; 
+        font-size: 14px !important;
+        margin-bottom: -15px !important;
+    }
+
+    /* KOLOM INPUT: PUTIH, BORDER TEBAL, TEKS TEBAL */
+    .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"] {
+        background-color: #FFFFFF !important;
+        border: 2px solid #1A2A3A !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+        height: 40px !important;
+    }
+
+    /* Merapatkan Jarak Antar Elemen */
+    .stVerticalBlock { gap: 0.5rem !important; }
+    .stRadio > div { margin-top: -20px; gap: 15px; }
+    .stSelectbox { margin-top: -10px; }
+    
+    /* Header Gambar */
+    .custom-header { text-align: left; margin-bottom: 10px; }
     .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
+    
+    /* Menghilangkan Spinner Running */
+    [data-testid="stStatusWidget"] { display: none !important; }
     </style>
     
     <div class="custom-header">
@@ -34,6 +59,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
+# URL API GOOGLE SHEETS
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1, show_spinner=False)
@@ -67,8 +93,10 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
+# --- TABS ---
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
+# --- TAB 1: CETAK INVOICE (MINIMALIS 1 BARIS) ---
 with tab1:
     raw_data = get_data()
     if not raw_data:
@@ -77,12 +105,10 @@ with tab1:
         df = pd.DataFrame(raw_data)
         st.write("---")
         
-        # BARIS FILTER MINIMALIS (Satu Baris)
+        # Kolom Filter Sejajar
         col_f1, col_f2 = st.columns([1, 1.5]) 
-        
         with col_f1:
             status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
-        
         with col_f2:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
             if not df_filtered.empty:
@@ -102,9 +128,7 @@ with tab1:
             tgl_raw = str(row.get('date', '')).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
-                
-            kata_terbilang = terbilang(t_val) + " Rupiah"
-
+            
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -118,7 +142,6 @@ with tab1:
                     .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                     .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
                     .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
                 </style>
@@ -139,10 +162,9 @@ with tab1:
                                 <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
                                 <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
                             </tr>
-                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                         </tbody>
                     </table>
-                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <div class="terbilang" style="border:1px solid black; padding:10px; margin-top:10px; font-style:italic;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
                     <table class="footer-table">
                         <tr>
                             <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b></td>
@@ -162,49 +184,35 @@ with tab1:
             """
             components.html(invoice_html, height=850, scrolling=True)
 
+# --- TAB 2: TAMBAH DATA (WARNA & TEBAL) ---
 with tab2:
-    # CSS khusus untuk merapatkan form di Tab 2
-    st.markdown("""
-        <style>
-        div[data-testid="stForm"] { padding: 10px; border-radius: 10px; }
-        div[data-testid="stMarkdownContainer"] h3 { margin-bottom: -20px; }
-        .stTextInput, .stDateInput, .stSelectbox { margin-bottom: -15px; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    st.subheader("➕ Input Pengiriman")
-    
+    st.markdown("### ➕ INPUT PENGIRIMAN BARU")
     with st.form("input_form", clear_on_submit=True):
-        # Baris 1: Tanggal & Nama (Sejajar)
         c1, c2 = st.columns(2)
-        with c1: v_tgl = st.date_input("Tgl")
-        with c2: v_cust = st.text_input("Customer")
-
-        # Baris 2: Keterangan (Satu baris penuh, tapi label dipersingkat)
-        v_desc = st.text_input("Barang / Keterangan")
-
-        # Baris 3: Origin & Destination (Sejajar)
+        with c1: v_tgl = st.date_input("TANGGAL")
+        with c2: v_cust = st.text_input("NAMA CUSTOMER")
+        
+        v_desc = st.text_input("KETERANGAN BARANG")
+        
         c3, c4 = st.columns(2)
-        with c3: v_orig = st.text_input("Asal")
-        with c4: v_dest = st.text_input("Tujuan")
-
-        # Baris 4: Kolli, Harga, Berat (Sejajar 3 kolom)
+        with c3: v_orig = st.text_input("ASAL (ORIGIN)")
+        with col4 if 'col4' in locals() else c4: v_dest = st.text_input("TUJUAN (DESTINATION)")
+        
         c5, c6, c7 = st.columns(3)
-        with c5: v_kol = st.text_input("Kolli")
-        with c6: v_harga = st.text_input("Harga/Kg")
-        with c7: v_weight = st.text_input("Berat (Kg)")
-
-        # Baris 5: Status & Tombol (Sejajar agar rapat ke bawah)
+        with c5: v_kol = st.text_input("KOLLI")
+        with c6: v_harga = st.text_input("HARGA / KG")
+        with c7: v_weight = st.text_input("BERAT (KG)")
+        
         c8, c9 = st.columns([2, 1])
         with c8:
-            v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
+            v_status = st.selectbox("STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
         with c9:
-            st.write("##") # Spasi pengimbang agar tombol sejajar input
+            st.write("##")
             submit = st.form_submit_button("💾 SIMPAN DATA")
 
         if submit:
             if not v_cust or not v_harga:
-                st.error("Nama & Harga wajib isi!")
+                st.error("Data Belum Lengkap!")
             else:
                 h_num = float(v_harga) if v_harga else 0
                 w_num = float(v_weight) if v_weight else 0
@@ -216,8 +224,7 @@ with tab2:
                 try:
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
-                        st.success(f"Tersimpan!")
+                        st.success("Berhasil Disimpan!")
                         st.rerun()
                 except:
-                    st.error("Koneksi Gagal")
-
+                    st.error("Koneksi Gagal!")
