@@ -9,62 +9,69 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (RESPONSIF & ANTI TERPOTONG)
+# 2. CSS FINAL (ANTI BERTUMPUK - FULL RESPONSIVE)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 1rem !important; padding-left: 1rem !important; padding-right: 1rem !important; }
+    .block-container { padding-top: 1rem !important; }
 
-    /* --- PERBAIKAN TAB AGAR TIDAK TERPOTONG (RESPONSIF) --- */
+    /* --- PERBAIKAN TAB: GAYA TOMBOL RESPONSIVE --- */
     div[data-testid="stTabs"] { 
-        position: sticky; top: 0; z-index: 999; 
-        background-color: white !important; 
-        padding-top: 5px; 
-        border-bottom: 4px solid #B8860B !important; 
-        margin-bottom: 20px !important;
-        overflow-x: visible !important; /* Biar tidak kepotong */
-    }
-    
-    /* Memaksa Tab untuk "bungkus" (wrap) ke bawah jika layar sempit */
-    div[data-baseweb="tab-list"] {
-        flex-wrap: wrap !important;
-        gap: 5px !important;
+        background-color: transparent !important; 
+        border: none !important;
     }
 
+    div[data-baseweb="tab-list"] {
+        flex-wrap: wrap !important; /* Biar turun ke bawah kalau gak muat */
+        gap: 10px !important;
+        padding: 10px 0 !important;
+        background-color: white !important;
+        border-bottom: 4px solid #B8860B !important;
+    }
+
+    /* Mengubah tab jadi kotak tombol biar gak tumpang tindih */
     .stTabs [data-baseweb="tab"] {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        height: auto !important;
-        white-space: normal !important; /* Teks tab bisa dua baris kalau panjang */
+        background-color: #f0f2f6 !important;
+        border-radius: 8px !important;
+        padding: 10px 15px !important;
+        border: 1px solid #ddd !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* Warna saat tab dipilih */
+    .stTabs [aria-selected="true"] {
+        background-color: #719dc9 !important;
+        border: 2px solid #B8860B !important;
     }
 
     .stTabs [data-baseweb="tab"] p { 
         color: #1A2A3A !important; 
         font-weight: 900 !important; 
-        font-size: clamp(14px, 4vw, 18px) !important; /* Ukuran teks fleksibel sesuai layar */
+        font-size: 14px !important;
+    }
+
+    .stTabs [aria-selected="true"] p {
+        color: white !important;
     }
 
     /* --- FORM BIRU GAGAH --- */
     [data-testid="stForm"] { 
         background-color: #719dc9 !important; 
-        padding: 1.5rem !important; /* Mengecil di HP */
+        padding: 1.5rem !important; 
         border-radius: 15px !important; 
         border: 4px solid #B8860B !important; 
     }
 
-    /* TEKS LABEL HITAM TEBAL */
-    [data-testid="stForm"] label p, 
-    [data-testid="stForm"] .stMarkdown p { 
+    [data-testid="stForm"] label p { 
         color: #000000 !important; 
         font-weight: 900 !important; 
-        font-size: 14px !important;
-        text-shadow: none !important; 
     }
 
-    /* Responsif untuk kolom: Di HP jadi satu kolom ke bawah */
+    /* Penyesuaian Kolom Form di HP */
     @media (max-width: 640px) {
-        [data-testid="stForm"] { padding: 1rem !important; }
-        .stTabs [data-baseweb="tab"] p { font-size: 14px !important; }
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -316,5 +323,6 @@ with tab3:
         </html>
         """
         components.html(fake_html, height=850, scrolling=True)
+
 
 
