@@ -94,7 +94,22 @@ with tab1:
     if not data:
         st.info("Menunggu data dari Google Sheets...")
     else:
-        df = pd.DataFrame(data)
+df = pd.DataFrame(data)
+        
+        # --- TAMBAHKAN BARIS INI (STATUS FILTER) ---
+        st.write("---")
+        c_stat1, c_stat2 = st.columns([2, 3])
+        with c_stat1:
+            status_filter = st.radio("Filter Status Bayar:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+        
+        if status_filter != "Semua":
+            df = df[df['status'] == status_filter]
+        # -------------------------------------------
+
+        if 'customer' in df.columns and not df.empty:
+            selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
+            # ... sisanya kode Bapak tetap sama ...
+
         if 'customer' in df.columns:
             # Urutkan dari yang terbaru (bawah ke atas) agar pilihan terbaru muncul paling atas
             selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
@@ -232,6 +247,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
