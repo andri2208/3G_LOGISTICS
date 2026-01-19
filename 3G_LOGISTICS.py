@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS STABIL (Sesuai keinginan: Rapat, Sticky, Rapi)
+# 2. CSS STABIL (Logo Rapat, Sticky Tab)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
@@ -35,12 +35,6 @@ st.markdown("""
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
     #MainMenu, footer {visibility: hidden;}
-    
-    /* Tombol Update Biru */
-    button[kind="secondary"] {
-        background-color: #1e3d59 !important; color: white !important;
-        font-weight: bold !important; border-radius: 10px !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -91,43 +85,29 @@ with tab1:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("**PILIH TRANSAKSI:**", sub_df['label'].tolist())
+                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
             
-            # --- FITUR UBAH DATA (EDIT MODE) ---
-            with st.expander("🛠️ UBAH DATA INVOICE INI (Klik untuk edit)"):
-                with st.form("edit_form"):
-                    e_col1, e_col2 = st.columns(2)
-                    with e_col1:
-                        new_desc = st.text_input("ITEM", value=row['description'])
-                        new_orig = st.text_input("ORIGIN", value=row['origin'])
-                        new_dest = st.text_input("DESTINATION", value=row['destination'])
-                    with e_col2:
-                        new_harga = st.number_input("HARGA", value=float(extract_number(row['harga'])))
-                        new_weight = st.number_input("WEIGHT", value=float(extract_number(row['weight'])))
-                        new_status = st.selectbox("STATUS", ["Belum Bayar", "Lunas"], index=0 if row['status']=="Belum Bayar" else 1)
-                    
-                    if st.form_submit_button("✅ UPDATE DATA"):
-                        payload = {
-                            "action": "edit", 
-                            "date": row['date'], 
-                            "customer": row['customer'],
-                            "description": new_desc.upper(),
-                            "origin": new_orig.upper(),
-                            "destination": new_dest.upper(),
-                            "harga": new_harga,
-                            "weight": new_weight,
-                            "status": new_status,
-                            "total": new_harga * new_weight
-                        }
-                        # Kirim ke Apps Script (Pastikan Apps Script Bapak sudah mendukung pencarian & update baris)
+            # --- PANEL UBAH DATA (Expandable) ---
+            with st.expander("🛠️ KLIK DI SINI UNTUK UBAH DATA (EDIT MODE)"):
+                with st.form("edit_data_form"):
+                    c1, c2 = st.columns(2)
+                    e_desc = c1.text_input("ITEM", value=row['description'])
+                    e_orig = c1.text_input("ORIGIN", value=row['origin'])
+                    e_dest = c1.text_input("DEST", value=row['destination'])
+                    e_harga = c2.number_input("HARGA", value=float(extract_number(row['harga'])))
+                    e_weight = c2.text_input("WEIGHT", value=str(row['weight']))
+                    e_status = c2.selectbox("STATUS", ["Belum Bayar", "Lunas"], index=0 if row['status']=="Belum Bayar" else 1)
+                    if st.form_submit_button("💾 SIMPAN PERUBAHAN"):
+                        payload = {"action": "edit", "date": row['date'], "customer": row['customer'], "description": e_desc.upper(), "origin": e_orig.upper(), "destination": e_dest.upper(), "harga": e_harga, "weight": e_weight, "status": e_status}
                         requests.post(API_URL, json=payload)
-                        st.success("Data berhasil diupdate! Merefresh...")
+                        st.cache_data.clear()
+                        st.success("Berhasil diupdate!")
                         st.rerun()
 
-            # --- TAMPILAN INVOICE ---
+            # --- KEMBALI KE DESAIN INVOICE ASLI BAPAK ---
             b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
@@ -136,35 +116,78 @@ with tab1:
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
             invoice_html = f"""
-            <div id="inv" style="background: white; padding: 25px; border: 1px solid #ccc; color: black; font-family: Arial;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
-                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px;">INVOICE</div>
-                <table style="width: 100%; font-weight: bold;"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr></table>
-                <table style="width: 100%; border-collapse: collapse; margin-top:10px; text-align: center;">
-                    <tr style="background:#eee;"><th>Description</th><th>Origin</th><th>Dest</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td><b>Rp {t_val:,}</b></td></tr>
-                </table>
-                <div style="margin-top:20px;">Sincerely,<br><br><br><b>KELVINITO JAYADI</b></div>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    body {{ background: #f0f0f0; padding: 10px; margin: 0; }}
+                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                    .header-img {{ width: 100%; height: auto; }}
+                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+                </style>
+            </head>
+            <body>
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr></table>
+                    <table class="data-table">
+                        <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
+                        <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                    </table>
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:65%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>
+                                NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                        </tr>
+                    </table>
+                </div>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+                <script>
+                    function savePDF() {{
+                        const e = document.getElementById('inv');
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    }}
+                </script>
+            </body>
+            </html>
             """
-            st.markdown(invoice_html, unsafe_allow_html=True)
+            components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: white;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: white; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        c1, c2, c3 = st.columns(3)
-        v_tgl = c1.date_input("📅 TANGGAL")
-        v_cust = c2.text_input("🏢 CUSTOMER")
-        v_desc = c3.text_input("📦 ITEM")
-        c4, c5, c6 = st.columns(3)
-        v_orig = c4.text_input("📍 ORIGIN")
-        v_dest = c5.text_input("🏁 DESTINATION")
-        v_harga = c6.number_input("💰 HARGA", value=0.0)
-        v_weight = st.number_input("⚖️ BERAT (Kg)", value=0.0)
-        v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        r1c1, r1c2, r1c3 = st.columns(3)
+        with r1c1: v_tgl = st.date_input("📅 TANGGAL")
+        with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
+        with r1c3: v_desc = st.text_input("📦 ITEM")
+        r2c1, r2c2, r2c3 = st.columns(3)
+        with r2c1: v_orig = st.text_input("📍 ORIGIN")
+        with r2c2: v_dest = st.text_input("🏁 DESTINATION")
+        with r2c3: v_kol = st.text_input("📦 KOLLI")
+        r3c1, r3c2, r3c3 = st.columns(3)
+        with r3c1: v_harga = st.text_input("💰 HARGA")
+        with r3c2: v_weight = st.text_input("⚖️ BERAT")
+        with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
-            payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "harga": v_harga, "weight": v_weight, "total": v_harga * v_weight, "status": v_status}
-            requests.post(API_URL, json=payload)
-            st.success("DATA TERSIMPAN!")
-            st.rerun()
+        submit = st.form_submit_button("🚀 SIMPAN SEKARANG")
+        if submit:
+            if v_cust and v_harga:
+                try:
+                    payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
+                    requests.post(API_URL, json=payload)
+                    st.cache_data.clear()
+                    st.success("DATA TERSIMPAN!")
+                    st.rerun()
+                except: st.error("ERROR!")
