@@ -13,71 +13,41 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM RESPONSIVE & BERWARNA
+# 2. CSS CUSTOM RESPONSIVE
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
     .block-container { padding-top: 1rem !important; }
-
-    /* PANEL INPUT DATA (Light Blue Theme) */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
         border-radius: 15px !important;
         border: 2px solid #B8860B !important;
-        width: 100% !important;
     }
-
-    /* TEKS LABEL PUTIH TERANG */
-    .stWidgetLabel p { 
-        color: #FFFFFF !important; 
-        font-weight: 800 !important;
-        font-size: 0.85rem !important;
-        text-transform: uppercase;
-        margin-bottom: -10px !important;
-    }
-
-    /* KOTAK INPUT (PUTIH - TEKS HITAM) */
+    .stWidgetLabel p { color: #FFFFFF !important; font-weight: 800 !important; font-size: 0.85rem !important; text-transform: uppercase; margin-bottom: -10px !important; }
     .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
+        background-color: #FFFFFF !important; color: #000000 !important; border-radius: 8px !important; font-weight: 700 !important;
     }
-    
-    div[data-baseweb="input"] input, div[data-baseweb="select"] div {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-    }
-
-    /* TOMBOL SIMPAN EMAS */
+    div[data-baseweb="input"] input, div[data-baseweb="select"] div { color: #000000 !important; -webkit-text-fill-color: #000000 !important; }
     div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: #1A2A3A !important;
-        font-weight: 900 !important;
-        width: 100% !important;
-        border-radius: 10px !important;
-        border: none !important;
-        height: 45px;
+        color: #1A2A3A !important; font-weight: 900 !important; width: 100% !important; border-radius: 10px !important; height: 45px;
     }
-
-    /* Sembunyikan Header Streamlit */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
-    
     <div style="text-align: left; margin-bottom: 10px;">
         <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="max-width: 250px; width: 100%;">
     </div>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA - AUTO REFRESH DENGAN CACHE TTL RENDAH
+# 3. LOGIC DATA - PAKSA NO CACHE
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
-@st.cache_data(ttl=2) # Cache hanya bertahan 2 detik agar data selalu segar
 def get_data():
+    # Gunakan parameter unik setiap kali panggil data agar tidak kena cache browser/streamlit
     try:
-        # Menambahkan parameter timestamp agar Google Script tidak memberi data lama (Cache-Busting)
-        response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}")
+        url_with_timestamp = f"{API_URL}?t={datetime.now().timestamp()}"
+        response = requests.get(url_with_timestamp)
         return response.json() if response.status_code == 200 else []
     except: return []
 
@@ -102,30 +72,28 @@ def terbilang(n):
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
+    # Paksa ambil data terbaru setiap kali tab dibuka
     data = get_data()
     if data:
         df = pd.DataFrame(data)
         st.write("---")
         col_f1, col_f2 = st.columns([1, 1]) 
         with col_f1:
-            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, key="rad_status")
         with col_f2:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
-            # Menggunakan List Comprehension agar Customer selalu terupdate di dropdown
-            cust_options = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("Pilih Customer:", cust_options)
+            cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
+            selected_cust = st.selectbox("Pilih Customer:", cust_list, key="sel_cust")
         
         if selected_cust and not df_filtered.empty:
             row = df_filtered[df_filtered['customer'] == selected_cust].iloc[-1]
-            b_val = extract_number(row['weight'])
-            h_val = extract_number(row['harga'])
+            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # --- INVOICE HTML (Tetap sesuai standar Bapak) ---
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -143,42 +111,25 @@ with tab1:
                     .data-table th {{ background-color: #f2f2f2; }}
                     .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 11px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; line-height: 1.5; }}
-                    .btn-dl {{ max-width: 750px; width: 95%; display: block; margin: 10px auto; background: #49bf59; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+                    .btn-dl {{ max-width: 750px; width: 100%; display: block; margin: 10px auto; background: #49bf59; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
                 </style>
             </head>
             <body>
                 <div id="inv">
                     <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                     <div class="title">INVOICE</div>
-                    <table class="info-table">
-                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                    </table>
+                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr></table>
                     <div style="overflow-x:auto;">
                         <table class="data-table">
-                            <thead>
-                                <tr><th>Desc</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
-                                    <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
-                                </tr>
-                                <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
-                            </tbody>
+                            <tr><th>Desc</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                            <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
+                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                         </table>
                     </div>
                     <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                     <table class="footer-table">
-                        <tr>
-                            <td style="width:60%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>NB: Konfirmasi ke Finance: <b>082179799200</b>
-                            </td>
-                            <td style="text-align:center; vertical-align:top;">
-                                Sincerely,<br>
-                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br>
-                                <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                            </td>
-                        </tr>
+                        <tr><td style="width:60%; vertical-align:top;"><b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>NB: Finance: 082179799200</td>
+                        <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td></tr>
                     </table>
                 </div>
                 <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
@@ -202,7 +153,7 @@ with tab2:
         v_desc = st.text_input("📦 KETERANGAN BARANG")
         c3, c4 = st.columns(2)
         with c3: v_orig = st.text_input("📍 ASAL (ORIGIN)")
-        with c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
+        with col4 := c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
         c5, c6, c7 = st.columns(3)
         with c5: v_kol = st.text_input("📦 JUMLAH KOLLI")
         with c6: v_harga = st.text_input("💰 HARGA")
@@ -220,12 +171,15 @@ with tab2:
                         "harga": float(v_harga), "weight": float(v_weight), 
                         "total": float(v_harga) * float(v_weight), "status": v_status
                     }
-                    # Kirim data ke Google Sheets
+                    # 1. KIRIM DATA
                     requests.post(API_URL, json=payload)
                     
-                    # BAGIAN PENTING: Clear Cache & Rerun agar Tab Invoice otomatis update
-                    st.cache_data.clear() 
-                    st.success("DATA BERHASIL DISIMPAN!")
-                    st.rerun() # Refresh otomatis aplikasi
+                    # 2. BERSIHKAN CACHE SECARA TOTAL
+                    st.cache_data.clear()
                     
+                    # 3. NOTIFIKASI BERHASIL
+                    st.success("DATA BERHASIL DISIMPAN! OTOMATIS UPDATE...")
+                    
+                    # 4. REFRESH APLIKASI
+                    st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
