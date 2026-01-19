@@ -10,7 +10,7 @@ import re
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
 # Masukkan URL hasil Deploy terbaru di sini
-API_URL = "https://script.google.com/macros/s/AKfycbxy6yXgkJgp9yo73SvkhAegi2NX8uWFomG8xlacvx8XkLMlXf5KD_Vkki9AE6Uh7Qjr/exec" 
+API_URL = "https://script.google.com/macros/s/AKfycby2LL8UfRE5B3sMDUhzje6Ja3TvitunQCQnprtwN5Wi_LnpdF0IkA36o5wqAjcgxCBs/exec" 
 
 @st.cache_data(ttl=1)
 def get_data():
@@ -201,6 +201,7 @@ with tab2:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
 
 
 
