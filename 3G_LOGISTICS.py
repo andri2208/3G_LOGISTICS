@@ -13,40 +13,47 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (DIPERBAIKI AGAR TAB TIDAK RUSAK)
+# 2. CSS PALING KUAT (FORCE CURSOR & HOVER)
 st.markdown("""
     <style>
-    /* 1. KEMBALIKAN WARNA TEKS TAB AGAR KELIHATAN */
+    /* MENGEMBALIKAN WARNA TEKS TAB AGAR KELIHATAN JELAS */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
         font-size: 16px !important;
     }
-    
-    /* 2. CURSOR JARI PADA PILIHAN & TOMBOL */
-    div[data-baseweb="select"], .stSelectbox, button, [role="button"] {
+
+    /* MEMAKSA KURSOR JADI JARI PADA SEMUA DROPDOWN & TOMBOL */
+    /* Kami menargetkan semua elemen interaktif Streamlit */
+    div[data-baseweb="select"], 
+    div[data-baseweb="base-input"],
+    div[role="button"],
+    button,
+    .stSelectbox,
+    .stButton,
+    input {
         cursor: pointer !important;
     }
 
-    /* 3. KHUSUS TOMBOL SIMPAN (HOVER HIJAU) */
-    div.stButton > button {
+    /* KHUSUS TOMBOL SIMPAN (HOVER HIJAU) */
+    /* Target spesifik ke tombol utama di dalam form */
+    button[kind="primaryFormSubmit"] {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: #000000 !important; 
         font-weight: 900 !important; 
         font-size: 18px !important;
-        width: 100% !important; 
-        height: 50px !important;
         border: 2px solid #000 !important;
-        transition: 0.3s !important;
+        transition: background 0.3s ease !important;
+        cursor: pointer !important;
     }
 
-    div.stButton > button:hover {
-        background: #28a745 !important; /* HIJAU SAAT DISENTUH */
+    button[kind="primaryFormSubmit"]:hover {
+        background: #28a745 !important; /* HIJAU */
         color: #FFFFFF !important;
         border: 2px solid #FFFFFF !important;
     }
 
-    /* 4. GAYA FORM INPUT */
+    /* GAYA FORM INPUT AGAR RAPI SEPERTI DI SCREENSHOT */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
@@ -57,7 +64,7 @@ st.markdown("""
     .stWidgetLabel p { 
         color: #FFFFFF !important; 
         font-weight: 900 !important; 
-        font-size: 15px !important; 
+        font-size: 14px !important; 
         text-transform: uppercase;
     }
     
@@ -66,13 +73,15 @@ st.markdown("""
         color: #000000 !important; 
         font-weight: 900 !important; 
         font-size: 16px !important;
+        cursor: pointer !important;
     }
 
+    /* Menghilangkan menu bawaan agar bersih */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA (Sama seperti sebelumnya)
+# 3. LOGIC DATA
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -141,7 +150,6 @@ with tab1:
                     .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                     .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
                     .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
                 </style>
@@ -156,7 +164,7 @@ with tab1:
                         <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
                         <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </table>
-                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {kata_terbilang}</div>
                     <table class="footer-table">
                         <tr>
                             <td style="width:65%; vertical-align:top;">
@@ -180,22 +188,23 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>INPUT DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>DASHBOARD INPUT PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         r1c1, r1c2, r1c3 = st.columns(3)
         with r1c1: v_tgl = st.date_input("📅 TANGGAL")
-        with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
-        with r1c3: v_desc = st.text_input("📦 ITEM")
+        with r1c2: v_cust = st.text_input("🏢 CUSTOMER NAME")
+        with r1c3: v_desc = st.text_input("📦 ITEM DESCRIPTION")
         r2c1, r2c2, r2c3 = st.columns(3)
         with r2c1: v_orig = st.text_input("📍 ORIGIN")
         with r2c2: v_dest = st.text_input("🏁 DESTINATION")
         with r2c3: v_kol = st.text_input("📦 KOLLI")
         r3c1, r3c2, r3c3 = st.columns(3)
-        with r3c1: v_harga = st.text_input("💰 HARGA")
-        with r3c2: v_weight = st.text_input("⚖️ BERAT")
-        with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        with r3c1: v_harga = st.text_input("💰 PRICE/KG")
+        with r3c2: v_weight = st.text_input("⚖️ WEIGHT")
+        with r3c3: v_status = st.selectbox("💳 PAYMENT STATUS", ["Belum Bayar", "Lunas"])
         
-        submit = st.form_submit_button("🚀 SIMPAN & UPDATE INVOICE")
+        # Tombol Simpan
+        submit = st.form_submit_button("🚀 SIMPAN DATA")
         
         if submit:
             if v_cust and v_harga:
@@ -203,6 +212,6 @@ with tab2:
                     payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
-                    st.success("DATA BERHASIL DISIMPAN!")
+                    st.success("DATA TERSIMPAN!")
                     st.rerun()
-                except: st.error("CEK INPUT ANGKA!")
+                except: st.error("ERROR INPUT")
