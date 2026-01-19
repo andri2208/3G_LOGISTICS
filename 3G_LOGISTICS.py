@@ -13,42 +13,53 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS BRUTAL (Targeting langsung ke elemen HTML dasar)
+# 2. CSS UNTUK HEADER, STICKY TAB, CURSOR & HOVER
 st.markdown("""
     <style>
-    /* 1. PAKSA SEMUA TAB TETAP GELAP & KELIHATAN */
+    /* TAMPILKAN HEADER DI KIRI ATAS */
+    [data-testid="stHeader"] {
+        background-color: rgba(255, 255, 255, 0.9);
+        visibility: visible !important;
+    }
+
+    /* BUAT TAB JADI STICKY (NEMPEL DI ATAS) */
+    div[data-testid="stTabs"] {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 999;
+        padding-top: 10px;
+        border-bottom: 2px solid #B8860B;
+    }
+
+    /* WARNA TEKS TAB */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
+        font-size: 16px;
     }
 
-    /* 2. PAKSA KURSOR JADI JARI PADA SEMUA YANG BISA DIKLIK */
-    /* Kami incar semua div, span, dan input di dalam form */
-    [data-testid="stForm"] *, 
-    [data-baseweb="select"] *, 
-    .stSelectbox *, 
-    button {
+    /* PAKSA KURSOR JADI JARI PADA PILIHAN & TOMBOL */
+    button, [role="button"], [data-baseweb="select"], .stSelectbox, input {
         cursor: pointer !important;
     }
 
-    /* 3. PAKSA TOMBOL SIMPAN JADI HIJAU SAAT HOVER */
-    /* Menggunakan selector atribut untuk akurasi 100% */
+    /* TOMBOL SIMPAN HOVER HIJAU */
     button[kind="primaryFormSubmit"] {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: black !important;
         font-weight: 900 !important;
         border: 2px solid black !important;
-        transition: 0.2s !important;
+        transition: 0.3s !important;
     }
 
     button[kind="primaryFormSubmit"]:hover {
-        background: #28a745 !important; /* HIJAU */
+        background: #28a745 !important;
         background-color: #28a745 !important;
         color: white !important;
-        border-color: white !important;
     }
 
-    /* 4. STYLE FORM (BIRU LOGISTICS) */
+    /* STYLE FORM */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 2rem !important;
@@ -56,24 +67,21 @@ st.markdown("""
         border: 4px solid #B8860B !important;
     }
 
-    /* 5. TEKS INPUT EXTRA TEBAL */
-    .stWidgetLabel p {
-        color: white !important;
-        font-weight: 900 !important;
-        font-size: 15px !important;
+    .stWidgetLabel p { 
+        color: white !important; 
+        font-weight: 900 !important; 
     }
 
-    input, [data-baseweb="select"] {
-        font-weight: 900 !important;
-        color: black !important;
-    }
-
-    /* Hilangkan Header & Footer */
-    #MainMenu, footer, header {visibility: hidden;}
+    /* Sembunyikan footer & menu kanan saja */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA
+# Tambahkan Logo di Header Kiri (Opsional jika ingin manual)
+st.sidebar.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=200)
+
+# 3. LOGIC DATA (Tetap Sama)
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -113,7 +121,7 @@ with tab1:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("**CUSTOMER:**", cust_list)
+            selected_cust = st.selectbox("**NAMA CUSTOMER:**", cust_list)
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
@@ -195,9 +203,7 @@ with tab2:
         with r3c2: v_weight = st.text_input("⚖️ BERAT")
         with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        # TOMBOL SIMPAN
         submit = st.form_submit_button("🚀 SIMPAN SEKARANG")
-        
         if submit:
             if v_cust and v_harga:
                 try:
