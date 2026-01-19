@@ -11,32 +11,31 @@ st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubu
 
 # 2. CSS FINAL (DIPERBAIKI AGAR TIDAK RENGGANG)
 st.markdown("""
-    <style>
+   <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 1rem !important; }
+    .block-container { padding-top: 1.5rem !important; } /* Jarak atas dari logo */
     
-    /* Logo Header */
-    [data-testid="stImage"] { margin-bottom: 0px !important; margin-top: -10px !important; }
+    [data-testid="stImage"] { margin-bottom: 20px !important; } /* Jarak logo ke Tab */
     
-    /* Tab Sticky & Rapat */
+    /* Area Tab */
     div[data-testid="stTabs"] { 
         position: sticky; top: 0; z-index: 999; 
-        background: white; padding-top: 5px; 
+        background: white; padding-top: 10px; 
         border-bottom: 3px solid #B8860B; 
+        margin-bottom: 25px !important; /* Kasih jarak ke bawah tab */
     }
+    
     .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; font-size: 18px; }
 
-    /* Menghilangkan jarak berlebih di bawah Tab */
-    [data-testid="stVerticalBlock"] > div:first-child { margin-top: -15px !important; }
-    
-    /* Form Style */
-    [data-testid="stForm"] { 
-        background: #719dc9 !important; padding: 2rem !important; 
-        border-radius: 20px !important; border: 4px solid #B8860B !important; 
+    /* Area Filter (Status, Customer, Transaksi) agar punya ruang */
+    .stWidgetLabel p { 
+        color: #1A2A3A !important; 
+        font-weight: 900 !important; 
+        margin-bottom: 5px !important; /* Teks judul filter tidak nempel ke input */
     }
-    .stWidgetLabel p { color: white !important; font-weight: 900 !important; margin-bottom: -15px !important; }
     
-    #MainMenu, footer {visibility: hidden;}
+    /* Jarak antar widget filter */
+    [data-testid="stVerticalBlock"] > div { margin-top: 5px !important; } 
     </style>
     """, unsafe_allow_html=True)
 
@@ -182,3 +181,4 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
