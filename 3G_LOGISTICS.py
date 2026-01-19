@@ -154,98 +154,6 @@ with tab1:
         st.write(f"Menampilkan data untuk: **{selected_cust}**")
         st.dataframe(customer_data) # Menampilkan tabel data yang difilter
             
-        if status_filter != "Semua":
-            # Pastikan kolom 'status' sudah Bapak buat di Google Sheets
-            if 'status' in df.columns:
-                df = df[df['status'] == status_filter]
-
-            # Cek lagi apakah setelah difilter datanya masih ada
-        if not df.empty and 'customer' in df.columns:
-            row = df[df['customer'] == selected_cust].iloc[-1]
-        
-            b_val = extract_number(row['weight'])
-            h_val = extract_number(row['harga'])
-            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-            
-            tgl_raw = str(row['date']).split('T')[0]
-            try:
-                tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
-            except:
-                tgl_indo = tgl_raw
-                
-            kata_terbilang = terbilang(t_val) + " Rupiah"
-
-            # (Seluruh isi invoice_html Bapak tetap sama sampai bawah...)
-            invoice_html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-                <style>
-                    body {{ background: #f0f0f0; padding: 10px; }}
-                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
-                    .header-img {{ width: 100%; height: auto; }}
-                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
-                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
-                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
-                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                    .data-table th {{ background-color: #f2f2f2; }}
-                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
-                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
-                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
-                </style>
-            </head>
-            <body>
-                <div id="inv">
-                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
-                    <div class="title">INVOICE</div>
-                    <table class="info-table">
-                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                    </table>
-                    <table class="data-table">
-                        <thead>
-                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
-                                <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
-                            </tr>
-                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
-                        </tbody>
-                    </table>
-                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
-                    <table class="footer-table">
-                        <tr>
-                            <td style="width:65%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>
-                                BCA <b>6720422334</b><br>
-                                <b>ADITYA GAMA SAPUTRI</b><br>
-                                NB: Jika sudah transfer mohon konfirmasi ke<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
-                            </td>
-                            <td style="text-align:center; vertical-align:top;">
-                                Sincerely,<br>
-                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
-                                <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
-                <script>
-                    function savePDF() {{
-                        const e = document.getElementById('inv');
-                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
-                    }}
-                </script>
-            </body>
-            </html>
-            """
-            components.html(invoice_html, height=850, scrolling=True)
-        else:
-            st.warning("Kolom 'customer' tidak ditemukan di Google Sheets.")
-
 with tab2:
     st.subheader("➕ Input Pengiriman Baru")
     
@@ -316,6 +224,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
