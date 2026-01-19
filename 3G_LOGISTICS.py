@@ -111,10 +111,28 @@ with tab1:
         df = pd.DataFrame(data)
         
          # Filter Status (Tambahan baru)
+        # --- GANTI BAGIAN FILTER & PILIH CUSTOMER DENGAN INI ---
         st.write("---")
-        c_stat1, c_stat2 = st.columns([2, 3])
-        with c_stat1:
-            status_filter = st.radio("Filter Status Bayar:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+        # Membuat 2 kolom agar filter dan dropdown sejajar ke samping (padat)
+        col_f1, col_f2 = st.columns([1, 1.5]) 
+        
+        with col_f1:
+            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+        
+        with col_f2:
+            # Filter data berdasarkan pilihan radio button
+            if status_filter != "Semua":
+                df_filtered = df[df['status'] == status_filter]
+            else:
+                df_filtered = df
+
+            if not df_filtered.empty:
+                selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique()))
+            else:
+                st.warning("Data tidak ditemukan")
+                selected_cust = None
+        st.write("---")
+        # -------------------------------------------------------
         
         if status_filter != "Semua":
             # Pastikan kolom 'status' sudah Bapak buat di Google Sheets
@@ -280,6 +298,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
