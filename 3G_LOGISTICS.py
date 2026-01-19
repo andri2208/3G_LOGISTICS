@@ -139,7 +139,7 @@ with tab1:
                     .data-table th {{ background-color: #f2f2f2; }}
                     .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
-                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: 700px; cursor: pointer; font-size: 16px; }}
                 </style>
             </head>
             <body>
@@ -215,5 +215,6 @@ with tab2:
                     st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
+
 
 
