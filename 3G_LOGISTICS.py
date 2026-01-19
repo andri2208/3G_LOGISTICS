@@ -114,7 +114,7 @@ with tab1:
         <td style="width:65%; vertical-align:top;">
             <b>TRANSFER TO :</b><br>
             BCA <b>6720422334</b><br>
-            <b>ADITYA GAMA SAPUTRI</b><br><br>
+            <b>ADITYA GAMA SAPUTRI</b><br>
             <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
         </td>
@@ -162,6 +162,7 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
 
 
 
