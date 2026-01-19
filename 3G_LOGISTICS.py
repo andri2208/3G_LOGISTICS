@@ -194,15 +194,18 @@ with tab2:
                 "harga": h_num, "weight": weight_final, "total": total_db
             }
             try:
-                # Mengirim data ke API baru
                 r = requests.post(API_URL, data=json.dumps(payload))
                 if r.status_code == 200:
-                    st.success(f"Berhasil Disimpan ke Cloud!")
-                    st.cache_data.clear()
+                    st.success("Berhasil Disimpan!")
+                    # --- TAMBAHKAN DUA BARIS INI ---
+                    st.cache_data.clear() # Membersihkan memori lama
+                    st.rerun()            # Otomatis refresh aplikasi
+                    # ------------------------------
                 else:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
 
 
 
