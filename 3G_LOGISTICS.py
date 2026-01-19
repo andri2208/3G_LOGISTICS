@@ -9,7 +9,7 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (TEKS HITAM TEBAL, NO SHADOW)
+# 2. CSS FINAL (TEKS HITAM TEBAL, NO SHADOW, WARNA BIRU GAGAH)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
@@ -26,14 +26,14 @@ st.markdown("""
     /* TEKS LABEL DI DALAM FORM: HITAM & TEBAL */
     [data-testid="stForm"] label p, 
     [data-testid="stForm"] .stMarkdown p { 
-        color: #000000 !important; /* HITAM PEKAT */
-        font-weight: 900 !important; /* SUPER TEBAL */
+        color: #000000 !important; 
+        font-weight: 900 !important; 
         font-size: 15px !important;
-        text-shadow: none !important; /* HAPUS SHADOW */
+        text-shadow: none !important; 
         margin-bottom: 5px !important;
     }
 
-    /* TEKS FILTER DI TAB CETAK (STATUS, CUSTOMER, DLL) */
+    /* TEKS FILTER DI TAB CETAK */
     .stRadio label p, .stSelectbox label p {
         color: #000000 !important;
         font-weight: 900 !important;
@@ -70,7 +70,7 @@ st.markdown("""
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 
 # 4. TABS
-tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
+tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
 
 API_URL = "https://script.google.com/macros/s/AKfycbwI8Ep0hTn2zoDOuYMpjvD4G_coxfBRr1MzAtOgCcI-5ufcR4CllgZsA__ekfDb_BP_/exec"
 
@@ -101,7 +101,6 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        # Jarak dipersempit di sini
         f1, f2, f3 = st.columns([1, 1.2, 1.5])
         with f1:
             st_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
@@ -117,12 +116,19 @@ with tab1:
 
         if s_cust and s_label:
             row = sub_df[sub_df['label'] == s_label].iloc[-1]
-            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
-            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
+            
+            # --- LOGIKA KHUSUS SESUAI PERMINTAAN BAPAK ---
+            t_val = 6071000  # Total dikunci ke 6.071.000
+            h_display = " "  # Harga dikosongkan
+            
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             
+            # Pesan WA Otomatis
+            pesan_wa = f"Halo {row['customer']}, Berikut Invoice 3G Logistics No: {row.get('inv_no', '-')}. Total: Rp {t_val:,}. Terima kasih."
+            link_wa = f"https://api.whatsapp.com/send?text={requests.utils.quote(pesan_wa)}"
+
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -137,7 +143,6 @@ with tab1:
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                     .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
-                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
                 </style>
             </head>
             <body>
@@ -145,35 +150,31 @@ with tab1:
                     <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                     <div class="title">INVOICE</div>
                     <table class="info-table">
-                        <tr>
-                            <td>CUSTOMER: {row['customer']}</td>
-                            <td style="text-align:right;">NO: {row.get('inv_no', '-')}</td>
-                        </tr>
-                        <tr>
-                            <td>DATE: {tgl_indo}</td>
-                            <td style="text-align:right;">STATUS: {row['status'].upper()}</td>
-                        </tr>
+                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">NO: {row.get('inv_no', '-')}</td></tr>
+                        <tr><td>DATE: {tgl_indo}</td><td style="text-align:right;">STATUS: {row['status'].upper()}</td></tr>
                     </table>
                     <table class="data-table">
                         <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                        <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
+                        <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>{h_display}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
                         <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </table>
                     <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
                     <table class="footer-table">
                         <tr>
                             <td style="width:65%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>
-                                BCA <b>6720422334</b><br>
-                                <b>ADITYA GAMA SAPUTRI</b><br><br>
-                                <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
+                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br><br>
+                                <i>NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
                             </td>
                             <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
                         </tr>
                     </table>
                 </div>
-                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+                <div style="display: flex; gap: 10px; justify-content: center; width: 750px; margin: 20px auto;">
+                    <button style="flex: 1; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+                    <a href="{link_wa}" target="_blank" style="flex: 1; text-decoration: none;">
+                        <button style="width: 100%; background: #25D366; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">💬 KIRIM WA</button>
+                    </a>
+                </div>
                 <script>
                     function savePDF() {{
                         const e = document.getElementById('inv');
@@ -209,43 +210,33 @@ with tab2:
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
 
-# Tambahkan Tab 3 di bagian definisi tabs
-tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
-
-# --- KODE UNTUK TAB 3 (FAKE INVOICE) ---
 with tab3:
     st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>CETAK INVOICE MANUAL (FAKE)</h2>", unsafe_allow_html=True)
-    st.info("Input di sini TIDAK AKAN tersimpan ke database. Hanya untuk cetak cepat.")
-    
     with st.form("fake_form"):
         fcol1, fcol2, fcol3 = st.columns(3)
         fk_no = fcol1.text_input("NOMOR INVOICE", "3G/INV/2026/000")
         fk_cust = fcol2.text_input("NAMA CUSTOMER")
         fk_tgl = fcol3.date_input("TANGGAL", datetime.now())
-        
         fcol4, fcol5, fcol6 = st.columns(3)
         fk_item = fcol4.text_input("ITEM / DESKRIPSI")
         fk_orig = fcol5.text_input("ORIGIN")
         fk_dest = fcol6.text_input("DESTINATION")
-        
         fcol7, fcol8, fcol9 = st.columns(3)
         fk_kolli = fcol7.text_input("KOLLI")
         fk_weight = fcol8.text_input("BERAT (WEIGHT)")
         fk_total = fcol9.number_input("TOTAL BAYAR (Rp)", value=6071000, step=1000)
-        
         submit_fake = st.form_submit_button("✨ GENERATE FAKE INVOICE")
 
     if submit_fake:
         tgl_f = fk_tgl.strftime('%d/%m/%Y')
         terbilang_f = terbilang(fk_total) + " Rupiah"
-        
         fake_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ background: #f0f0f0; padding: 10px; }}
+                body {{ background: #f0f0f0; padding: 10px; margin: 0; }}
                 #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
@@ -265,15 +256,7 @@ with tab3:
                 </table>
                 <table class="data-table">
                     <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr>
-                        <td>{fk_item.upper()}</td>
-                        <td>{fk_orig.upper()}</td>
-                        <td>{fk_dest.upper()}</td>
-                        <td>{fk_kolli}</td>
-                        <td> </td>
-                        <td>{fk_weight}</td>
-                        <td style="font-weight:bold;">Rp {fk_total:,}</td>
-                    </tr>
+                    <tr><td>{fk_item.upper()}</td><td>{fk_orig.upper()}</td><td>{fk_dest.upper()}</td><td>{fk_kolli}</td><td> </td><td>{fk_weight}</td><td style="font-weight:bold;">Rp {fk_total:,}</td></tr>
                     <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
                 </table>
                 <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang_f}</div>
@@ -298,7 +281,3 @@ with tab3:
         </html>
         """
         components.html(fake_html, height=850, scrolling=True)
-
-
-
-
