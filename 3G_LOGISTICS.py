@@ -133,7 +133,7 @@ with tab1:
                     #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
                     .header-img {{ width: 100%; height: auto; }}
                     .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
-                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: 700px; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
                     .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
                     .data-table th {{ background-color: #f2f2f2; }}
@@ -215,4 +215,5 @@ with tab2:
                     st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
+
 
