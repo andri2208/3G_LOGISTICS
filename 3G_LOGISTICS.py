@@ -13,122 +13,65 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS ULTRA-PREMIUM & MEWAH
+# 2. CSS ULTRA-PREMIUM (DAPUR APLIKASI)
 st.markdown("""
     <style>
-    /* Import Font Modern */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-
-    /* Global Style */
-    .stApp { 
-        background-color: #F8F9FA; 
-        font-family: 'Inter', sans-serif; 
-    }
-    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    .stApp { background-color: #F4F7F9; font-family: 'Inter', sans-serif; }
     header, footer, #MainMenu {visibility: hidden;}
-    .block-container { padding-top: 2rem !important; max-width: 900px !important; }
+    .block-container { padding-top: 1.5rem !important; max-width: 1000px !important; }
 
-    /* Glassmorphism Card Effect untuk Form */
+    /* Container Form & Tab */
     div[data-testid="stForm"] {
         background: white !important;
-        border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 15px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
-        padding: 30px !important;
+        border: none !important;
+        border-radius: 20px !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05) !important;
+        padding: 40px !important;
     }
 
-    /* Label Mewah: Tipis, Spasi Lebar, Abu-abu Gelap */
-    .stWidgetLabel p { 
-        font-weight: 600 !important; 
-        color: #4A4A4A !important; 
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-bottom: -5px !important;
-    }
-
-    /* Input Minimalis: Tanpa Border Tebal, Hanya Garis Bawah saat Fokus */
+    /* Input Style */
     .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"] {
-        background-color: #FDFDFD !important;
-        border: 1px solid #E0E0E0 !important;
-        border-radius: 8px !important;
-        font-weight: 400 !important;
-        color: #2C3E50 !important;
-        height: 45px !important;
-        transition: all 0.4s ease-in-out;
+        background-color: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
+        height: 48px !important;
+    }
+    
+    .stWidgetLabel p { 
+        font-weight: 700 !important; color: #475569 !important; 
+        font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px;
     }
 
-    .stTextInput input:focus {
-        border-color: #1A2A3A !important;
-        background-color: #FFFFFF !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-    }
-
-    /* Tombol Premium: Elegan & Berwibawa */
+    /* Button Style */
     div.stButton > button {
-        background: linear-gradient(135deg, #1A2A3A 0%, #34495E 100%) !important;
+        background: #1E293B !important;
         color: white !important;
-        border-radius: 8px !important;
-        border: none !important;
-        font-weight: 600 !important;
-        letter-spacing: 1px;
-        padding: 0.7rem 2rem !important;
-        transition: all 0.3s ease;
-        width: 100%;
-        height: 50px;
-        text-transform: uppercase;
-        font-size: 13px;
-    }
-    
-    div.stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(26, 42, 58, 0.3) !important;
-    }
-
-    /* Tab Style Modern */
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] {
-        background-color: transparent !important;
-        border: none !important;
-        font-weight: 400 !important;
-        color: #95A5A6 !important;
-        font-size: 14px !important;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #1A2A3A !important;
+        border-radius: 10px !important;
         font-weight: 700 !important;
-        border-bottom: 3px solid #1A2A3A !important;
+        height: 50px;
+        width: 100%;
+        border: none !important;
+        transition: 0.3s;
     }
+    div.stButton > button:hover { background: #334155 !important; transform: translateY(-2px); }
 
-    /* Rapat & Simpel */
-    .stVerticalBlock { gap: 1.2rem !important; }
-    
-    /* Logo Header */
-    .custom-header { text-align: center; margin-bottom: 30px; }
-    .custom-header img { width: 100%; max-width: 250px; filter: grayscale(20%); }
-
-    /* Hide Running Status */
-    [data-testid="stStatusWidget"] { display: none !important; }
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
+    .stTabs [data-baseweb="tab"] { font-size: 14px !important; color: #94A3B8 !important; }
+    .stTabs [aria-selected="true"] { color: #1E293B !important; font-weight: 800 !important; border-bottom: 3px solid #1E293B !important; }
     </style>
-    
-    <div class="custom-header">
-        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png">
-    </div>
     """, unsafe_allow_html=True)
 
-# URL API
+# API CONFIG
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1, show_spinner=False)
 def get_data():
     try:
         response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
-        if response.status_code == 200:
-            all_data = response.json()
-            return all_data if all_data else []
-        return []
-    except:
-        return []
+        return response.json() if response.status_code == 200 else []
+    except: return []
 
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
@@ -147,93 +90,137 @@ def terbilang(n):
     return ""
 
 # --- TABS ---
-tab1, tab2 = st.tabs(["INVOICE CENTER", "NEW DISPATCH"])
+t1, t2 = st.tabs(["🏛️ INVOICE CENTER", "📦 NEW SHIPMENT"])
 
-# --- TAB 1: INVOICE ---
-with tab1:
-    raw_data = get_data()
-    if not raw_data:
-        st.write("---")
-        st.caption("Synchronizing database...")
-    else:
-        df = pd.DataFrame(raw_data)
-        st.write("")
-        c_filter1, c_filter2 = st.columns([1, 2]) 
-        with c_filter1:
-            status_f = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
-        with c_filter2:
+with t1:
+    data = get_data()
+    if data:
+        df = pd.DataFrame(data)
+        st.markdown("<br>", unsafe_allow_html=True)
+        c_f1, c_f2 = st.columns([1, 2])
+        with c_f1: status_f = st.radio("Status", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
+        with c_f2:
             df_f = df[df['status'] == status_f] if status_f != "Semua" else df
-            if not df_f.empty:
-                v_cust = st.selectbox("", sorted(df_f['customer'].unique()), label_visibility="collapsed")
-            else:
-                v_cust = None
+            cust = st.selectbox("Client", sorted(df_f['customer'].unique()) if not df_f.empty else ["No Data"], label_visibility="collapsed")
         
-        st.markdown("<hr style='margin:10px 0; opacity:0.1;'>", unsafe_allow_html=True)
-        
-        if v_cust:
-            row = df_f[df_f['customer'] == v_cust].iloc[-1]
-            b_val = extract_number(row.get('weight', 0))
-            h_val = extract_number(row.get('harga', 0))
-            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-            tgl_raw = str(row.get('date', '')).split('T')[0]
-            try: tgl_i = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d %b %Y')
-            except: tgl_i = tgl_raw
+        if cust != "No Data":
+            row = df_f[df_f['customer'] == cust].iloc[-1]
+            h_v = extract_number(row.get('harga', 0))
+            w_v = extract_number(row.get('weight', 0))
+            total = int(h_v * w_v) if w_v > 0 else int(h_v)
             
-            invoice_html = f"""
-            <div style="background:#FFF; padding:40px; border-radius:15px; box-shadow:0 20px 50px rgba(0,0,0,0.05); color:#2C3E50; font-family:sans-serif; max-width:750px; margin:auto; border:1px solid #EEE;">
-                <div style="text-align:center; margin-bottom:30px;">
-                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:280px;">
-                    <h2 style="letter-spacing:8px; font-weight:300; margin-top:20px; border-top:1px solid #EEE; border-bottom:1px solid #EEE; padding:10px 0;">INVOICE</h2>
-                </div>
-                <table style="width:100%; font-size:12px; margin-bottom:20px;">
-                    <tr><td><b>CLIENT</b><br>{row['customer']}</td><td style="text-align:right;"><b>DATE</b><br>{tgl_i}</td></tr>
+            # FORMAT TANGGAL
+            tgl_raw = str(row.get('date', '')).split('T')[0]
+            try: tgl_f = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d %B %Y')
+            except: tgl_f = tgl_raw
+
+            # --- THE CORPORATE INVOICE HTML ---
+            inv_html = f"""
+            <div id="invoice-box" style="background:white; padding:50px; border:1px solid #EEE; max-width:800px; margin:auto; color:#333; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                <table style="width:100%; margin-bottom:20px;">
+                    <tr>
+                        <td style="width:50%"><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:300px;"></td>
+                        <td style="text-align:right; vertical-align:top;">
+                            <h1 style="margin:0; color:#1A2A3A; letter-spacing:-1px;">INVOICE</h1>
+                            <p style="margin:0; font-size:12px; color:#666;">No: INV/3G/{datetime.now().strftime('%Y%m%d')}/{row.name}</p>
+                        </td>
+                    </tr>
                 </table>
-                <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                    <thead><tr style="background:#F8F9FA; color:#7F8C8D;"><th style="padding:12px; border-bottom:1px solid #EEE;">DESCRIPTION</th><th style="padding:12px; border-bottom:1px solid #EEE;">DESTINATION</th><th style="padding:12px; border-bottom:1px solid #EEE;">TOTAL</th></tr></thead>
-                    <tbody><tr><td style="padding:15px; border-bottom:1px solid #F8F9FA;">{row['description']}</td><td style="padding:15px; border-bottom:1px solid #F8F9FA; text-align:center;">{row['destination']}</td><td style="padding:15px; border-bottom:1px solid #F8F9FA; text-align:right; font-weight:bold;">IDR {t_val:,}</td></tr></tbody>
+
+                <div style="background:#1A2A3A; height:8px; margin-bottom:30px;"></div>
+
+                <table style="width:100%; margin-bottom:40px; font-size:13px;">
+                    <tr>
+                        <td style="width:50%;"><b>BILLED TO:</b><br><span style="font-size:18px; color:#1A2A3A;">{row['customer']}</span></td>
+                        <td style="text-align:right;"><b>DATE:</b><br>{tgl_f}</td>
+                    </tr>
                 </table>
-                <div style="margin-top:40px; display:flex; justify-content:space-between; align-items:flex-end;">
-                    <div style="font-size:10px; color:#95A5A6;"><b>PAYMENT INFO</b><br>BCA 6720422334<br>A.G. SAPUTRI</div>
-                    <div style="text-align:center; font-size:10px;">
-                        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:80px; opacity:0.8;"><br>
-                        <b>KELVINITO JAYADI</b><br>Managing Director
-                    </div>
-                </div>
+
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                    <thead>
+                        <tr style="background:#F8F9FA; text-align:left;">
+                            <th style="padding:15px; border-bottom:2px solid #1A2A3A;">DESCRIPTION</th>
+                            <th style="padding:15px; border-bottom:2px solid #1A2A3A; text-align:center;">DESTINATION</th>
+                            <th style="padding:15px; border-bottom:2px solid #1A2A3A; text-align:right;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:20px 15px; border-bottom:1px solid #EEE;">
+                                <b>{row['description']}</b><br>
+                                <span style="font-size:11px; color:#666;">Origin: {row['origin']} | Qty: {row['kolli']} | Rate: Rp {int(h_v):,}</span>
+                            </td>
+                            <td style="padding:20px 15px; border-bottom:1px solid #EEE; text-align:center;">{row['destination']}</td>
+                            <td style="padding:20px 15px; border-bottom:1px solid #EEE; text-align:right; font-weight:bold;">Rp {total:,}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table style="width:100%;">
+                    <tr>
+                        <td style="width:60%; vertical-align:top;">
+                            <div style="background:#F8F9FA; padding:15px; border-radius:5px; font-size:11px;">
+                                <b>TERBILANG:</b><br>
+                                <i style="text-transform:capitalize;"># {terbilang(total)} Rupiah #</i>
+                            </div>
+                            <div style="margin-top:20px; font-size:11px;">
+                                <b>PAYMENT DETAILS:</b><br>
+                                Bank BCA: <b>6720422334</b><br>
+                                A/N: <b>ADITYA GAMA SAPUTRI</b>
+                            </div>
+                        </td>
+                        <td style="text-align:center; vertical-align:top;">
+                            <div style="position:relative; display:inline-block;">
+                                <p style="font-size:12px; margin-bottom:50px;">Sincerely,</p>
+                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="position:absolute; top:20px; left:10px; width:110px; opacity:0.8;">
+                                <p style="font-size:13px; font-weight:bold; margin:0;"><u>KELVINITO JAYADI</u></p>
+                                <p style="font-size:11px; color:#666; margin:0;">Managing Director</p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <button onclick="generatePDF()" style="width:100%; margin-top:20px; background:#1A2A3A; color:white; border:none; padding:15px; border-radius:10px; cursor:pointer; font-weight:bold; font-size:14px; letter-spacing:1px;">📥 DOWNLOAD OFFICIAL INVOICE (PDF)</button>
+            <script>
+                function generatePDF() {{
+                    const element = document.getElementById('invoice-box');
+                    const opt = {{
+                        margin: 0.5,
+                        filename: 'Invoice_{row['customer']}.pdf',
+                        image: {{ type: 'jpeg', quality: 0.98 }},
+                        html2canvas: {{ scale: 2 }},
+                        jsPDF: {{ unit: 'in', format: 'letter', orientation: 'portrait' }}
+                    }};
+                    html2pdf().set(opt).from(element).save();
+                }}
+            </script>
             """
-            st.components.v1.html(invoice_html + f"<button onclick=\"window.print()\" style=\"width:100%; margin-top:20px; background:#1A2A3A; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:bold; letter-spacing:1px;\">EXPORT TO CLOUD</button>", height=750)
+            components.html(inv_html, height=900, scrolling=True)
 
-# --- TAB 2: INPUT ---
-with tab2:
-    with st.form("input_form", clear_on_submit=True):
+with t2:
+    st.markdown("### 📝 RECORD SHIPMENT")
+    with st.form("ship_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
-        with c1: v_tgl = st.date_input("TRANS_DATE")
-        with c2: v_cust = st.text_input("CLIENT_NAME")
-        
-        v_desc = st.text_input("CARGO_DESCRIPTION")
-        
+        with c1: v_tgl = st.date_input("Date")
+        with c2: v_cust = st.text_input("Customer Name")
+        v_desc = st.text_input("Cargo Details")
         c3, c4 = st.columns(2)
-        with c3: v_orig = st.text_input("ORIGIN")
-        with c4: v_dest = st.text_input("DESTINATION")
-        
+        with c3: v_orig = st.text_input("Origin")
+        with c4: v_dest = st.text_input("Destination")
         c5, c6, c7 = st.columns(3)
-        with c5: v_kol = st.text_input("QTY")
-        with c6: v_harga = st.text_input("RATE")
-        with c7: v_weight = st.text_input("WEIGHT")
-        
-        v_status = st.selectbox("PAYMENT_STATUS", ["Belum Bayar", "Lunas"])
-        
-        st.write("")
-        submit = st.form_submit_button("CONFIRM & SAVE DATA")
-
-        if submit:
+        with c5: v_kol = st.text_input("Qty (Kolli)")
+        with c6: v_harga = st.text_input("Rate (Price)")
+        with c7: v_weight = st.text_input("Weight (Kg)")
+        v_status = st.selectbox("Payment Status", ["Belum Bayar", "Lunas"])
+        if st.form_submit_button("SAVE TO DATABASE"):
             if v_cust and v_harga:
                 payload = {
                     "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
                     "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                    "harga": float(v_harga), "weight": float(v_weight) if v_weight else 0, 
+                    "harga": float(v_harga), "weight": float(v_weight) if v_weight else 0,
                     "total": float(v_harga) * (float(v_weight) if v_weight else 1), "status": v_status
                 }
                 requests.post(API_URL, json=payload)
-                st.success("Transaction Logged Successfully.")
+                st.success("Data secured.")
                 st.rerun()
