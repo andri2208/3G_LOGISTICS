@@ -6,8 +6,12 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import re
 
-# 1. KONFIGURASI HALAMAN
-st.set_page_config(page_title="3G Logistics", layout="wide")
+# 1. KONFIGURASI HALAMAN (Update Favicon)
+st.set_page_config(
+    page_title="3G Logistics", 
+    page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", # Link ke file favicon Bapak
+    layout="wide"
+)
 
 # --- TAMBAHAN 1: SESSION STATE UNTUK KONTROL TAB ---
 if "active_tab" not in st.session_state:
@@ -216,6 +220,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
