@@ -1,5 +1,5 @@
 import streamlit as st
-import pd
+import pandas as pd  # <--- INI SUDAH SAYA PERBAIKI
 import requests
 import json
 from datetime import datetime
@@ -154,3 +154,4 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
