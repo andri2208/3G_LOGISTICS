@@ -13,78 +13,66 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS PERBAIKAN (AGAR KONTEN TIDAK TERTUTUP)
+# 2. CSS FINAL (STABIL & TIDAK MEPET)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Bawaan */
+    /* Sembunyikan Header Asli Streamlit */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* PENTING: Memberi ruang di atas agar konten tidak tertutup header sticky */
-    .main .block-container {
-        padding-top: 30px !important;
+    /* Atur Jarak Atas Aplikasi agar tidak menempel ke browser */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 0rem !important;
     }
 
-    /* RAPATKAN LOGO KE TAB */
+    /* LOGO: Kita beri jarak bawah yang normal (tidak negatif lagi) */
     [data-testid="stImage"] {
-        margin-bottom: -35px !important;
-        position: relative;
-        z-index: 1001;
+        margin-bottom: 10px !important;
+        margin-top: -10px !important;
     }
 
-    /* TAB STICKY (TETAP DI ATAS) */
+    /* TAB STICKY: Dibuat lebih tinggi sedikit agar tidak menabrak logo */
     div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
-        z-index: 1000;
+        z-index: 999;
         background-color: white;
-        padding-top: 5px;
-        padding-bottom: 5px;
-        border-bottom: 2px solid #B8860B;
+        padding-top: 15px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #B8860B;
     }
 
     /* STYLE TEKS TAB */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
-        font-size: 16px;
+        font-size: 18px;
     }
 
-    /* KURSOR JARI */
-    button, [role="button"], [data-baseweb="select"], .stSelectbox, input, .stTabs [data-baseweb="tab"] {
-        cursor: pointer !important;
-    }
-
-    /* TOMBOL SIMPAN HOVER HIJAU */
-    button[kind="primaryFormSubmit"] {
-        background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: black !important;
-        font-weight: 900 !important;
-        border: 2px solid black !important;
-    }
-
-    button[kind="primaryFormSubmit"]:hover {
-        background: #28a745 !important;
-        background-color: #28a745 !important;
-        color: white !important;
-    }
-
-    /* FORM STYLE */
+    /* FORM: Diberi jarak yang pas agar tidak gepeng */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
-        padding: 2rem !important;
-        border-radius: 15px !important;
+        padding: 3rem !important;
+        border-radius: 20px !important;
         border: 4px solid #B8860B !important;
+        margin-top: 20px !important;
+    }
+
+    /* Atur agar input di dalam form punya ruang */
+    [data-testid="stForm"] .stMarkdown p {
+        margin-bottom: 5px !important;
     }
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
 
-    /* Sembunyikan Menu & Footer */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. AREA HEADER (Logo)
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=400)
+# 3. AREA HEADER (Logo diletakkan di container agar stabil)
+header_container = st.container()
+with header_container:
+    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 
 # 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
@@ -119,7 +107,7 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.write("---")
+        st.write("###") # Kasih ruang dikit
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
             status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
