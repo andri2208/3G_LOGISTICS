@@ -13,25 +13,38 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (Hanya untuk Panel Input & Filter)
+# 2. CSS CUSTOM (Diringkas agar lebih padat)
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
-    [data-testid="stForm"] { background-color: #719dc9 !important; padding: 1.5rem !important; border-radius: 12px !important; border: 2px solid #B8860B !important; }
-    .stWidgetLabel p { color: #FFFFFF !important; font-weight: 800 !important; font-size: 13px !important; text-transform: uppercase; margin-bottom: -10px !important; }
+    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
     
-    /* Warna Label di luar Form (Filter) agar tetap terbaca */
-    [data-testid="stHeader"] + div label p { color: #1A2A3A !important; }
-
-    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] { 
-        background-color: #FFFFFF !important; color: #000000 !important; font-weight: 700 !important; 
+    [data-testid="stForm"] {
+        background-color: #719dc9 !important;
+        padding: 1.2rem !important;
+        border-radius: 12px !important;
+        border: 2px solid #B8860B !important;
     }
-    div.stButton > button { background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important; color: #1A2A3A !important; font-weight: 900 !important; width: 100% !important; height: 45px; }
+    
+    /* Label Putih & Kecil agar hemat tempat */
+    .stWidgetLabel p { 
+        color: #FFFFFF !important; 
+        font-weight: 700 !important; 
+        font-size: 12px !important; 
+        margin-bottom: -15px !important; 
+    }
+    
+    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
+        background-color: #FFFFFF !important; color: #000000 !important; height: 38px !important;
+    }
+
+    div.stButton > button {
+        background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
+        color: #1A2A3A !important; font-weight: 900 !important; height: 45px; margin-top: 10px;
+    }
+    
     #MainMenu, footer, header {visibility: hidden;}
     </style>
-    <div style="text-align: left; margin-bottom: 10px;">
-        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="max-width: 250px;">
-    </div>
     """, unsafe_allow_html=True)
 
 # 3. LOGIC DATA
@@ -68,40 +81,29 @@ with tab1:
     if data:
         df = pd.DataFrame(data)
         st.write("---")
-        
-        # BARIS FILTER (Dibuat Sejajar 3 Kolom)
+        # Baris Filter Sejajar
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
-        
         with f_col1:
             status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
-            
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
             selected_cust = st.selectbox("Pilih Customer:", cust_list)
-            
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
-                # Label: Tgl - Nama Barang
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
                 selected_label = st.selectbox("Pilih Transaksi:", sub_df['label'].tolist())
-            else:
-                st.selectbox("Pilih Transaksi:", ["Pilih Customer Dulu"], disabled=True)
 
-        # TAMPILKAN INVOICE JIKA TRANSAKSI SUDAH DIPILIH
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
-            
-            b_val = extract_number(row['weight'])
-            h_val = extract_number(row['harga'])
+            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE ASLI (NB Konfirmasi Aman)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -129,32 +131,18 @@ with tab1:
                         <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
                     </table>
                     <table class="data-table">
-                        <thead>
-                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
-                                <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
-                            </tr>
-                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
-                        </tbody>
+                        <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
+                        <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </table>
                     <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
                     <table class="footer-table">
                         <tr>
                             <td style="width:65%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>
-                                BCA <b>6720422334</b><br>
-                                <b>ADITYA GAMA SAPUTRI</b><br>
-                                NB: Jika sudah transfer mohon konfirmasi ke<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>
+                                NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
                             </td>
-                            <td style="text-align:center; vertical-align:top;">
-                                Sincerely,<br>
-                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
-                                <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-                            </td>
+                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
                         </tr>
                     </table>
                 </div>
@@ -171,27 +159,35 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin: 0;'>NEW DISPATCH ENTRY</h4>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #1A2A3A;'>DASHBOARD INPUT DATA</h3>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN")
-        with c2: v_cust = st.text_input("🏢 NAMA CUSTOMER")
-        v_desc = st.text_input("📦 KETERANGAN BARANG")
-        c3, c4 = st.columns(2)
-        with c3: v_orig = st.text_input("📍 ASAL (ORIGIN)")
-        with c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
-        c5, c6, c7 = st.columns(3)
-        with c5: v_kol = st.text_input("📦 JUMLAH KOLLI")
-        with c6: v_harga = st.text_input("💰 HARGA")
-        with c7: v_weight = st.text_input("⚖️ BERAT")
-        v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
-        submit = st.form_submit_button("🚀 SIMPAN DATA")
+        # BARIS 1 (Tanggal, Customer, Barang)
+        r1c1, r1c2, r1c3 = st.columns(3)
+        with r1c1: v_tgl = st.date_input("📅 TANGGAL")
+        with r1c2: v_cust = st.text_input("🏢 CUSTOMER NAME")
+        with r1c3: v_desc = st.text_input("📦 ITEM DESCRIPTION")
+        
+        # BARIS 2 (Origin, Destination, Kolli)
+        r2c1, r2c2, r2c3 = st.columns(3)
+        with r2c1: v_orig = st.text_input("📍 ORIGIN")
+        with r2c2: v_dest = st.text_input("🏁 DESTINATION")
+        with r2c3: v_kol = st.text_input("📦 KOLLI")
+        
+        # BARIS 3 (Harga, Weight, Status)
+        r3c1, r3c2, r3c3 = st.columns(3)
+        with r3c1: v_harga = st.text_input("💰 PRICE/KG")
+        with r3c2: v_weight = st.text_input("⚖️ WEIGHT")
+        with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        
+        # Tombol Simpan di bawah
+        submit = st.form_submit_button("🚀 SIMPAN DATA & AUTO-UPDATE")
+        
         if submit:
             if v_cust and v_harga:
                 try:
                     payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
-                    st.success("DATA BERHASIL DISIMPAN!")
+                    st.success("DATA TERSIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
