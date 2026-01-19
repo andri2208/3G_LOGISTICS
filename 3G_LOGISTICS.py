@@ -229,14 +229,13 @@ with tab2:
         
        # --- BAGIAN TOMBOL SIMPAN DI TAB 2 ---
         if st.form_submit_button("💾 SIMPAN DATA"):
-            h_num = extract_number(v_hrg)
-            w_num = extract_number(v_kg)
-            weight_final = str(v_kg)
-            if v_kg and "kg" not in v_kg.lower(): weight_final = f"{v_kg} Kg"
+            # Hitung angka dulu
+            h_num = float(v_harga) if v_harga else 0
+            w_num = float(v_weight) if v_weight else 0
+            total_db = h_num * w_num
             
-            total_db = int(w_num * h_num) if w_num > 0 else int(h_num)
-            
-           payload = {
+            # BAGIAN PAYLOAD HARUS SEJAJAR DENGAN TOTAL_DB DI ATASNYA
+            payload = {
                 "date": str(v_tgl), 
                 "customer": v_cust.upper(), 
                 "description": v_desc.upper(),
@@ -244,9 +243,9 @@ with tab2:
                 "destination": v_dest.upper(), 
                 "kolli": v_kol,
                 "harga": h_num, 
-                "weight": weight_final, 
+                "weight": w_num, 
                 "total": total_db,
-                "status": v_status  # <--- SEKARANG MENGAMBIL DARI PILIHAN DI ATAS
+                "status": v_status # Status pilihan Bapak (Lunas/Belum Bayar)
             }
         
             try:
@@ -270,6 +269,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
