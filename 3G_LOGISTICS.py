@@ -13,38 +13,47 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS UNTUK HEADER, STICKY TAB, CURSOR & HOVER
+# 2. CSS UNTUK HEADER & TAB STICKY (Satu Baris)
 st.markdown("""
     <style>
-    /* TAMPILKAN HEADER DI KIRI ATAS */
-    [data-testid="stHeader"] {
-        background-color: rgba(255, 255, 255, 0.9);
-        visibility: visible !important;
+    /* 1. MENGATUR HEADER & TAB AGAR STICKY DI ATAS */
+    header[data-testid="stHeader"] {
+        display: none; /* Sembunyikan header asli streamlit */
     }
-
-    /* BUAT TAB JADI STICKY (NEMPEL DI ATAS) */
-    div[data-testid="stTabs"] {
-        position: sticky;
+    
+    /* Area Sticky Custom */
+    .sticky-header {
+        position: fixed;
         top: 0;
+        left: 0;
+        width: 100%;
         background-color: white;
-        z-index: 999;
-        padding-top: 10px;
-        border-bottom: 2px solid #B8860B;
+        z-index: 1000;
+        padding: 10px 20px;
+        border-bottom: 3px solid #B8860B;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    /* WARNA TEKS TAB */
+    /* Penyesuaian jarak konten agar tidak tertutup sticky header */
+    .main .block-container {
+        padding-top: 120px !important;
+    }
+
+    /* 2. TAB MENU STYLE */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
         font-size: 16px;
     }
 
-    /* PAKSA KURSOR JADI JARI PADA PILIHAN & TOMBOL */
+    /* 3. PAKSA KURSOR JADI JARI */
     button, [role="button"], [data-baseweb="select"], .stSelectbox, input {
         cursor: pointer !important;
     }
 
-    /* TOMBOL SIMPAN HOVER HIJAU */
+    /* 4. TOMBOL SIMPAN HOVER HIJAU */
     button[kind="primaryFormSubmit"] {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: black !important;
@@ -59,7 +68,7 @@ st.markdown("""
         color: white !important;
     }
 
-    /* STYLE FORM */
+    /* 5. STYLE FORM INPUT */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 2rem !important;
@@ -72,16 +81,20 @@ st.markdown("""
         font-weight: 900 !important; 
     }
 
-    /* Sembunyikan footer & menu kanan saja */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    /* Sembunyikan menu bawaan yang mengganggu */
+    #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# Tambahkan Logo di Header Kiri (Opsional jika ingin manual)
-st.sidebar.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=200)
+# 3. TAMPILKAN HEADER LOGO (STICKY MANUAL)
+st.markdown("""
+    <div class="sticky-header">
+        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="height: 50px; margin-right: 30px;">
+        <p style="margin: 0; font-weight: 900; color: #1A2A3A; font-size: 20px; border-left: 2px solid #ccc; padding-left: 20px;">3G LOGISTICS SYSTEM</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA (Tetap Sama)
+# 4. LOGIC DATA
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -107,7 +120,7 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# 4. TAMPILAN TABS
+# 5. TAMPILAN TABS (Sekarang akan menempel di bawah header sticky)
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
