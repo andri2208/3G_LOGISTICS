@@ -111,36 +111,49 @@ tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
 tab1, tab2 = st.tabs(tab_list)
 
 with tab1:
-    data = get_data()
-    if not data:
-        st.info("Menunggu data dari Google Sheets...")
-    else:
-        # SEMUA BARIS DI BAWAH INI HARUS MASUK KE DALAM (ADA 2 KALI TAB/SPASI)
-        df = pd.DataFrame(data)
-        
-         # Filter Status (Tambahan baru)
-        # --- GANTI BAGIAN FILTER & PILIH CUSTOMER DENGAN INI ---
-        st.write("---")
-        # Membuat 2 kolom sejajar
-    c1, c2 = st.columns([1, 2]) 
+    # 1. Judul Halaman
+    st.subheader("📑 Data Pengiriman & Invoice")
+
+    # 2. Kode 'Ajaib' supaya jaraknya mepet/rapat (Minimalis)
+    st.markdown("""
+        <style>
+        .stRadio > div { margin-top: -25px; gap: 10px; }
+        .stSelectbox { margin-top: -25px; }
+        div[data-testid="stBlock"] { padding: 0px; }
+        </style>
+        """, unsafe_allow_html=True)
+
+    st.write("---") # Garis pembatas atas
+
+    # 3. Baris Filter (Dibuat sejajar dalam satu baris)
+    c1, c2 = st.columns([1, 1.5]) 
     
     with c1:
-        # Pilihan Status (Tanpa judul di atasnya agar rapat)
+        # Filter Status (Tanpa tulisan judul di atasnya)
         status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
     
     with c2:
-        # Logika filter data
-        df_f = df[df['status'] == status_filter] if status_filter != "Semua" else df
-        
-        if not df_f.empty:
-            # Dropdown Customer (Tanpa judul di atasnya agar rapat)
-            selected_cust = st.selectbox("", sorted(df_f['customer'].unique()), label_visibility="collapsed")
+        # Logika menyaring data
+        if status_filter != "Semua":
+            df_filtered = df[df['status'] == status_filter]
+        else:
+            df_filtered = df
+
+        if not df_filtered.empty:
+            # Dropdown Pilih Customer (Tanpa tulisan judul di atasnya)
+            selected_cust = st.selectbox("", sorted(df_filtered['customer'].unique()), label_visibility="collapsed")
         else:
             selected_cust = None
-            st.caption("Data tidak ada")
+            st.info("Tidak ada data")
 
-    st.write("---")
-        
+    st.write("---") # Garis pembatas bawah
+
+    # 4. Tampilan Data Setelah Dipilih
+    if selected_cust:
+        customer_data = df_filtered[df_filtered['customer'] == selected_cust]
+        st.write(f"Menampilkan data untuk: **{selected_cust}**")
+        st.dataframe(customer_data) # Menampilkan tabel data yang difilter
+            
         if status_filter != "Semua":
             # Pastikan kolom 'status' sudah Bapak buat di Google Sheets
             if 'status' in df.columns:
@@ -303,6 +316,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
