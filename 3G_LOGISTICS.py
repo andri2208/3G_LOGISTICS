@@ -211,61 +211,76 @@ with tab1:
             st.warning("Kolom 'customer' tidak ditemukan di Google Sheets.")
 
 with tab2:
-    with st.form("input_form"):
-        # Semua baris di bawah ini HARUS sejajar dan menjorok ke dalam
-        v_tgl = st.date_input("TANGGAL:", value=datetime.now())
-        v_cust = st.text_input("NAMA CUSTOMER:")
-        v_desc = st.text_input("KETERANGAN BARANG:")
-        v_orig = st.text_input("ASAL (ORIGIN):")
-        v_dest = st.text_input("TUJUAN (DESTINATION):")
-        v_kol = st.text_input("KOLLI:")
-        v_harga = st.text_input("HARGA PER KG:") # Baris 216 yang tadi error
-        v_weight = st.text_input("BERAT (KG):")
-        v_status = st.selectbox("STATUS PEMBAYARAN:", ["Belum Bayar", "Lunas"])
-        
-        submit_button = st.form_submit_button("💾 SIMPAN DATA")
+    st.subheader("➕ Input Pengiriman Baru")
+    
+    # Gunakan form agar bisa di-reset sekaligus
+    with st.form("input_form", clear_on_submit=True):
+        # Baris 1: Tanggal & Nama
+        col1, col2 = st.columns(2)
+        with col1:
+            v_tgl = st.date_input("Tanggal", value=datetime.now())
+        with col2:
+            v_cust = st.text_input("Nama Customer")
 
-        if submit_button:
-            # Baris di dalam 'if' juga harus menjorok lebih dalam lagi
-            h_num = float(v_harga) if v_harga else 0
-            w_num = float(v_weight) if v_weight else 0
-            total_db = h_num * w_num
-            
-            # BAGIAN PAYLOAD HARUS SEJAJAR DENGAN TOTAL_DB DI ATASNYA
-            payload = {
-                "date": str(v_tgl), 
-                "customer": v_cust.upper(), 
-                "description": v_desc.upper(),
-                "origin": v_orig.upper(), 
-                "destination": v_dest.upper(), 
-                "kolli": v_kol,
-                "harga": h_num, 
-                "weight": w_num, 
-                "total": total_db,
-                "status": v_status # Status pilihan Bapak (Lunas/Belum Bayar)
-            }
-        
-            try:
-                # Menampilkan spinner agar user tahu proses sedang berjalan
-                with st.spinner('Sedang mengirim data...'):
-                    r = requests.post(API_URL, data=json.dumps(payload))
-                    
-                if r.status_code == 200:
-                    # NOTIFIKASI BERHASIL
-                    st.success(f"✅ DATA {v_cust.upper()} BERHASIL DISIMPAN, BUKA TAB CETAK INVOICE!")
-                    
-                    # Beri jeda 1 detik agar user sempat membaca notifikasi
-                    import time
-                    time.sleep(1.5) 
-                    
-                    # Refresh dan Pindah Tab
-                    st.cache_data.clear()
-                    st.session_state.active_tab = 0 
-                    st.rerun()
-                else:
-                    st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
-            except Exception as e:
-                st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+        # Baris 2: Keterangan Barang (Full Width)
+        v_desc = st.text_input("Keterangan Barang")
+
+        # Baris 3: Asal & Tujuan
+        col3, col4 = st.columns(2)
+        with col3:
+            v_orig = st.text_input("Asal (Origin)")
+        with col4:
+            v_dest = st.text_input("Tujuan (Destination)")
+
+        # Baris 4: Kolli, Harga, Berat
+        col5, col6, col7 = st.columns(3)
+        with col5:
+            v_kol = st.text_input("Kolli")
+        with col6:
+            v_harga = st.text_input("Harga/KG")
+        with col7:
+            v_weight = st.text_input("Berat (KG)")
+
+        # Baris 5: Status Pembayaran
+        v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
+
+        # Tombol Simpan
+        submit = st.form_submit_button("🚀 SIMPAN & BERSIHKAN")
+
+        if submit:
+            if not v_cust or not v_harga:
+                st.error("Nama Customer dan Harga tidak boleh kosong!")
+            else:
+                # Proses Hitung
+                h_num = float(v_harga) if v_harga else 0
+                w_num = float(v_weight) if v_weight else 0
+                total_db = h_num * w_num
+
+                payload = {
+                    "date": str(v_tgl), 
+                    "customer": v_cust.upper(), 
+                    "description": v_desc.upper(),
+                    "origin": v_orig.upper(), 
+                    "destination": v_dest.upper(), 
+                    "kolli": v_kol,
+                    "harga": h_num, 
+                    "weight": w_num, 
+                    "total": total_db,
+                    "status": v_status
+                }
+
+                # Kirim ke Sheets
+                try:
+                    resp = requests.post(API_URL, json=payload)
+                    if resp.status_code == 200:
+                        st.success(f"Data {v_cust.upper()} Berhasil Disimpan!")
+                        # Memicu aplikasi untuk refresh dan mengosongkan form
+                        st.rerun() 
+                    else:
+                        st.error("Gagal simpan ke server.")
+                except:
+                    st.error("Koneksi Error.")
+
 
 
 
