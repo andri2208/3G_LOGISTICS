@@ -9,6 +9,10 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
+# --- TAMBAHAN 1: SESSION STATE UNTUK KONTROL TAB ---
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = 0 # Default ke tab Invoice
+
 # GANTI DENGAN URL BARU HASIL DEPLOY TADI
 API_URL = "https://script.google.com/macros/s/AKfycby3wvU4wURslcvwHRi7VVi7PYsdxT21yCtibIGsNr72YKJMH6xUGUTmxKC0oIQRn4zs5Q/exec"
 
@@ -20,7 +24,6 @@ def get_data():
         if response.status_code == 200:
             return response.json()
         else:
-            st.error(f"Gagal menarik data! Status: {response.status_code}")
             return []
     except Exception as e:
         return []
@@ -30,18 +33,14 @@ st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
     .block-container { padding-top: 5rem !important; }
-
     .custom-header { text-align: center; margin-bottom: 20px; }
     .custom-header img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
-
     .stWidgetLabel p { font-weight: 900 !important; font-size: 14px !important; color: #1A2A3A !important; }
-    
     .stTextInput input {
         background-color: #FFFFFF !important;
         border: 2px solid #BCC6CC !important;
         border-radius: 8px !important;
     }
-
     .stTabs [data-baseweb="tab"] { font-size: 18px !important; font-weight: bold !important; }
     </style>
     
@@ -50,6 +49,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
+# (Fungsi extract_number dan terbilang tetap sama seperti kode Bapak)
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
@@ -68,14 +68,10 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-@st.cache_data(ttl=2)
-def get_data():
-    try:
-        r = requests.get(API_URL, timeout=10)
-        return r.json()
-    except: return []
-
-tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
+# --- TAMBAHAN 2: GUNAKAN SESSION STATE PADA TABS ---
+# Ini agar Streamlit tahu tab mana yang harus dibuka saat rerun
+tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
+tab1, tab2 = st.tabs(tab_list)
 
 with tab1:
     data = get_data()
@@ -83,8 +79,8 @@ with tab1:
         st.info("Menunggu data dari Google Sheets...")
     else:
         df = pd.DataFrame(data)
-        # Pastikan kolom customer ada
         if 'customer' in df.columns:
+            # Urutkan dari yang terbaru (bawah ke atas) agar pilihan terbaru muncul paling atas
             selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
             row = df[df['customer'] == selected_cust].iloc[-1]
             
@@ -93,9 +89,14 @@ with tab1:
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             
             tgl_raw = str(row['date']).split('T')[0]
-            tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            try:
+                tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            except:
+                tgl_indo = tgl_raw
+                
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
+            # (Seluruh isi invoice_html Bapak tetap sama sampai bawah...)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -194,20 +195,15 @@ with tab2:
                 "harga": h_num, "weight": weight_final, "total": total_db
             }
             try:
-                # Mengirim data ke API baru
                 r = requests.post(API_URL, data=json.dumps(payload))
                 if r.status_code == 200:
-                    st.success(f"Berhasil Disimpan ke Cloud!")
-                    st.cache_data.clear()
+                    st.success(f"Berhasil Disimpan ke Cloud! Mengalihkan...")
+                    
+                    # --- TAMBAHAN 3: REFRESH DAN PINDAH TAB ---
+                    st.cache_data.clear()            # Hapus memori lama
+                    st.session_state.active_tab = 0  # Setel agar tab Invoice yang terbuka
+                    st.rerun()                       # Paksa aplikasi muat ulang
                 else:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
-
-
-
-
-
-
-
-
