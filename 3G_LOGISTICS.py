@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM UNTUK TAMPILAN WEB PRO & MINIMALIS
+# 2. CSS CUSTOM UNTUK TAMPILAN WEB PRO (PERBAIKAN KOTAK DOBEL)
 st.markdown("""
     <style>
     /* Dasar Web */
@@ -24,37 +24,40 @@ st.markdown("""
     .custom-header { text-align: left; margin-bottom: 20px; }
     .custom-header img { width: 100%; max-width: 400px; height: auto; }
 
-    /* STYLING INPUT DATA JADI PRO */
-    .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"], .stNumberInput input {
+    /* FIX KOTAK DOBEL: Menghapus border bawaan container luar Streamlit */
+    div[data-baseweb="calendar"], div[data-baseweb="select"], .stNumberInput div {
+        border: none !important;
+    }
+
+    /* STYLING INPUT DATA JADI PRO - Ramping & Tanpa Double Border */
+    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"], .stNumberInput input {
         background-color: #FFFFFF !important;
         border: 1px solid #D1D5DB !important;
         border-radius: 6px !important;
-        height: 40px !important;
+        height: 42px !important;
         font-size: 14px !important;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     
-    .stTextInput input:focus {
+    /* Efek Focus */
+    .stTextInput input:focus, .stDateInput div[data-baseweb="input"]:focus-within {
         border-color: #1A2A3A !important;
-        box-shadow: 0 0 0 2px rgba(26, 42, 58, 0.1) !important;
+        box-shadow: 0 0 0 1px #1A2A3A !important;
     }
 
-    /* Label Input */
+    /* Label Input - Dibuat lebih bersih */
     .stWidgetLabel p { 
         font-weight: 700 !important; 
-        color: #374151 !important; 
-        font-size: 12px !important;
+        color: #4B5563 !important; 
+        font-size: 11px !important;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: -12px !important;
+        margin-bottom: -10px !important;
     }
 
     /* Tab Header */
-    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
     .stTabs [data-baseweb="tab"] {
         font-size: 15px !important;
         font-weight: 700 !important;
-        color: #9CA3AF !important;
     }
     .stTabs [aria-selected="true"] {
         color: #1A2A3A !important;
@@ -66,18 +69,11 @@ st.markdown("""
         background-color: #1A2A3A !important;
         color: white !important;
         font-weight: 800 !important;
-        letter-spacing: 1px;
         border-radius: 6px !important;
         width: 100%;
         height: 50px;
         border: none;
-        margin-top: 10px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    
-    div.stButton > button:hover {
-        background-color: #2c3e50 !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
     }
 
     /* Hide Streamlit Decor */
@@ -90,7 +86,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA
+# 3. LOGIC DATA (URL API Bapak)
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1, show_spinner=False)
@@ -150,7 +146,7 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE HTML (TIDAK DIRUBAH SAMA SEKALI)
+            # INVOICE HTML (100% ASLI TETAP DIJAGA)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -246,7 +242,6 @@ with tab2:
         v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
 
         # TOMBOL
-        st.write("##") # Spasi
         submit = st.form_submit_button("🚀 SIMPAN DATA KE DATABASE")
 
         if submit:
@@ -263,8 +258,8 @@ with tab2:
                     }
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
-                        st.success(f"Berhasil! Data {v_cust.upper()} telah tersimpan.")
+                        st.success(f"Berhasil Tersimpan!")
                         st.rerun()
-                    else: st.error("Gagal terhubung ke Google Sheets.")
-                except ValueError:
-                    st.error("Harga dan Berat harus berupa angka!")
+                    else: st.error("Gagal simpan.")
+                except:
+                    st.error("Input Harga/Berat harus angka!")
