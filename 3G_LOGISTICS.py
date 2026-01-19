@@ -223,6 +223,9 @@ with tab2:
         v_kol = c6.text_input("KOLLI")
         v_kg = c7.text_input("WEIGHT")
         v_hrg = c8.text_input("HARGA")
+
+        # --- TAMBAHKAN PILIHAN STATUS DI FORM INPUT ---
+        v_status = st.selectbox("STATUS PEMBAYARAN:", ["Belum Bayar", "Lunas"])
         
        # --- BAGIAN TOMBOL SIMPAN DI TAB 2 ---
         if st.form_submit_button("💾 SIMPAN DATA"):
@@ -233,7 +236,7 @@ with tab2:
             
             total_db = int(w_num * h_num) if w_num > 0 else int(h_num)
             
-            payload = {
+           payload = {
                 "date": str(v_tgl), 
                 "customer": v_cust.upper(), 
                 "description": v_desc.upper(),
@@ -243,9 +246,9 @@ with tab2:
                 "harga": h_num, 
                 "weight": weight_final, 
                 "total": total_db,
-                "status": "Belum Bayar"  # <--- TAMBAHKAN INI DI PAYLOAD PYTHON
+                "status": v_status  # <--- SEKARANG MENGAMBIL DARI PILIHAN DI ATAS
             }
-            
+        
             try:
                 # Menampilkan spinner agar user tahu proses sedang berjalan
                 with st.spinner('Sedang mengirim data...'):
@@ -267,6 +270,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
