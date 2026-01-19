@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pd
 import requests
 import json
 from datetime import datetime
@@ -7,77 +7,29 @@ import streamlit.components.v1 as components
 import re
 
 # 1. KONFIGURASI HALAMAN
-st.set_page_config(
-    page_title="3G Logistics Pro", 
-    page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", 
-    layout="wide"
-)
+st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (STABIL & TIDAK MEPET)
+# 2. CSS FINAL (Sesuai permintaan Bapak)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Asli Streamlit */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    
-    /* Atur Jarak Atas Aplikasi agar tidak menempel ke browser */
-    .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 0rem !important;
-    }
-
-    /* LOGO: Kita beri jarak bawah yang normal (tidak negatif lagi) */
-    [data-testid="stImage"] {
-        margin-bottom: 10px !important;
-        margin-top: -10px !important;
-    }
-
-    /* TAB STICKY: Dibuat lebih tinggi sedikit agar tidak menabrak logo */
-    div[data-testid="stTabs"] {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background-color: white;
-        padding-top: 15px;
-        padding-bottom: 10px;
-        border-bottom: 3px solid #B8860B;
-    }
-
-    /* STYLE TEKS TAB */
-    .stTabs [data-baseweb="tab"] p {
-        color: #1A2A3A !important;
-        font-weight: 800 !important;
-        font-size: 18px;
-    }
-
-    /* FORM: Diberi jarak yang pas agar tidak gepeng */
-    [data-testid="stForm"] {
-        background-color: #719dc9 !important;
-        padding: 3rem !important;
-        border-radius: 20px !important;
-        border: 4px solid #B8860B !important;
-        margin-top: 20px !important;
-    }
-
-    /* Atur agar input di dalam form punya ruang */
-    [data-testid="stForm"] .stMarkdown p {
-        margin-bottom: 5px !important;
-    }
-
+    .block-container { padding-top: 2rem !important; }
+    [data-testid="stImage"] { margin-bottom: 10px !important; margin-top: -10px !important; }
+    div[data-testid="stTabs"] { position: sticky; top: 0; z-index: 999; background: white; padding-top: 15px; border-bottom: 3px solid #B8860B; }
+    .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; font-size: 18px; }
+    [data-testid="stForm"] { background: #719dc9 !important; padding: 3rem !important; border-radius: 20px !important; border: 4px solid #B8860B !important; margin-top: 20px !important; }
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
-
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. AREA HEADER (Logo diletakkan di container agar stabil)
-header_container = st.container()
-with header_container:
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
+# 3. AREA HEADER
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 
 # 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# --- LOGIC DATA ---
+# GANTI DENGAN URL DEPLOY TERBARU BAPAK
 API_URL = "https://script.google.com/macros/s/AKfycbzQYctEFdKCwonDhbn7fOVtXKTiI9i53HBa-q0BzNc8F9aevvo0et-NAM4p-GGHqREUvw/exec"
 
 def get_data():
@@ -87,8 +39,8 @@ def get_data():
     except: return []
 
 def extract_number(value):
-    if pd.isna(value) or value == "": return 0
-    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
+    if value is None or value == "": return 0
+    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
     return float(match[0]) if match else 0
 
 def terbilang(n):
@@ -107,7 +59,7 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.write("###") # Kasih ruang dikit
+        st.write("###")
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
             status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
@@ -123,11 +75,10 @@ with tab1:
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
-            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
+            b_val = extract_number(row['weight'])
+            h_val = extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
-            try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
-            except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
             invoice_html = f"""
@@ -151,7 +102,7 @@ with tab1:
                 <div id="inv">
                     <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                     <div class="title">INVOICE</div>
-                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr></table>
+                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_raw}</td></tr></table>
                     <table class="data-table">
                         <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
                         <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
@@ -162,7 +113,7 @@ with tab1:
                         <tr>
                             <td style="width:65%; vertical-align:top;">
                                 <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>
-                                NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                                NB: Jika sudah transfer mohon konfirmasi ke Finance: <b>082179799200</b>
                             </td>
                             <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
                         </tr>
@@ -181,30 +132,25 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: white; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        r1c1, r1c2, r1c3 = st.columns(3)
-        with r1c1: v_tgl = st.date_input("📅 TANGGAL")
-        with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
-        with r1c3: v_desc = st.text_input("📦 ITEM")
-        r2c1, r2c2, r2c3 = st.columns(3)
-        with r2c1: v_orig = st.text_input("📍 ORIGIN")
-        with r2c2: v_dest = st.text_input("🏁 DESTINATION")
-        with r2c3: v_kol = st.text_input("📦 KOLLI")
-        r3c1, r3c2, r3c3 = st.columns(3)
-        with r3c1: v_harga = st.text_input("💰 HARGA")
-        with r3c2: v_weight = st.text_input("⚖️ BERAT")
-        with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        r1, r2, r3 = st.columns(3)
+        v_tgl = r1.date_input("📅 TANGGAL")
+        v_cust = r2.text_input("🏢 CUSTOMER")
+        v_desc = r3.text_input("📦 ITEM")
+        r4, r5, r6 = st.columns(3)
+        v_orig = r4.text_input("📍 ORIGIN")
+        v_dest = r5.text_input("🏁 DESTINATION")
+        v_kol = r6.text_input("📦 KOLLI")
+        r7, r8, r9 = st.columns(3)
+        v_harga = r7.text_input("💰 HARGA (Angka saja)")
+        v_weight = r8.text_input("⚖️ BERAT (Angka saja)")
+        v_status = r9.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        submit = st.form_submit_button("🚀 SIMPAN SEKARANG")
-        if submit:
+        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
             if v_cust and v_harga:
-                try:
-                    payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
-                    requests.post(API_URL, json=payload)
-                    st.cache_data.clear()
-                    st.success("DATA TERSIMPAN!")
-                    st.rerun()
-                except: st.error("ERROR!")
-
-
+                payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": v_harga, "weight": v_weight, "status": v_status}
+                requests.post(API_URL, json=payload)
+                st.cache_data.clear()
+                st.success("DATA TERSIMPAN!")
+                st.rerun()
