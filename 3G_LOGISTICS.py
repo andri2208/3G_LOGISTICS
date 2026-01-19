@@ -6,6 +6,16 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import re
 
+st.markdown("""
+    <style>
+    /* Mengurangi jarak antar elemen agar lebih rapat */
+    .stApp { margin-top: -50px; }
+    .css-1v0mb7p { gap: 0rem; }
+    .stRadio > div { padding-bottom: 0px; margin-bottom: -15px; }
+    .stSelectbox { margin-top: -10px; }
+    </style>
+    """, unsafe_allow_html=True)
+
 # 1. KONFIGURASI HALAMAN (Update Favicon)
 st.set_page_config(
     page_title="3G Logistics", 
@@ -298,6 +308,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
