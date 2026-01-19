@@ -163,25 +163,48 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.subheader("➕ Input Pengiriman Baru")
+    # CSS khusus untuk merapatkan form di Tab 2
+    st.markdown("""
+        <style>
+        div[data-testid="stForm"] { padding: 10px; border-radius: 10px; }
+        div[data-testid="stMarkdownContainer"] h3 { margin-bottom: -20px; }
+        .stTextInput, .stDateInput, .stSelectbox { margin-bottom: -15px; }
+        </style>
+        """, unsafe_allow_html=True)
+
+    st.subheader("➕ Input Pengiriman")
+    
     with st.form("input_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1: v_tgl = st.date_input("Tanggal", value=datetime.now())
-        with col2: v_cust = st.text_input("Nama Customer")
-        v_desc = st.text_input("Keterangan Barang")
-        col3, col4 = st.columns(2)
-        with col3: v_orig = st.text_input("Asal (Origin)")
-        with col4: v_dest = st.text_input("Tujuan (Destination)")
-        col5, col6, col7 = st.columns(3)
-        with col5: v_kol = st.text_input("Kolli")
-        with col6: v_harga = st.text_input("Harga/KG")
-        with col7: v_weight = st.text_input("Berat (KG)")
-        v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
-        submit = st.form_submit_button("🚀 SIMPAN & BERSIHKAN")
+        # Baris 1: Tanggal & Nama (Sejajar)
+        c1, c2 = st.columns(2)
+        with c1: v_tgl = st.date_input("Tgl")
+        with c2: v_cust = st.text_input("Customer")
+
+        # Baris 2: Keterangan (Satu baris penuh, tapi label dipersingkat)
+        v_desc = st.text_input("Barang / Keterangan")
+
+        # Baris 3: Origin & Destination (Sejajar)
+        c3, c4 = st.columns(2)
+        with c3: v_orig = st.text_input("Asal")
+        with c4: v_dest = st.text_input("Tujuan")
+
+        # Baris 4: Kolli, Harga, Berat (Sejajar 3 kolom)
+        c5, c6, c7 = st.columns(3)
+        with c5: v_kol = st.text_input("Kolli")
+        with c6: v_harga = st.text_input("Harga/Kg")
+        with c7: v_weight = st.text_input("Berat (Kg)")
+
+        # Baris 5: Status & Tombol (Sejajar agar rapat ke bawah)
+        c8, c9 = st.columns([2, 1])
+        with c8:
+            v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
+        with c9:
+            st.write("##") # Spasi pengimbang agar tombol sejajar input
+            submit = st.form_submit_button("💾 SIMPAN DATA")
 
         if submit:
             if not v_cust or not v_harga:
-                st.error("Nama Customer dan Harga tidak boleh kosong!")
+                st.error("Nama & Harga wajib isi!")
             else:
                 h_num = float(v_harga) if v_harga else 0
                 w_num = float(v_weight) if v_weight else 0
@@ -193,7 +216,8 @@ with tab2:
                 try:
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
-                        st.success(f"Data {v_cust.upper()} Berhasil Disimpan!")
+                        st.success(f"Tersimpan!")
                         st.rerun()
                 except:
-                    st.error("Koneksi Error.")
+                    st.error("Koneksi Gagal")
+
