@@ -20,14 +20,27 @@ if "active_tab" not in st.session_state:
 # GANTI DENGAN URL BARU HASIL DEPLOY TADI
 API_URL = "https://script.google.com/macros/s/AKfycbxuYkIlCrPVRtRKxj5zR6o8BRwxVFemut8hpePywTfsSwryZR2mya7GiYm_0ZY7SiDWWw/exec"
 
-@st.cache_data(ttl=1, show_spinner=False) # Tambahkan show_spinner=False
+@st.cache_data(ttl=1, show_spinner=False)
 def get_data():
     try:
+        # Menambahkan nocache agar data selalu ditarik yang paling baru
         response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
         if response.status_code == 200:
-            return response.json()
-        return []
-    except:
+            all_data = response.json()
+            
+            # CEK: Jika data kosong, beri tahu sistem
+            if not all_data:
+                return []
+                
+            # CEK: Pastikan setiap baris punya kolom 'status' agar tidak error saat difilter
+            for item in all_data:
+                if 'status' not in item:
+                    item['status'] = "Belum Bayar" # Isi otomatis jika kosong
+            
+            return all_data
+        else:
+            return []
+    except Exception as e:
         return []
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
@@ -254,6 +267,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
