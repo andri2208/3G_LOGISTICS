@@ -149,12 +149,6 @@ with tab1:
             if 'status' in df.columns:
                 df = df[df['status'] == status_filter]
         
-        # Cek lagi apakah setelah difilter datanya masih ada
-        if not df.empty and 'customer' in df.columns:
-            selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
-            row = df[df['customer'] == selected_cust].iloc[-1]
-            
-        
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
@@ -308,6 +302,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
