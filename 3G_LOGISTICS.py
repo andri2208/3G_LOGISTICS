@@ -197,12 +197,12 @@ with tab2:
             }
             try:
                 # Menampilkan spinner agar user tahu proses sedang berjalan
-                with st.spinner('Sedang mengirim data ke Google Sheets...'):
+                with st.spinner('Sedang mengirim data...'):
                     r = requests.post(API_URL, data=json.dumps(payload))
                     
                 if r.status_code == 200:
                     # NOTIFIKASI BERHASIL
-                    st.success(f"✅ DATA {v_cust.upper()} BERHASIL DISIMPAN!")
+                    st.success(f"✅ DATA {v_cust.upper()} BERHASIL DISIMPAN, BUKA TAB CETAK INVOICE!")
                     
                     # Beri jeda 1 detik agar user sempat membaca notifikasi
                     import time
@@ -216,4 +216,5 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
