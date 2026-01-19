@@ -23,28 +23,30 @@ API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomW
 @st.cache_data(ttl=1, show_spinner=False)
 def get_data():
     try:
-        response = requests.get(API_URL) # API_URL adalah link Web App Google Script Bapak
+        response = requests.get(API_URL)
         if response.status_code == 200:
             data = response.json()
+            if not data: # Jika JSON kosong
+                return pd.DataFrame()
+            
             df = pd.DataFrame(data)
-            # Pastikan semua nama kolom jadi huruf kecil agar konsisten
+            
+            # 1. Bersihkan nama kolom (huruf kecil semua)
             df.columns = [str(col).lower().strip() for col in df.columns]
+            
+            # 2. CEK KOLOM STATUS: Jika belum ada, buatkan otomatis
+            if 'status' not in df.columns:
+                df['status'] = "Belum Bayar"
+            
+            # 3. Isi data kosong di kolom status dengan "Belum Bayar"
+            df['status'] = df['status'].fillna("Belum Bayar").replace('', "Belum Bayar")
+            
             return df
         else:
-            return pd.DataFrame() # Kirim tabel kosong jika gagal
-    except:
-        return pd.DataFrame() # Kirim tabel kosong jika error koneksi
-                
-            # CEK: Pastikan setiap baris punya kolom 'status' agar tidak error saat difilter
-            for item in all_data:
-                if 'status' not in item:
-                    item['status'] = "Belum Bayar" # Isi otomatis jika kosong
-            
-            return all_data
-        else:
-            return []
+            return pd.DataFrame()
     except Exception as e:
-        return []
+        # Jika error, kirim tabel kosong agar aplikasi tidak mati
+        return pd.DataFrame()
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
 st.markdown("""
@@ -215,6 +217,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
