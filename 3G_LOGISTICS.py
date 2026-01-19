@@ -6,75 +6,26 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import re
 
-# 1. KONFIGURASI HALAMAN (Update Favicon)
+# 1. KONFIGURASI HALAMAN
 st.set_page_config(
     page_title="3G Logistics", 
-    page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", # Link ke file favicon Bapak
+    page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png",
     layout="wide"
 )
 
-# --- TAMBAHAN 1: SESSION STATE UNTUK KONTROL TAB ---
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = 0 # Default ke tab Invoice
-
-# GANTI DENGAN URL BARU HASIL DEPLOY TADI
-API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
-
-@st.cache_data(ttl=1, show_spinner=False)
-def get_data():
-    try:
-        response = requests.get(API_URL)
-        if response.status_code == 200:
-            data = response.json()
-            if not data: # Jika JSON kosong
-                return pd.DataFrame()
-            
-            df = pd.DataFrame(data)
-            
-            # 1. Bersihkan nama kolom (huruf kecil semua)
-            df.columns = [str(col).lower().strip() for col in df.columns]
-            
-            # 2. CEK KOLOM STATUS: Jika belum ada, buatkan otomatis
-            if 'status' not in df.columns:
-                df['status'] = "Belum Bayar"
-            
-            # 3. Isi data kosong di kolom status dengan "Belum Bayar"
-            df['status'] = df['status'].fillna("Belum Bayar").replace('', "Belum Bayar")
-            
-            return df
-        else:
-            return pd.DataFrame()
-    except Exception as e:
-        # Jika error, kirim tabel kosong agar aplikasi tidak mati
-        return pd.DataFrame()
-
-# --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
+# 2. CSS SAKTI UNTUK MINIMALIS (Rapat & Bersih)
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
-    .block-container { padding-top: 4rem !important; }
-    .custom-header { text-align: left; /* PINDAH KE KIRI */ margin-bottom: 20px; }
-    .custom-header img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
-    .stWidgetLabel p { font-weight: 900 !important; font-size: 14px !important; color: #1A2A3A !important; }
-    .stTextInput input {
-        background-color: #FFFFFF !important;
-        border: 2px solid #BCC6CC !important;
-        border-radius: 8px !important;
-    }
-    .stTabs [data-baseweb="tab"] { font-size: 18px !important; font-weight: bold !important; }
-    /* Menyembunyikan indikator running di pojok kanan atas */
+    .block-container { padding-top: 1rem !important; }
+    .stRadio > div { margin-top: -30px; gap: 10px; }
+    .stSelectbox { margin-top: -30px; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    [data-testid="stStatusWidget"] { display: none !important; }
     
-    /* MENGHILANGKAN TULISAN RUNNING GET_DATA */
-    [data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    
-    /* CSS Bapak yang sebelumnya tetap dipertahankan di bawah ini */
-    .stApp { background-color: #FDFCF0; }
-    .custom-header { text-align: left; margin-bottom: 20px; }
+    .custom-header { text-align: left; margin-bottom: 5px; }
     .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
     </style>
     
@@ -83,12 +34,26 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# (Fungsi extract_number dan terbilang tetap sama seperti kode Bapak)
+API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
+
+@st.cache_data(ttl=1, show_spinner=False)
+def get_data():
+    try:
+        response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
+        if response.status_code == 200:
+            all_data = response.json()
+            if not all_data: return []
+            for item in all_data:
+                if 'status' not in item: item['status'] = "Belum Bayar"
+            return all_data
+        return []
+    except:
+        return []
+
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
-    if match: return float(match[0])
-    return 0
+    return float(match[0]) if match else 0
 
 def terbilang(n):
     bil = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
@@ -102,165 +67,133 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- TAMBAHAN 2: GUNAKAN SESSION STATE PADA TABS ---
-# Ini agar Streamlit tahu tab mana yang harus dibuka saat rerun
-tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
-tab1, tab2 = st.tabs(tab_list)
+tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
-    df = get_data() 
-
-    # --- KODE CSS TETAP SAMA (UNTUK MERAPATKAN JARAK) ---
-    st.markdown("""
-        <style>
-        .stRadio > div { margin-top: -30px; }
-        .stSelectbox { margin-top: -30px; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    st.write("---")
-
-    # --- PERBAIKAN LOGIKA AGAR TIDAK ATTRIBUTE ERROR ---
-    import pandas as pd # Pastikan pandas sudah di-import
-
-    # Cek apakah df benar-benar sebuah tabel (DataFrame)
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        col_kiri, col_kanan = st.columns([1, 2])
-        
-        with col_kiri:
-            v_stat = st.radio("", ["Semua", "Belum Bayar", "Lunas"], 
-                              horizontal=True, label_visibility="collapsed")
-
-        with col_kanan:
-            # Filter berdasarkan status
-            df_f = df[df['status'] == v_stat] if v_stat != "Semua" else df
-            
-            if not df_f.empty:
-                v_cust = st.selectbox("", sorted(df_f['customer'].unique()), 
-                                      label_visibility="collapsed")
-            else:
-                v_cust = None
-                st.caption("Data Status ini Kosong")
+    raw_data = get_data()
+    if not raw_data:
+        st.info("Menunggu data dari Google Sheets...")
     else:
-        v_cust = None
-        st.error("⚠️ Data tidak dapat dimuat. Pastikan Google Sheets tidak kosong dan koneksi internet stabil.")
-
-    st.write("---")
+        df = pd.DataFrame(raw_data)
+        st.write("---")
         
+        # BARIS FILTER MINIMALIS (Satu Baris)
+        col_f1, col_f2 = st.columns([1, 1.5]) 
+        
+        with col_f1:
+            status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
+        
+        with col_f2:
+            df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
+            if not df_filtered.empty:
+                selected_cust = st.selectbox("", sorted(df_filtered['customer'].unique()), label_visibility="collapsed")
+            else:
+                selected_cust = None
+                st.caption("Data Kosong")
+        
+        st.write("---")
+        
+        if selected_cust:
+            row = df_filtered[df_filtered['customer'] == selected_cust].iloc[-1]
+            b_val = extract_number(row.get('weight', 0))
+            h_val = extract_number(row.get('harga', 0))
+            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
+            
+            tgl_raw = str(row.get('date', '')).split('T')[0]
+            try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            except: tgl_indo = tgl_raw
+                
+            kata_terbilang = terbilang(t_val) + " Rupiah"
+
+            invoice_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    body {{ background: #f0f0f0; padding: 10px; }}
+                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                    .header-img {{ width: 100%; height: auto; }}
+                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
+                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+                </style>
+            </head>
+            <body>
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table">
+                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
+                    </table>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
+                                <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
+                            </tr>
+                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b></td>
+                            <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                        </tr>
+                    </table>
+                </div>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
+                <script>
+                    function savePDF() {{
+                        const e = document.getElementById('inv');
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    }}
+                </script>
+            </body>
+            </html>
+            """
+            components.html(invoice_html, height=850, scrolling=True)
+
 with tab2:
     st.subheader("➕ Input Pengiriman Baru")
-    
-    # Gunakan form agar bisa di-reset sekaligus
     with st.form("input_form", clear_on_submit=True):
-        # Baris 1: Tanggal & Nama
         col1, col2 = st.columns(2)
-        with col1:
-            v_tgl = st.date_input("Tanggal", value=datetime.now())
-        with col2:
-            v_cust = st.text_input("Nama Customer")
-
-        # Baris 2: Keterangan Barang (Full Width)
+        with col1: v_tgl = st.date_input("Tanggal", value=datetime.now())
+        with col2: v_cust = st.text_input("Nama Customer")
         v_desc = st.text_input("Keterangan Barang")
-
-        # Baris 3: Asal & Tujuan
         col3, col4 = st.columns(2)
-        with col3:
-            v_orig = st.text_input("Asal (Origin)")
-        with col4:
-            v_dest = st.text_input("Tujuan (Destination)")
-
-        # Baris 4: Kolli, Harga, Berat
+        with col3: v_orig = st.text_input("Asal (Origin)")
+        with col4: v_dest = st.text_input("Tujuan (Destination)")
         col5, col6, col7 = st.columns(3)
-        with col5:
-            v_kol = st.text_input("Kolli")
-        with col6:
-            v_harga = st.text_input("Harga/KG")
-        with col7:
-            v_weight = st.text_input("Berat (KG)")
-
-        # Baris 5: Status Pembayaran
+        with col5: v_kol = st.text_input("Kolli")
+        with col6: v_harga = st.text_input("Harga/KG")
+        with col7: v_weight = st.text_input("Berat (KG)")
         v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
-
-        # Tombol Simpan
         submit = st.form_submit_button("🚀 SIMPAN & BERSIHKAN")
 
         if submit:
             if not v_cust or not v_harga:
                 st.error("Nama Customer dan Harga tidak boleh kosong!")
             else:
-                # Proses Hitung
                 h_num = float(v_harga) if v_harga else 0
                 w_num = float(v_weight) if v_weight else 0
-                total_db = h_num * w_num
-
                 payload = {
-                    "date": str(v_tgl), 
-                    "customer": v_cust.upper(), 
-                    "description": v_desc.upper(),
-                    "origin": v_orig.upper(), 
-                    "destination": v_dest.upper(), 
-                    "kolli": v_kol,
-                    "harga": h_num, 
-                    "weight": w_num, 
-                    "total": total_db,
-                    "status": v_status
+                    "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
+                    "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
+                    "harga": h_num, "weight": w_num, "total": h_num * w_num, "status": v_status
                 }
-
-                # Kirim ke Sheets
                 try:
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
                         st.success(f"Data {v_cust.upper()} Berhasil Disimpan!")
-                        # Memicu aplikasi untuk refresh dan mengosongkan form
-                        st.rerun() 
-                    else:
-                        st.error("Gagal simpan ke server.")
+                        st.rerun()
                 except:
                     st.error("Koneksi Error.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
