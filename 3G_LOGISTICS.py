@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd  # <--- Ini yang benar, Pak
+import pandas as pd
 import requests
 import json
 from datetime import datetime
@@ -13,10 +13,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS MINIMALIS & PREMIUM (Hanya mengatur UI Aplikasi)
+# 2. CSS MINIMALIS & PREMIUM
 st.markdown("""
     <style>
-    /* Mengatur Font dan Warna Dasar */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
     
     html, body, [class*="css"] {
@@ -24,14 +23,11 @@ st.markdown("""
         background-color: #FDFCF0;
     }
 
-    /* Merapatkan Jarak Atas & Padding Halaman */
     .block-container { padding-top: 1.5rem !important; padding-bottom: 0rem !important; }
     
-    /* Header Gambar */
     .custom-header { text-align: left; margin-bottom: 10px; }
     .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
 
-    /* Gaya Form Input Minimalis */
     .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"] {
         background-color: #FFFFFF !important;
         border: 1px solid #D1D5DB !important;
@@ -40,7 +36,6 @@ st.markdown("""
         font-weight: 500 !important;
     }
     
-    /* Label Tebal & Minimalis */
     .stWidgetLabel p { 
         font-weight: 800 !important; 
         color: #1F2937 !important; 
@@ -49,10 +44,8 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Merapatkan Jarak Antar Elemen Form */
     .stVerticalBlock { gap: 0.8rem !important; }
     
-    /* Gaya Tab */
     .stTabs [data-baseweb="tab-list"] { gap: 20px; }
     .stTabs [data-baseweb="tab"] {
         font-size: 16px !important;
@@ -64,13 +57,11 @@ st.markdown("""
         border-bottom: 3px solid #1A2A3A !important;
     }
 
-    /* Sembunyikan Elemen Bawaan Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     [data-testid="stStatusWidget"] { display: none !important; }
     
-    /* Tombol Simpan */
     div.stButton > button {
         background-color: #1A2A3A !important;
         color: white !important;
@@ -124,7 +115,6 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- TABS ---
 tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
 tab1, tab2 = st.tabs(tab_list)
 
@@ -136,16 +126,13 @@ with tab1:
         df = pd.DataFrame(data)
         st.write("---")
         col_f1, col_f2 = st.columns([1, 1.5]) 
-        
         with col_f1:
             status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-        
         with col_f2:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
             if not df_filtered.empty:
                 selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique()))
             else:
-                st.warning("Data tidak ditemukan")
                 selected_cust = None
         st.write("---")
         
@@ -154,13 +141,11 @@ with tab1:
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-            
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE HTML (TETAP SAMA SEPERTI ASLINYA)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -235,23 +220,16 @@ with tab2:
         col1, col2 = st.columns(2)
         with col1: v_tgl = st.date_input("Tanggal", value=datetime.now())
         with col2: v_cust = st.text_input("Nama Customer")
-        
         v_desc = st.text_input("Keterangan Barang")
-        
         col3, col4 = st.columns(2)
         with col3: v_orig = st.text_input("Asal (Origin)")
         with col4: v_dest = st.text_input("Tujuan (Destination)")
-        
         col5, col6, col7 = st.columns(3)
         with col5: v_kol = st.text_input("Kolli")
         with col6: v_harga = st.text_input("Harga/KG")
         with col7: v_weight = st.text_input("Berat (KG)")
-        
         v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
-        
-        st.write("") # Spasi tipis
         submit = st.form_submit_button("🚀 SIMPAN & BERSIHKAN")
-
         if submit:
             if not v_cust or not v_harga:
                 st.error("Nama Customer dan Harga tidak boleh kosong!")
@@ -270,4 +248,3 @@ with tab2:
                         st.rerun()
                     else: st.error("Gagal simpan ke server.")
                 except: st.error("Koneksi Error.")
-
