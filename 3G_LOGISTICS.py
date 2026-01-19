@@ -13,21 +13,13 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM RESPONSIVE (TIDAK MERUSAK STRUKTUR INVOICE)
+# 2. CSS CUSTOM RESPONSIVE & BERWARNA
 st.markdown("""
     <style>
-    /* Dasar Web agar pas di semua layar */
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #F8FAFC;
-    }
-    
-    .block-container {
-        padding-top: 1rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
+    html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
+    .block-container { padding-top: 1rem !important; }
 
-    /* PANEL INPUT RESPONSIVE */
+    /* PANEL INPUT DATA (Light Blue Theme) */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
@@ -36,7 +28,7 @@ st.markdown("""
         width: 100% !important;
     }
 
-    /* TEKS LABEL PUTIH (Tetap Tajam) */
+    /* TEKS LABEL PUTIH TERANG */
     .stWidgetLabel p { 
         color: #FFFFFF !important; 
         font-weight: 800 !important;
@@ -45,7 +37,7 @@ st.markdown("""
         margin-bottom: -10px !important;
     }
 
-    /* INPUT BOX (Lebar Otomatis) */
+    /* KOTAK INPUT (PUTIH - TEKS HITAM) */
     .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -53,13 +45,12 @@ st.markdown("""
         font-weight: 700 !important;
     }
     
-    /* Fix Teks Hitam di Dropdown & Tanggal */
     div[data-baseweb="input"] input, div[data-baseweb="select"] div {
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
     }
 
-    /* TOMBOL SIMPAN (Lebar Penuh di Mobile) */
+    /* TOMBOL SIMPAN EMAS */
     div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: #1A2A3A !important;
@@ -67,14 +58,7 @@ st.markdown("""
         width: 100% !important;
         border-radius: 10px !important;
         border: none !important;
-        padding: 0.5rem 0 !important;
-    }
-
-    /* Responsive Header Image */
-    .header-logo {
-        max-width: 250px;
-        width: 100%;
-        height: auto;
+        height: 45px;
     }
 
     /* Sembunyikan Header Streamlit */
@@ -82,16 +66,17 @@ st.markdown("""
     </style>
     
     <div style="text-align: left; margin-bottom: 10px;">
-        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-logo">
+        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="max-width: 250px; width: 100%;">
     </div>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA
+# 3. LOGIC DATA - AUTO REFRESH DENGAN CACHE TTL RENDAH
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
-@st.cache_data(ttl=1)
+@st.cache_data(ttl=2) # Cache hanya bertahan 2 detik agar data selalu segar
 def get_data():
     try:
+        # Menambahkan parameter timestamp agar Google Script tidak memberi data lama (Cache-Busting)
         response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}")
         return response.json() if response.status_code == 200 else []
     except: return []
@@ -121,13 +106,14 @@ with tab1:
     if data:
         df = pd.DataFrame(data)
         st.write("---")
-        # Kolom Filter dibuat Responsive
         col_f1, col_f2 = st.columns([1, 1]) 
         with col_f1:
             status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
         with col_f2:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
-            selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique())) if not df_filtered.empty else None
+            # Menggunakan List Comprehension agar Customer selalu terupdate di dropdown
+            cust_options = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
+            selected_cust = st.selectbox("Pilih Customer:", cust_options)
         
         if selected_cust and not df_filtered.empty:
             row = df_filtered[df_filtered['customer'] == selected_cust].iloc[-1]
@@ -139,7 +125,7 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE DENGAN CSS RESPONSIVE (MAX-WIDTH 100%)
+            # --- INVOICE HTML (Tetap sesuai standar Bapak) ---
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -148,38 +134,16 @@ with tab1:
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
                 <style>
                     body {{ background: #f0f0f0; padding: 5px; margin: 0; }}
-                    #inv {{ 
-                        background: white; 
-                        padding: 15px; 
-                        max-width: 750px; 
-                        width: 95%; 
-                        margin: auto; 
-                        border: 1px solid #ccc; 
-                        color: black; 
-                        font-family: Arial, sans-serif; 
-                    }}
+                    #inv {{ background: white; padding: 15px; max-width: 750px; width: 95%; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
                     .header-img {{ width: 100%; height: auto; }}
                     .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 18px; }}
                     .info-table {{ width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: bold; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
-                    .data-table th, .data-table td {{ border: 1px solid black; padding: 6px; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
                     .data-table th {{ background-color: #f2f2f2; }}
-                    .terbilang {{ border: 1px solid black; padding: 8px; margin-top: 10px; font-size: 11px; font-style: italic; }}
-                    .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; line-height: 1.4; }}
-                    .btn-dl {{ 
-                        max-width: 750px; 
-                        width: 95%; 
-                        display: block; 
-                        margin: 15px auto; 
-                        background: #49bf59; 
-                        color: white; 
-                        padding: 12px; 
-                        border: none; 
-                        border-radius: 8px; 
-                        font-weight: bold; 
-                        cursor: pointer; 
-                        font-size: 14px; 
-                    }}
+                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 11px; font-style: italic; }}
+                    .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; line-height: 1.5; }}
+                    .btn-dl {{ max-width: 750px; width: 95%; display: block; margin: 10px auto; background: #49bf59; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
                 </style>
             </head>
             <body>
@@ -207,15 +171,11 @@ with tab1:
                     <table class="footer-table">
                         <tr>
                             <td style="width:60%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>
-                                BCA <b>6720422334</b><br>
-                                <b>ADITYA GAMA SAPUTRI</b><br>
-                                NB: Jika sudah transfer mohon konfirmasi ke<br>
-                                Finance: <b>082179799200</b>
+                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>NB: Konfirmasi ke Finance: <b>082179799200</b>
                             </td>
                             <td style="text-align:center; vertical-align:top;">
                                 Sincerely,<br>
-                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:90px; margin: 5px 0;"><br>
+                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br>
                                 <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
                             </td>
                         </tr>
@@ -225,14 +185,7 @@ with tab1:
                 <script>
                     function savePDF() {{
                         const e = document.getElementById('inv');
-                        const opt = {{
-                            margin: 0.2,
-                            filename: 'Inv_{selected_cust}.pdf',
-                            image: {{ type: 'jpeg', quality: 0.98 }},
-                            html2canvas: {{ scale: 2, useCORS: true }},
-                            jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
-                        }};
-                        html2pdf().set(opt).from(e).save();
+                        html2pdf().set({{ margin: 0.2, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 2, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
                     }}
                 </script>
             </body>
@@ -241,24 +194,19 @@ with tab1:
             components.html(invoice_html, height=800, scrolling=True)
 
 with tab2:
-    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin-top: -10px;'>NEW ENTRY</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin: 0;'>NEW DISPATCH ENTRY</h4>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        # Column otomatis jadi baris jika di layar kecil (HP)
-        c1, c2 = st.columns([1, 1])
+        c1, c2 = st.columns(2)
         with c1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN")
         with c2: v_cust = st.text_input("🏢 NAMA CUSTOMER")
-        
         v_desc = st.text_input("📦 KETERANGAN BARANG")
-        
-        c3, c4 = st.columns([1, 1])
+        c3, c4 = st.columns(2)
         with c3: v_orig = st.text_input("📍 ASAL (ORIGIN)")
         with c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
-        
-        c5, c6, c7 = st.columns([1, 1, 1])
-        with c5: v_kol = st.text_input("📦 KOLLI")
+        c5, c6, c7 = st.columns(3)
+        with c5: v_kol = st.text_input("📦 JUMLAH KOLLI")
         with c6: v_harga = st.text_input("💰 HARGA")
         with c7: v_weight = st.text_input("⚖️ BERAT")
-        
         v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
         
         submit = st.form_submit_button("🚀 SIMPAN DATA")
@@ -267,18 +215,17 @@ with tab2:
             if v_cust and v_harga:
                 try:
                     payload = {
-                        "date": str(v_tgl), 
-                        "customer": v_cust.upper(), 
-                        "description": v_desc.upper(), 
-                        "origin": v_orig.upper(), 
-                        "destination": v_dest.upper(), 
-                        "kolli": v_kol, 
-                        "harga": float(v_harga), 
-                        "weight": float(v_weight), 
-                        "total": float(v_harga) * float(v_weight), 
-                        "status": v_status
+                        "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
+                        "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
+                        "harga": float(v_harga), "weight": float(v_weight), 
+                        "total": float(v_harga) * float(v_weight), "status": v_status
                     }
+                    # Kirim data ke Google Sheets
                     requests.post(API_URL, json=payload)
+                    
+                    # BAGIAN PENTING: Clear Cache & Rerun agar Tab Invoice otomatis update
+                    st.cache_data.clear() 
                     st.success("DATA BERHASIL DISIMPAN!")
-                    st.rerun()
-                except: st.error("CEK INPUT ANGKA PADA HARGA/BERAT!")
+                    st.rerun() # Refresh otomatis aplikasi
+                    
+                except: st.error("CEK INPUT ANGKA!")
