@@ -23,14 +23,17 @@ API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomW
 @st.cache_data(ttl=1, show_spinner=False)
 def get_data():
     try:
-        # Menambahkan nocache agar data selalu ditarik yang paling baru
-        response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
+        response = requests.get(API_URL) # API_URL adalah link Web App Google Script Bapak
         if response.status_code == 200:
-            all_data = response.json()
-            
-            # CEK: Jika data kosong, beri tahu sistem
-            if not all_data:
-                return []
+            data = response.json()
+            df = pd.DataFrame(data)
+            # Pastikan semua nama kolom jadi huruf kecil agar konsisten
+            df.columns = [str(col).lower().strip() for col in df.columns]
+            return df
+        else:
+            return pd.DataFrame() # Kirim tabel kosong jika gagal
+    except:
+        return pd.DataFrame() # Kirim tabel kosong jika error koneksi
                 
             # CEK: Pastikan setiap baris punya kolom 'status' agar tidak error saat difilter
             for item in all_data:
@@ -212,6 +215,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
