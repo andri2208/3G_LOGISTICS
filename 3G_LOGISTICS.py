@@ -13,36 +13,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (HANYA UNTUK INPUT DATA)
+# 2. CSS CUSTOM
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
-    .block-container { padding-top: 1rem !important; }
-    
-    [data-testid="stForm"] {
-        background-color: #719dc9 !important;
-        padding: 1.5rem !important;
-        border-radius: 12px !important;
-        border: 2px solid #B8860B !important;
-    }
-    
-    .stWidgetLabel p { 
-        color: #FFFFFF !important; 
-        font-weight: 800 !important; 
-        font-size: 13px !important; 
-        text-transform: uppercase; 
-        margin-bottom: -10px !important; 
-    }
-    
-    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
-        background-color: #FFFFFF !important; color: #000000 !important; font-weight: 700 !important;
-    }
-
-    div.stButton > button {
-        background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: #1A2A3A !important; font-weight: 900 !important; width: 100% !important; height: 45px;
-    }
-    
+    [data-testid="stForm"] { background-color: #719dc9 !important; padding: 1.5rem !important; border-radius: 12px !important; border: 2px solid #B8860B !important; }
+    .stWidgetLabel p { color: #FFFFFF !important; font-weight: 800 !important; font-size: 13px !important; text-transform: uppercase; margin-bottom: -10px !important; }
+    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] { background-color: #FFFFFF !important; color: #000000 !important; font-weight: 700 !important; }
+    div.stButton > button { background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important; color: #1A2A3A !important; font-weight: 900 !important; width: 100% !important; height: 45px; }
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     <div style="text-align: left; margin-bottom: 10px;">
@@ -84,16 +62,27 @@ with tab1:
     if data:
         df = pd.DataFrame(data)
         st.write("---")
-        col_f1, col_f2 = st.columns([1, 1]) 
-        with col_f1:
+        
+        # FILTER PERTAMA: STATUS & NAMA
+        c_inv1, c_inv2 = st.columns(2)
+        with c_inv1:
             status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-        with col_f2:
+        with c_inv2:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("Pilih Customer:", cust_list)
+            selected_cust = st.selectbox("1. Pilih Customer:", cust_list)
         
-        if selected_cust and not df_filtered.empty:
-            row = df_filtered[df_filtered['customer'] == selected_cust].iloc[-1]
+        # FILTER KEDUA: JIKA NAMA DOBEL, PILIH DATA BERDASARKAN TANGGAL/BARANG
+        if selected_cust:
+            sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
+            # Buat label pilihan: Tanggal - Barang
+            sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
+            
+            selected_label = st.selectbox("2. Pilih Transaksi (Jika ada banyak):", sub_df['label'].tolist())
+            
+            # Ambil satu baris yang spesifik dipilih
+            row = sub_df[sub_df['label'] == selected_label].iloc[-1]
+            
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
@@ -102,7 +91,7 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE (SUDAH DIKEMBALIKAN TEKS NB YANG HILANG)
+            # INVOICE ASLI (NB LENGKAP)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -186,18 +175,11 @@ with tab2:
         with c6: v_harga = st.text_input("💰 HARGA")
         with c7: v_weight = st.text_input("⚖️ BERAT")
         v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
-        
         submit = st.form_submit_button("🚀 SIMPAN DATA")
-        
         if submit:
             if v_cust and v_harga:
                 try:
-                    payload = {
-                        "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
-                        "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                        "harga": float(v_harga), "weight": float(v_weight), 
-                        "total": float(v_harga) * float(v_weight), "status": v_status
-                    }
+                    payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
                     st.success("DATA BERHASIL DISIMPAN!")
