@@ -1,5 +1,5 @@
 import streamlit as st
-import pd
+import pandas as pd  # <--- Tadi saya tulis 'import pd', ini yang benar
 import requests
 import json
 from datetime import datetime
@@ -13,23 +13,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS STABIL (MENGATASI TAMPILAN BERANTAKAN)
+# 2. CSS STABIL (Logo Rapat, Tab Sticky, Form Rapi)
 st.markdown("""
     <style>
     /* Sembunyikan Header Asli */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* FIX: Hilangkan padding berlebih di bagian atas aplikasi */
+    /* Atur Jarak Atas */
     .block-container {
-        padding-top: 2rem !important;
+        padding-top: 1.5rem !important;
     }
 
-    /* KUNCI JARAK LOGO (Sesuai keinginan Bapak) */
+    /* RAPATKAN LOGO KE TAB */
     [data-testid="stImage"] {
-        margin-bottom: -30px !important;
+        margin-bottom: -35px !important;
     }
 
-    /* BUAT TAB STICKY YANG STABIL */
+    /* TAB STICKY */
     div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
@@ -66,13 +66,13 @@ st.markdown("""
         color: white !important;
     }
 
-    /* FORM STYLE (Agar tidak bertumpuk) */
+    /* FORM STYLE */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 2.5rem !important;
         border-radius: 15px !important;
         border: 4px solid #B8860B !important;
-        margin-top: 20px !important;
+        margin-top: 10px !important;
     }
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
@@ -81,13 +81,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. AREA HEADER (Hanya Logo)
+# 3. AREA HEADER (Logo)
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=400)
 
 # 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# --- BAGIAN DATA & LOGIC (Tetap Sama) ---
+# --- BAGIAN DATA & LOGIC ---
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
