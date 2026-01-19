@@ -43,27 +43,8 @@ def get_data():
     except Exception as e:
         return []
 
-# --- BAGIAN FILTER YANG DIRAPIKAN ---
-st.markdown("### Filter & Pilih") # Judul kecil agar lebih padat
-
-    <style>
-    # Masukkan Filter dan Pilih Customer dalam satu baris agar hemat ruang
-c1, c2 = st.columns([1, 2])
-
-with c1:
-    status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-
-with c2:
-    if not df.empty and 'customer' in df.columns:
-        # Filter data dulu sesuai radio button
-        if status_filter != "Semua":
-            df_display = df[df['status'] == status_filter]
-        else:
-            df_display = df
-            
-        selected_cust = st.selectbox("Pilih Customer:", sorted(df_display['customer'].unique()))
-# ------------------------------------
-    
+# --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
+st.markdown(""" 
     .stApp { background-color: #FDFCF0; }
     .block-container { padding-top: 4rem !important; }
     .custom-header { text-align: left; /* PINDAH KE KIRI */ margin-bottom: 20px; }
@@ -298,6 +279,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
