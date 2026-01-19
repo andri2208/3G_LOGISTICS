@@ -9,54 +9,18 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (RESPONSIF & TEKS HITAM TEBAL)
+# 2. CSS (Tampilan Tab & Form)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     .block-container { padding-top: 1rem !important; }
-
-    /* Gaya Tab Kotak agar tidak bertumpuk di HP */
-    div[data-baseweb="tab-list"] {
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        padding: 10px 0 !important;
-        background-color: white !important;
-        border-bottom: 4px solid #B8860B !important;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background-color: #f0f2f6 !important;
-        border-radius: 8px !important;
-        padding: 10px 15px !important;
-        border: 1px solid #ddd !important;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background-color: #719dc9 !important;
-        border: 2px solid #B8860B !important;
-    }
-
-    .stTabs [data-baseweb="tab"] p { 
-        color: #000000 !important; 
-        font-weight: 900 !important; 
-        font-size: 14px !important;
-    }
-
-    .stTabs [aria-selected="true"] p { color: white !important; }
-
-    /* Form Biru */
-    [data-testid="stForm"] { 
-        background-color: #719dc9 !important; 
-        padding: 1.5rem !important; 
-        border-radius: 15px !important; 
-        border: 5px solid #B8860B !important; 
-    }
-
+    div[data-baseweb="tab-list"] { flex-wrap: wrap !important; gap: 10px !important; border-bottom: 4px solid #B8860B !important; }
+    .stTabs [data-baseweb="tab"] { background-color: #f0f2f6 !important; border-radius: 8px !important; padding: 10px 15px !important; }
+    .stTabs [aria-selected="true"] { background-color: #719dc9 !important; }
+    .stTabs [data-baseweb="tab"] p { color: #000000 !important; font-weight: 900 !important; }
+    [data-testid="stForm"] { background-color: #719dc9 !important; border-radius: 15px !important; border: 5px solid #B8860B !important; }
     [data-testid="stForm"] label p { color: #000000 !important; font-weight: 900 !important; }
-
-    @media (max-width: 640px) {
-        div[data-testid="stHorizontalBlock"] { flex-direction: column !important; }
-    }
+    @media (max-width: 640px) { div[data-testid="stHorizontalBlock"] { flex-direction: column !important; } }
     </style>
     """, unsafe_allow_html=True)
 
@@ -89,78 +53,145 @@ def extract_number(value):
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
 
-# --- TAB 1: CETAK INVOICE (FORMAT ASLI TANPA RUBAH) ---
+# --- TAB 1: CETAK INVOICE (FORMAT ASLI TOTAL) ---
 with tab1:
     if st.button("🔄 REFRESH DATA"): st.rerun()
     data = get_data()
     if data:
         df = pd.DataFrame(data)
         f1, f2, f3 = st.columns([1, 1.2, 1.5])
-        with f1:
-            st_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-            df_f = df[df['status'] == st_filter] if st_filter != "Semua" else df
         with f2:
-            c_list = sorted(df_f['customer'].unique()) if not df_f.empty else []
-            s_cust = st.selectbox("**NAMA CUSTOMER:**", c_list)
+            s_cust = st.selectbox("**NAMA CUSTOMER:**", sorted(df['customer'].unique()) if not df.empty else [])
         with f3:
             if s_cust:
-                sub_df = df_f[df_f['customer'] == s_cust].copy()
+                sub_df = df[df['customer'] == s_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
                 s_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
 
         if s_cust and s_label:
             row = sub_df[sub_df['label'] == s_label].iloc[-1]
-            
-            # LOGIKA ASLI: HARGA & TOTAL DIAMBIL DARI SHEET
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
             total_invoice = int(b_val * h_val) if b_val > 0 else int(h_val)
-            
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             
             invoice_html = f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <div id="inv" style="background: white; padding: 25px; width: 700px; margin: auto; color: black; font-family: Arial;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
-                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px;">INVOICE</div>
-                <table style="width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold;">
-                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">NO: {row.get('inv_no', '-')}</td></tr>
-                    <tr><td>DATE: {tgl_indo}</td><td style="text-align:right;">STATUS: {row['status'].upper()}</td></tr>
-                </table>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center;">
-                    <tr style="border: 1px solid black;"><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr style="border: 1px solid black;">
-                        <td>{row['description']}</td>
-                        <td>{row['origin']}</td>
-                        <td>{row['destination']}</td>
-                        <td>{row['kolli']}</td>
-                        <td>Rp {int(h_val):,}</td>
-                        <td>{row['weight']}</td>
-                        <td style="font-weight:bold;">Rp {total_invoice:,}</td>
-                    </tr>
-                    <tr style="font-weight:bold; border: 1px solid black;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {total_invoice:,}</td></tr>
-                </table>
-                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang(total_invoice)} Rupiah</div>
-                <table style="width: 100%; margin-top: 30px; font-size: 12px;">
-                    <tr>
-                        <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI</td>
-                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b></td>
-                    </tr>
-                </table>
+            <div id="capture">
+                <div id="inv" style="background: white; padding: 20px; width: 800px; margin: auto; color: black; font-family: Arial; border: 1px solid #eee;">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
+                    <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 22px;">INVOICE</div>
+                    <table style="width: 100%; font-size: 14px; font-weight: bold; margin-bottom: 10px;">
+                        <tr><td>CUSTOMER: {row['customer']} [cite: 1, 19]</td><td style="text-align:right;">NO: {row.get('inv_no', '-')} [cite: 6]</td></tr>
+                        <tr><td>DATE: {tgl_indo} [cite: 2, 21]</td><td style="text-align:right;">STATUS: {row['status'].upper()} [cite: 6]</td></tr>
+                    </table>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center;">
+                        <tr style="border: 1px solid black; background: #f2f2f2;">
+                            <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
+                        </tr>
+                        <tr style="border: 1px solid black;">
+                            <td>{row['description']} </td>
+                            <td>{row['origin']} </td>
+                            <td>{row['destination']} </td>
+                            <td>{row['kolli']} </td>
+                            <td>Rp {int(h_val):,} </td>
+                            <td>{row['weight']} </td>
+                            <td style="font-weight:bold;">Rp {total_invoice:,} [cite: 7, 22, 24]</td>
+                        </tr>
+                        <tr style="font-weight:bold; border: 1px solid black;">
+                            <td colspan="6" style="text-align:right; padding-right: 10px;">TOTAL BAYAR</td>
+                            <td>Rp {total_invoice:,} [cite: 7, 24]</td>
+                        </tr>
+                    </table>
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 13px;">
+                        <b>Terbilang:</b> {terbilang(total_invoice)} Rupiah [cite: 8, 26, 27]
+                    </div>
+                    <table style="width: 100%; margin-top: 30px; font-size: 13px;">
+                        <tr>
+                            <td style="width:60%;">
+                                <b>TRANSFER TO :</b> [cite: 9, 28]<br>
+                                {row.get('bank_name', 'BCA')} <b>6720422334</b> [cite: 10, 29, 30]<br>
+                                <b>ADITYA GAMA SAPUTRI</b> [cite: 11, 31]<br><br>
+                                <small>NB: Konfirmasi Finance: 082179799200 [cite: 12, 13, 32]</small>
+                            </td>
+                            <td style="text-align:center;">
+                                Sincerely, [cite: 14, 33]<br>
+                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px;"><br>
+                                <b><u>KELVINITO JAYADI</u></b> [cite: 15, 35]<br>DIREKTUR [cite: 16, 36]
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-            <button style="width: 700px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+            <button style="width: 100%; max-width: 800px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD INVOICE ASLI (ANTI-POTONG)</button>
             <script>
                 function savePDF() {{
                     const e = document.getElementById('inv');
-                    html2pdf().set({{ margin: 0.2, filename: 'Inv_{row.get("inv_no", "3G")}.pdf', html2canvas: {{ scale: 2 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    const opt = {{
+                        margin: 0.1,
+                        filename: 'Invoice_{row['customer']}.pdf',
+                        image: {{ type: 'jpeg', quality: 0.98 }},
+                        html2canvas: {{ scale: 2, useCORS: true }},
+                        jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
+                    }};
+                    html2pdf().set(opt).from(e).save();
                 }}
             </script>
             """
-            components.html(invoice_html, height=800, scrolling=True)
+            components.html(invoice_html, height=850, scrolling=True)
 
-# --- TAB 2: TAMBAH DATA (TETAP SAMA) ---
+# --- TAB 3: FAKE INVOICE (HANYA UNTUK KEBUTUHAN KHUSUS) ---
+with tab3:
+    st.markdown("<h3 style='text-align: center; color: black;'>CETAK INVOICE MANUAL (FAKE) [cite: 20, 5]</h3>", unsafe_allow_html=True)
+    with st.form("fake_form"):
+        f1, f2, f3 = st.columns(3)
+        fk_no, fk_cust, fk_tgl = f1.text_input("NOMOR INVOICE", "3G/INV/2026/000"), f2.text_input("NAMA CUSTOMER"), f3.date_input("TANGGAL")
+        f4, f5, f6 = st.columns(3)
+        fk_item, fk_orig, fk_dest = f4.text_input("ITEM"), f5.text_input("ORIGIN"), f6.text_input("DESTINATION")
+        f7, f8, f9 = st.columns(3)
+        fk_kol, fk_weight, fk_total = f7.text_input("KOLLI"), f8.text_input("WEIGHT"), f9.number_input("TOTAL BAYAR", value=6071000)
+        
+        if st.form_submit_button("✨ GENERATE FAKE"):
+            terbilang_f = terbilang(fk_total) + " Rupiah"
+            fake_html = f"""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <div id="f-inv" style="background: white; padding: 20px; width: 800px; margin: auto; color: black; font-family: Arial;">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
+                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 22px;">INVOICE</div>
+                <table style="width: 100%; font-size: 14px; font-weight: bold; margin-bottom: 10px;">
+                    <tr><td>CUSTOMER: {fk_cust.upper()}</td><td style="text-align:right;">NO: {fk_no}</td></tr>
+                    <tr><td>DATE: {fk_tgl.strftime('%d/%m/%Y')}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
+                </table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center;">
+                    <tr style="border: 1px solid black; background: #f2f2f2;">
+                        <th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th>
+                    </tr>
+                    <tr style="border: 1px solid black;">
+                        <td>{fk_item.upper()}</td><td>{fk_orig.upper()}</td><td>{fk_dest.upper()}</td><td>{fk_kol}</td><td> </td><td>{fk_weight}</td><td style="font-weight:bold;">Rp {fk_total:,}</td>
+                    </tr>
+                    <tr style="font-weight:bold; border: 1px solid black;"><td colspan="6" style="text-align:right; padding-right: 10px;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
+                </table>
+                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 13px;"><b>Terbilang:</b> {terbilang_f}</div>
+                <table style="width: 100%; margin-top: 30px; font-size: 13px;">
+                    <tr>
+                        <td style="width:60%;"><b>TRANSFER TO :</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI</td>
+                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:120px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                    </tr>
+                </table>
+            </div>
+            <button style="width: 100%; max-width: 800px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border-radius: 8px; border: none; font-weight: bold;" onclick="saveFakePDF()">📥 DOWNLOAD FAKE PDF</button>
+            <script>
+                function saveFakePDF() {{
+                    const e = document.getElementById('f-inv');
+                    html2pdf().set({{ margin: 0.1, filename: 'Fake_Inv.pdf', html2canvas: {{ scale: 2 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                }}
+            </script>
+            """
+            components.html(fake_html, height=850, scrolling=True)
+
+# TAB 2 tetap menggunakan kode input standar Bapak
 with tab2:
     st.markdown("<h3 style='text-align: center; color: black;'>TAMBAH DATA PENGIRIMAN</h3>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
@@ -170,51 +201,7 @@ with tab2:
         v_orig, v_dest, v_kol = c4.text_input("ORIGIN"), c5.text_input("DESTINATION"), c6.text_input("KOLLI")
         c7, c8, c9 = st.columns(3)
         v_harga, v_weight, v_status = c7.text_input("HARGA"), c8.text_input("WEIGHT"), c9.selectbox("STATUS", ["Belum Bayar", "Lunas"])
-        if st.form_submit_button("🚀 SIMPAN DATA"):
+        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
             payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": v_harga, "weight": v_weight, "status": v_status}
             requests.post(API_URL, json=payload)
-            st.success("DATA TERSIMPAN!"); st.rerun()
-
-# --- TAB 3: FAKE INVOICE (KHUSUS UNTUK CUSTOM HARGA KOSONG) ---
-with tab3:
-    st.markdown("<h3 style='text-align: center; color: black;'>INVOICE MANUAL (FAKE)</h3>", unsafe_allow_html=True)
-    with st.form("fake_form"):
-        f1, f2, f3 = st.columns(3)
-        fk_no, fk_cust, fk_tgl = f1.text_input("NOMOR INVOICE", "3G/INV/2026/000"), f2.text_input("NAMA CUSTOMER"), f3.date_input("TANGGAL", datetime.now())
-        f4, f5, f6 = st.columns(3)
-        fk_item, fk_orig, fk_dest = f4.text_input("ITEM"), f5.text_input("ORIGIN"), f6.text_input("DESTINATION")
-        f7, f8, f9 = st.columns(3)
-        fk_kol, fk_weight, fk_total = f7.text_input("KOLLI"), f8.text_input("WEIGHT"), f9.number_input("TOTAL BAYAR (Rp)", value=6071000)
-        if st.form_submit_button("✨ CETAK FAKE INVOICE"):
-            terbilang_f = terbilang(fk_total) + " Rupiah"
-            fake_html = f"""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <div id="f-inv" style="background: white; padding: 25px; width: 700px; margin: auto; color: black; font-family: Arial;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
-                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px;">INVOICE</div>
-                <table style="width: 100%; font-size: 14px; font-weight: bold; margin-bottom: 10px;">
-                    <tr><td>CUSTOMER: {fk_cust.upper()}</td><td style="text-align:right;">NO: {fk_no}</td></tr>
-                    <tr><td>DATE: {fk_tgl.strftime('%d/%m/%Y')}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
-                </table>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center;">
-                    <tr style="border: 1px solid black;"><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr style="border: 1px solid black;"><td>{fk_item.upper()}</td><td>{fk_orig.upper()}</td><td>{fk_dest.upper()}</td><td>{fk_kol}</td><td> </td><td>{fk_weight}</td><td style="font-weight:bold;">Rp {fk_total:,}</td></tr>
-                    <tr style="font-weight:bold; border: 1px solid black;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
-                </table>
-                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang_f}</div>
-                <table style="width: 100%; margin-top: 30px; font-size: 12px;">
-                    <tr>
-                        <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI</td>
-                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b></td>
-                    </tr>
-                </table>
-            </div>
-            <button style="width: 700px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD FAKE PDF</button>
-            <script>
-                function savePDF() {{
-                    const e = document.getElementById('f-inv');
-                    html2pdf().set({{ margin: 0.2, filename: 'Fake_Inv_{fk_cust}.pdf', html2canvas: {{ scale: 2 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
-                }}
-            </script>
-            """
-            components.html(fake_html, height=800, scrolling=True)
+            st.success("DATA BERHASIL DISIMPAN!"); st.rerun()
