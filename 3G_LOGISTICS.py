@@ -18,7 +18,7 @@ if "active_tab" not in st.session_state:
     st.session_state.active_tab = 0 # Default ke tab Invoice
 
 # GANTI DENGAN URL BARU HASIL DEPLOY TADI
-API_URL = "https://script.google.com/macros/s/AKfycbzMWrUmi0ji80GscKJiXv2wLAulUXYjdC_7MzlMw0B5hTV6i6KM6KfaguEuTwP4-fYwHA/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbxD83UeolFj_Jwd8Cx7zXN0Sj5O1po-oIJR2wVTZzO4UCZSE774mmfznHb9e3OEn5OHyQ/exec"
 
 @st.cache_data(ttl=1, show_spinner=False) # Tambahkan show_spinner=False
 def get_data():
@@ -254,6 +254,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
