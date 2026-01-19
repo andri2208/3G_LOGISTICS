@@ -32,7 +32,7 @@ def get_data():
 st.markdown("""
     <style>
     .stApp { background-color: #FDFCF0; }
-    .block-container { padding-top: 3rem !important; }
+    .block-container { padding-top: 4rem !important; }
     .custom-header { text-align: left; /* PINDAH KE KIRI */ margin-bottom: 20px; }
     .custom-header img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
     .stWidgetLabel p { font-weight: 900 !important; font-size: 14px !important; color: #1A2A3A !important; }
@@ -216,6 +216,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
