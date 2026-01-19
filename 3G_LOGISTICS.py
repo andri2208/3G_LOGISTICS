@@ -44,7 +44,8 @@ def get_data():
         return []
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
-st.markdown(""" 
+st.markdown("""
+    <style>
     .stApp { background-color: #FDFCF0; }
     .block-container { padding-top: 4rem !important; }
     .custom-header { text-align: left; /* PINDAH KE KIRI */ margin-bottom: 20px; }
@@ -279,6 +280,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
