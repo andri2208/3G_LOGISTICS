@@ -234,47 +234,79 @@ with tab3:
         <!DOCTYPE html>
         <html>
         <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <style>
-                body {{ background: #f0f0f0; padding: 10px; margin: 0; }}
-                #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                body {{ background: #f0f0f0; padding: 0; margin: 0; }}
+                #inv-container {{ width: 100%; overflow-x: auto; padding: 10px; box-sizing: border-box; }}
+                #inv {{ 
+                    background: white; 
+                    padding: 20px; 
+                    width: 700px; /* Sedikit dikecilkan agar lebih aman */
+                    margin: auto; 
+                    border: 1px solid #ccc; 
+                    color: black; 
+                    font-family: Arial, sans-serif;
+                }}
                 .header-img {{ width: 100%; height: auto; }}
                 .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
-                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
-                .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
-                .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
-                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 13px; font-weight: bold; border-collapse: collapse; }}
+                .data-table {{ width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }}
+                .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
+                .footer-table {{ width: 100%; margin-top: 20px; font-size: 11px; line-height: 1.4; }}
+                .btn-container {{ text-align: center; padding: 20px; }}
+                .btn-dl {{ background: #49bf59; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px; }}
             </style>
         </head>
         <body>
-            <div id="inv">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
-                <div class="title">INVOICE</div>
-                <table class="info-table">
-                    <tr><td>CUSTOMER: {fk_cust.upper()}</td><td style="text-align:right;">NO: {fk_no}</td></tr>
-                    <tr><td>DATE: {tgl_f}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
-                </table>
-                <table class="data-table">
-                    <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr><td>{fk_item.upper()}</td><td>{fk_orig.upper()}</td><td>{fk_dest.upper()}</td><td>{fk_kolli}</td><td> </td><td>{fk_weight}</td><td style="font-weight:bold;">Rp {fk_total:,}</td></tr>
-                    <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
-                </table>
-                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang_f}</div>
-                <table class="footer-table">
-                    <tr>
-                        <td style="width:65%; vertical-align:top;">
-                            <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br><br>
-                            <i>NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
-                        </td>
-                        <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
-                    </tr>
-                </table>
+            <div id="inv-container">
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table">
+                        <tr><td>CUSTOMER: {fk_cust.upper()}</td><td style="text-align:right;">NO: {fk_no}</td></tr>
+                        <tr><td>DATE: {tgl_f}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
+                    </table>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>{fk_item.upper()}</td><td>{fk_orig.upper()}</td><td>{fk_dest.upper()}</td><td>{fk_kolli}</td><td> </td><td>{fk_weight}</td><td style="font-weight:bold;">Rp {fk_total:,}</td></tr>
+                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 11px;"><b>Terbilang:</b> {terbilang_f}</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:60%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br><br>
+                                <i>NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-            <button style="width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD FAKE PDF</button>
+            <div class="btn-container">
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD FAKE PDF (FIX HP)</button>
+            </div>
             <script>
                 function savePDF() {{
-                    const e = document.getElementById('inv');
-                    html2pdf().set({{ margin: 0, filename: 'Fake_Inv_{fk_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    const element = document.getElementById('inv');
+                    const opt = {{
+                        margin: 0.2,
+                        filename: 'Fake_Inv_{fk_cust}.pdf',
+                        image: {{ type: 'jpeg', quality: 0.98 }},
+                        html2canvas: {{ 
+                            scale: 2, 
+                            useCORS: true,
+                            logging: false,
+                            letterRendering: true
+                        }},
+                        jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }}
+                    }};
+                    html2pdf().set(opt).from(element).save();
                 }}
             </script>
         </body>
