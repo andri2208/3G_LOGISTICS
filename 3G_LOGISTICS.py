@@ -13,24 +13,29 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS FINAL (STABIL & TIDAK BIKIN LAYAR PUTIH)
+# 2. CSS FINAL: HAPUS HEADER BAWAAN, RAPATKAN JARAK, & STICKY TABS
 st.markdown("""
     <style>
-    /* Sembunyikan Header Bawaan */
-    header[data-testid="stHeader"] { visibility: hidden; }
+    /* Sembunyikan Header Bawaan Streamlit */
+    header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* BUAT TAB STICKY DENGAN CARA LEBIH AMAN */
+    /* MENGATUR JARAK ANTARA LOGO DAN TAB (SANGAT RAPAT) */
+    .stApp [data-testid="stVerticalBlock"] > div:first-child {
+        margin-bottom: -45px !important; /* Tarik konten bawah ke atas agar rapat ke logo */
+    }
+
+    /* BUAT TAB MENJADI STICKY (NEMPEL DI ATAS) */
     div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
         z-index: 999;
         background-color: white;
-        padding-top: 5px;
-        margin-top: -20px; /* Merapatkan ke logo di atasnya */
+        padding-top: 10px;
+        padding-bottom: 5px;
         border-bottom: 2px solid #B8860B;
     }
 
-    /* Warna Teks Tab */
+    /* WARNA & STYLE TEKS TAB */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
@@ -48,10 +53,12 @@ st.markdown("""
         color: black !important;
         font-weight: 900 !important;
         border: 2px solid black !important;
+        transition: 0.3s;
     }
 
     button[kind="primaryFormSubmit"]:hover {
         background: #28a745 !important;
+        background-color: #28a745 !important;
         color: white !important;
     }
 
@@ -65,19 +72,16 @@ st.markdown("""
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
 
+    /* Sembunyikan Menu & Footer */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. HEADER (Diletakkan di luar sticky agar stabil)
-# Menggunakan col untuk logo di kiri
-col_logo, col_text = st.columns([1, 2])
-with col_logo:
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=350)
-with col_text:
-    st.markdown("<h2 style='margin-top: 20px; color: #1A2A3A;'>3G LOGISTICS SYSTEM</h2>", unsafe_allow_html=True)
+# 3. TAMPILKAN LOGO SAJA (TANPA TEKS)
+# Logo diletakkan di paling atas
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=450)
 
-# 4. TAMPILAN TABS (Hanya Tab yang nempel saat scroll)
+# 4. TAMPILAN TABS (STICKY)
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 # --- LOGIC DATA ---
