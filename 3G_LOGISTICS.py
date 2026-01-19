@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd  # <--- Tadi saya tulis 'import pd', ini yang benar
+import pandas as pd
 import requests
 import json
 from datetime import datetime
@@ -13,34 +13,36 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS STABIL (Logo Rapat, Tab Sticky, Form Rapi)
+# 2. CSS PERBAIKAN (AGAR KONTEN TIDAK TERTUTUP)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Asli */
+    /* Sembunyikan Header Bawaan */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* Atur Jarak Atas */
-    .block-container {
-        padding-top: 1.5rem !important;
+    /* PENTING: Memberi ruang di atas agar konten tidak tertutup header sticky */
+    .main .block-container {
+        padding-top: 30px !important;
     }
 
     /* RAPATKAN LOGO KE TAB */
     [data-testid="stImage"] {
         margin-bottom: -35px !important;
+        position: relative;
+        z-index: 1001;
     }
 
-    /* TAB STICKY */
+    /* TAB STICKY (TETAP DI ATAS) */
     div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
-        z-index: 999;
+        z-index: 1000;
         background-color: white;
         padding-top: 5px;
         padding-bottom: 5px;
         border-bottom: 2px solid #B8860B;
     }
 
-    /* TEKS TAB */
+    /* STYLE TEKS TAB */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
@@ -69,14 +71,14 @@ st.markdown("""
     /* FORM STYLE */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
-        padding: 2.5rem !important;
+        padding: 2rem !important;
         border-radius: 15px !important;
         border: 4px solid #B8860B !important;
-        margin-top: 10px !important;
     }
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
 
+    /* Sembunyikan Menu & Footer */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -87,7 +89,7 @@ st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER
 # 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# --- BAGIAN DATA & LOGIC ---
+# --- LOGIC DATA ---
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
