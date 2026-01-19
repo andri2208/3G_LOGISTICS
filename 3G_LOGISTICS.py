@@ -13,64 +13,49 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM: STICKY HEADER & TAB DENGAN JARAK RAPAT
+# 2. CSS FINAL (STABIL & TIDAK BIKIN LAYAR PUTIH)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Bawaan Streamlit */
-    header[data-testid="stHeader"] { visibility: hidden; height: 0; }
+    /* Sembunyikan Header Bawaan */
+    header[data-testid="stHeader"] { visibility: hidden; }
     
-    /* 1. CONTAINER UTAMA UNTUK HEADER & TAB (STICKY) */
-    .stApp {
-        position: relative;
-    }
-
-    [data-testid="stVerticalBlock"] > div:first-child {
+    /* BUAT TAB STICKY DENGAN CARA LEBIH AMAN */
+    div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
         z-index: 999;
         background-color: white;
-        padding-bottom: 5px; /* Kontrol jarak bawah tab */
+        padding-top: 5px;
+        margin-top: -20px; /* Merapatkan ke logo di atasnya */
+        border-bottom: 2px solid #B8860B;
     }
 
-    /* 2. STYLE UNTUK TAB AGAR RAPAT KE HEADER */
-    .stTabs {
-        background-color: white;
-        padding-top: 0px !important;
-        margin-top: -10px !important; /* Menarik Tab ke atas agar rapat dengan logo */
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 20px;
-        background-color: white;
-    }
-
+    /* Warna Teks Tab */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
         font-size: 16px;
     }
 
-    /* 3. PAKSA KURSOR JADI JARI */
+    /* PAKSA KURSOR JADI JARI */
     button, [role="button"], [data-baseweb="select"], .stSelectbox, input, .stTabs [data-baseweb="tab"] {
         cursor: pointer !important;
     }
 
-    /* 4. TOMBOL SIMPAN HOVER HIJAU */
+    /* TOMBOL SIMPAN HOVER HIJAU */
     button[kind="primaryFormSubmit"] {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: black !important;
         font-weight: 900 !important;
         border: 2px solid black !important;
-        transition: 0.3s !important;
     }
 
     button[kind="primaryFormSubmit"]:hover {
         background: #28a745 !important;
-        background-color: #28a745 !important;
         color: white !important;
     }
 
-    /* 5. STYLE FORM INPUT (BIRU LOGISTICS) */
+    /* STYLE FORM INPUT */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 2rem !important;
@@ -78,24 +63,21 @@ st.markdown("""
         border: 4px solid #B8860B !important;
     }
 
-    .stWidgetLabel p { 
-        color: white !important; 
-        font-weight: 900 !important; 
-    }
+    .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
 
-    /* Hilangkan Menu Samping */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. TAMPILAN HEADER (STICKY KARENA DI ATAS SENDIRI)
-col_h1, col_h2 = st.columns([1, 2])
-with col_h1:
-    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=400)
-with col_h2:
-    st.markdown("<h2 style='margin-top: 25px; color: #1A2A3A; font-family: sans-serif; border-left: 3px solid #ccc; padding-left: 20px;'>3G LOGISTICS SYSTEM</h2>", unsafe_allow_html=True)
+# 3. HEADER (Diletakkan di luar sticky agar stabil)
+# Menggunakan col untuk logo di kiri
+col_logo, col_text = st.columns([1, 2])
+with col_logo:
+    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=350)
+with col_text:
+    st.markdown("<h2 style='margin-top: 20px; color: #1A2A3A;'>3G LOGISTICS SYSTEM</h2>", unsafe_allow_html=True)
 
-# 4. TAMPILAN TABS (MENEMPEL DI BAWAH HEADER)
+# 4. TAMPILAN TABS (Hanya Tab yang nempel saat scroll)
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 # --- LOGIC DATA ---
