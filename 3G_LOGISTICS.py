@@ -212,18 +212,24 @@ with tab1:
 
 with tab2:
     with st.form("input_form"):
-    # ... input lainnya ...
-    v_harga = st.text_input("HARGA PER KG:") # Pastikan namanya v_harga
-    v_weight = st.text_input("BERAT (KG):")
-    v_status = st.selectbox("STATUS PEMBAYARAN:", ["Belum Bayar", "Lunas"]) # Variabel baru kita
-    
-    submit_button = st.form_submit_button("💾 SIMPAN DATA")
-    
-    if submit_button:
-        # Sekarang variabel v_harga di bawah ini pasti terbaca
-        h_num = float(v_harga) if v_harga else 0
-        w_num = float(v_weight) if v_weight else 0
-        total_db = h_num * w_num
+        # Semua baris di bawah ini HARUS sejajar dan menjorok ke dalam
+        v_tgl = st.date_input("TANGGAL:", value=datetime.now())
+        v_cust = st.text_input("NAMA CUSTOMER:")
+        v_desc = st.text_input("KETERANGAN BARANG:")
+        v_orig = st.text_input("ASAL (ORIGIN):")
+        v_dest = st.text_input("TUJUAN (DESTINATION):")
+        v_kol = st.text_input("KOLLI:")
+        v_harga = st.text_input("HARGA PER KG:") # Baris 216 yang tadi error
+        v_weight = st.text_input("BERAT (KG):")
+        v_status = st.selectbox("STATUS PEMBAYARAN:", ["Belum Bayar", "Lunas"])
+        
+        submit_button = st.form_submit_button("💾 SIMPAN DATA")
+
+        if submit_button:
+            # Baris di dalam 'if' juga harus menjorok lebih dalam lagi
+            h_num = float(v_harga) if v_harga else 0
+            w_num = float(v_weight) if v_weight else 0
+            total_db = h_num * w_num
             
             # BAGIAN PAYLOAD HARUS SEJAJAR DENGAN TOTAL_DB DI ATASNYA
             payload = {
@@ -260,6 +266,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
