@@ -10,7 +10,7 @@ import re
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
 # URL API BARU BAPAK
-API_URL = "https://script.google.com/macros/s/AKfycby3cKchG7S-PsrHNTzgmQT39W2qpiOvIeZjq84kSqhf84_zmo25V4rI2_0Nd3G_HWIA/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbxy6yXgkJgp9yo73SvkhAegi2NX8uWFomG8xlacvx8XkLMlXf5KD_Vkki9AE6Uh7Qjr/exec"
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
 st.markdown("""
@@ -190,6 +190,7 @@ with tab2:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
 
 
 
