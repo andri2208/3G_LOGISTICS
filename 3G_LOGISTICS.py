@@ -103,56 +103,54 @@ tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
 tab1, tab2 = st.tabs(tab_list)
 
 with tab1:
-    # 1. Pastikan Data Terambil (Mencegah NameError)
-    # Ganti 'get_data()' dengan nama fungsi ambil data Bapak jika berbeda
+    # 1. Panggil data dari Google Sheets (Sesuaikan nama fungsi Bapak)
     df = get_data() 
 
-    # 2. CSS SAKTI (Untuk Tampilan Paling Rapat & Tanpa Judul)
+    # 2. CSS SAKTI: Menghapus Judul & Merapatkan Jarak
     st.markdown("""
         <style>
-        .stRadio > div { margin-top: -20px; }
-        .stSelectbox { margin-top: -20px; }
-        /* Menghilangkan jarak putih besar di atas */
-        .block-container { padding-top: 1rem; }
+        .stRadio > div { margin-top: -30px; }
+        .stSelectbox { margin-top: -30px; }
+        div[data-testid="stColumn"] { padding: 0px; }
         </style>
         """, unsafe_allow_html=True)
 
     st.write("---")
 
-    # 3. Filter & Pilih (Satu Baris, Tanpa Label Teks yang Bikin Lebar)
-    col_a, col_b = st.columns([1, 2])
+    # 3. Baris Filter Super Minimalis (1 baris lurus)
+    col_kiri, col_kanan = st.columns([1, 2])
 
-    with col_a:
-        # horizontal radio tanpa label atas
-        status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], 
-                                 horizontal=True, label_visibility="collapsed")
+    with col_kiri:
+        # Pilih Status (Lunas/Belum) - Label disembunyikan
+        v_stat = st.radio("", ["Semua", "Belum Bayar", "Lunas"], 
+                          horizontal=True, label_visibility="collapsed")
 
-    with col_b:
-        # Filter data berdasarkan status
-        if status_filter != "Semua":
-            df_final = df[df['status'] == status_filter] if 'status' in df.columns else df
+    with col_kanan:
+        # Filter data dulu sebelum ditampilkan di dropdown
+        if df is not None and not df.empty:
+            df_f = df[df['status'] == v_stat] if v_stat != "Semua" else df
+            
+            if not df_f.empty:
+                # Pilih Customer - Label disembunyikan agar sejajar radio
+                v_cust = st.selectbox("", sorted(df_f['customer'].unique()), 
+                                      label_visibility="collapsed")
+            else:
+                v_cust = None
+                st.caption("Data tidak ditemukan")
         else:
-            df_final = df
-
-        if not df_final.empty:
-            # Dropdown tanpa label "PILIH CUSTOMER" agar minimalis
-            selected_cust = st.selectbox("", sorted(df_final['customer'].unique()), 
-                                         label_visibility="collapsed")
-        else:
-            selected_cust = None
-            st.caption("Data Kosong")
+            v_cust = None
+            st.error("Gagal mengambil data dari Google Sheets")
 
     st.write("---")
 
-    # 4. Tampilkan Invoice jika customer dipilih
-    if selected_cust:
-        # Filter data spesifik customer yang dipilih
-        data_invoice = df_final[df_final['customer'] == selected_cust]
+    # 4. Tampilkan Invoice jika sudah pilih nama
+    if v_cust:
+        data_inv = df_f[df_f['customer'] == v_cust]
         
         # --- LANJUTKAN KODE TAMPILAN INVOICE BAPAK DI SINI ---
-        st.success(f"Invoice untuk: {selected_cust}")
-        st.dataframe(data_invoice) # Contoh tampilan tabel
-            
+        st.success(f"Invoice: {v_cust}")
+        st.table(data_inv) # Menampilkan data dalam bentuk tabel minimalis
+        
 with tab2:
     st.subheader("➕ Input Pengiriman Baru")
     
@@ -223,6 +221,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
