@@ -148,6 +148,11 @@ with tab1:
             # Pastikan kolom 'status' sudah Bapak buat di Google Sheets
             if 'status' in df.columns:
                 df = df[df['status'] == status_filter]
+
+            # Cek lagi apakah setelah difilter datanya masih ada
+        if not df.empty and 'customer' in df.columns:
+            selected_cust = st.selectbox("PILIH CUSTOMER:", sorted(df['customer'].unique()))
+            row = df[df['customer'] == selected_cust].iloc[-1]
         
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
@@ -302,6 +307,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
