@@ -78,7 +78,7 @@ with header_container:
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 # --- LOGIC DATA ---
-API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbzQYctEFdKCwonDhbn7fOVtXKTiI9i53HBa-q0BzNc8F9aevvo0et-NAM4p-GGHqREUvw/exec"
 
 def get_data():
     try:
@@ -206,4 +206,5 @@ with tab2:
                     st.success("DATA TERSIMPAN!")
                     st.rerun()
                 except: st.error("ERROR!")
+
 
