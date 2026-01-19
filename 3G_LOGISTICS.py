@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import json
 from datetime import datetime
 import streamlit.components.v1 as components
 import re
@@ -12,79 +13,64 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM: FULL COLOR DENGAN TEKS PUTIH TERANG (ANTI-SCROLL)
+# 2. CSS CUSTOM: HANYA UNTUK INPUT DATA (TIDAK GANGGU INVOICE)
 st.markdown("""
     <style>
-    /* Dasar Web */
     .stApp { background-color: #F8FAFC; font-family: 'Inter', sans-serif; }
-    .block-container { padding-top: 0.5rem !important; padding-bottom: 0rem !important; }
-    
-    /* PANEL INPUT DATA (NAVY DARK) */
+    .block-container { padding-top: 1rem !important; }
+
+    /* PANEL INPUT DATA BERWARNA GELAP */
     [data-testid="stForm"] {
         background-color: #1A2A3A !important;
-        padding: 15px 25px !important; /* Dipersempit agar muat 1 layar */
-        border-radius: 15px !important;
-        border: 2px solid #B8860B !important; 
+        padding: 20px !important;
+        border-radius: 12px !important;
+        border: 2px solid #B8860B !important;
     }
 
-    /* LABEL INPUT (PUTIH TERANG) */
+    /* TEKS LABEL JADI PUTIH TERANG */
     .stWidgetLabel p { 
-        font-weight: 800 !important; 
         color: #FFFFFF !important; 
-        font-size: 12px !important; /* Font sedikit dikecilkan agar rapat */
+        font-weight: 800 !important;
+        font-size: 13px !important;
         text-transform: uppercase;
-        margin-bottom: -15px !important;
-        letter-spacing: 1px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        margin-bottom: -12px !important;
     }
 
-    /* KOTAK INPUT (PUTIH BERSIH, TEKS HITAM) */
+    /* KOTAK INPUT TETAP PUTIH DENGAN TEKS HITAM */
     .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"], .stNumberInput input {
         background-color: #FFFFFF !important;
-        border: 2px solid #B8860B !important;
-        border-radius: 8px !important;
-        height: 38px !important; /* Tinggi kotak dioptimalkan */
         color: #000000 !important;
-        font-size: 14px !important;
+        border-radius: 6px !important;
+        height: 38px !important;
         font-weight: 700 !important;
     }
-
-    /* Memastikan teks dalam tanggal & selectbox berwarna HITAM */
+    
+    /* FIX TEKS DALAM TANGGAL & SELECTBOX */
     div[data-baseweb="input"] input, div[data-baseweb="select"] div {
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
     }
-    
-    /* Menghilangkan Border Ganda */
-    div[data-baseweb="input"], div[data-baseweb="select"] { border: none !important; }
 
     /* TOMBOL SIMPAN EMAS */
     div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: #1A2A3A !important;
         font-weight: 900 !important;
-        text-transform: uppercase;
-        border-radius: 8px !important;
         height: 45px;
         width: 100%;
         border: none !important;
-        margin-top: 10px;
     }
 
-    /* Header & Tabs Ramping */
-    .custom-header { text-align: left; margin-bottom: 5px; }
-    .custom-header img { max-width: 250px; height: auto; }
-    .stTabs [aria-selected="true"] { color: #1A2A3A !important; border-bottom: 3px solid #B8860B !important; }
-    
+    /* Hapus Header Streamlit */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     
-    <div class="custom-header">
-        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png">
+    <div style="text-align: left; margin-bottom: 10px;">
+        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="max-width: 250px;">
     </div>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA
+# 3. LOGIC DATA (Sesuai Kode Bapak)
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1)
@@ -96,7 +82,7 @@ def get_data():
 
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
-    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
+    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
     return float(match[0]) if match else 0
 
 def terbilang(n):
@@ -115,7 +101,6 @@ def terbilang(n):
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
-    # AREA CETAK INVOICE (TIDAK DISENTUH SAMA SEKALI)
     data = get_data()
     if data:
         df = pd.DataFrame(data)
@@ -137,76 +122,96 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
+            # --- INVOICE ASLI BAPAK (100% TIDAK DIUBAH) ---
             invoice_html = f"""
-            <div id="inv" style="background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width: 100%;">
-                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px;">INVOICE</div>
-                <table style="width: 100%; font-weight: bold; font-size: 14px;">
-                    <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
-                </table>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-top: 10px;">
-                    <tr style="background: #f2f2f2;">
-                        <th style="border: 1px solid black; padding: 5px;">Description</th>
-                        <th style="border: 1px solid black; padding: 5px;">Origin</th>
-                        <th style="border: 1px solid black; padding: 5px;">Dest</th>
-                        <th style="border: 1px solid black; padding: 5px;">KOLLI</th>
-                        <th style="border: 1px solid black; padding: 5px;">HARGA</th>
-                        <th style="border: 1px solid black; padding: 5px;">WEIGHT</th>
-                        <th style="border: 1px solid black; padding: 5px;">TOTAL</th>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 5px;">{row['description']}</td>
-                        <td style="border: 1px solid black; padding: 5px;">{row['origin']}</td>
-                        <td style="border: 1px solid black; padding: 5px;">{row['destination']}</td>
-                        <td style="border: 1px solid black; padding: 5px;">{row['kolli']}</td>
-                        <td style="border: 1px solid black; padding: 5px;">Rp {int(h_val):,}</td>
-                        <td style="border: 1px solid black; padding: 5px;">{row['weight']}</td>
-                        <td style="border: 1px solid black; padding: 5px; font-weight: bold;">Rp {t_val:,}</td>
-                    </tr>
-                </table>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    body {{ background: #f0f0f0; padding: 10px; }}
+                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                    .header-img {{ width: 100%; height: auto; }}
+                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .data-table th {{ background-color: #f2f2f2; }}
+                    .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
+                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }}
+                </style>
+            </head>
+            <body>
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table">
+                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_indo}</td></tr>
+                    </table>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td>
+                                <td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td>
+                            </tr>
+                            <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="terbilang"><b>Terbilang:</b> {kata_terbilang}</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:65%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>
+                                BCA <b>6720422334</b><br>
+                                <b>ADITYA GAMA SAPUTRI</b><br>
+                                NB: Jika sudah transfer mohon konfirmasi ke<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">
+                                Sincerely,<br>
+                                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px; margin: 5px 0;"><br>
+                                <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
+                <script>
+                    function savePDF() {{
+                        const e = document.getElementById('inv');
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    }}
+                </script>
+            </body>
+            </html>
             """
-            st.components.v1.html(invoice_html, height=500)
+            components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin-top: -10px; margin-bottom: 5px;'>NEW DISPATCH ENTRY</h4>", unsafe_allow_html=True)
-    
+    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin: 0;'>NEW DISPATCH ENTRY</h4>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
-        # Baris 1
-        col1, col2 = st.columns(2)
-        with col1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN")
-        with col2: v_cust = st.text_input("🏢 NAMA CUSTOMER")
-
-        # Baris 2
+        c1, c2 = st.columns(2)
+        with c1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN")
+        with c2: v_cust = st.text_input("🏢 NAMA CUSTOMER")
         v_desc = st.text_input("📦 KETERANGAN BARANG")
-
-        # Baris 3
-        col3, col4 = st.columns(2)
-        with col3: v_orig = st.text_input("📍 ASAL (ORIGIN)")
-        with col4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
-
-        # Baris 4
-        col5, col6, col7 = st.columns(3)
-        with col5: v_kol = st.text_input("📦 JUMLAH KOLLI")
-        with col6: v_harga = st.text_input("💰 HARGA PER KG")
-        with col7: v_weight = st.text_input("⚖️ BERAT TOTAL")
-
-        # Baris 5
+        c3, c4 = st.columns(2)
+        with c3: v_orig = st.text_input("📍 ASAL (ORIGIN)")
+        with c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)")
+        c5, c6, c7 = st.columns(3)
+        with c5: v_kol = st.text_input("📦 JUMLAH KOLLI")
+        with c6: v_harga = st.text_input("💰 HARGA PER KG")
+        with c7: v_weight = st.text_input("⚖️ BERAT TOTAL")
         v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
-
-        # Tombol
         submit = st.form_submit_button("🚀 SIMPAN DATA KE GOOGLE SHEETS")
-
         if submit:
             if v_cust and v_harga:
                 try:
-                    payload = {
-                        "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
-                        "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                        "harga": float(v_harga), "weight": float(v_weight), 
-                        "total": float(v_harga) * float(v_weight), "status": v_status
-                    }
+                    payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
-                except: st.error("HARGA & BERAT HARUS ANGKA!")
+                except: st.error("CEK INPUT ANGKA!")
