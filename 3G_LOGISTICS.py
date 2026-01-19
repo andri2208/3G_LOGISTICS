@@ -9,59 +9,62 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (TEKS HITAM TEBAL, NO SHADOW, WARNA BIRU GAGAH)
+# 2. CSS FINAL (RESPONSIF & ANTI TERPOTONG)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 1.5rem !important; }
+    .block-container { padding-top: 1rem !important; padding-left: 1rem !important; padding-right: 1rem !important; }
 
-    /* PAKSA WARNA FORM JADI BIRU */
-    [data-testid="stForm"] { 
-        background-color: #719dc9 !important; 
-        padding: 2.5rem !important; 
-        border-radius: 20px !important; 
-        border: 5px solid #B8860B !important; 
+    /* --- PERBAIKAN TAB AGAR TIDAK TERPOTONG (RESPONSIF) --- */
+    div[data-testid="stTabs"] { 
+        position: sticky; top: 0; z-index: 999; 
+        background-color: white !important; 
+        padding-top: 5px; 
+        border-bottom: 4px solid #B8860B !important; 
+        margin-bottom: 20px !important;
+        overflow-x: visible !important; /* Biar tidak kepotong */
+    }
+    
+    /* Memaksa Tab untuk "bungkus" (wrap) ke bawah jika layar sempit */
+    div[data-baseweb="tab-list"] {
+        flex-wrap: wrap !important;
+        gap: 5px !important;
     }
 
-    /* TEKS LABEL DI DALAM FORM: HITAM & TEBAL */
+    .stTabs [data-baseweb="tab"] {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        height: auto !important;
+        white-space: normal !important; /* Teks tab bisa dua baris kalau panjang */
+    }
+
+    .stTabs [data-baseweb="tab"] p { 
+        color: #1A2A3A !important; 
+        font-weight: 900 !important; 
+        font-size: clamp(14px, 4vw, 18px) !important; /* Ukuran teks fleksibel sesuai layar */
+    }
+
+    /* --- FORM BIRU GAGAH --- */
+    [data-testid="stForm"] { 
+        background-color: #719dc9 !important; 
+        padding: 1.5rem !important; /* Mengecil di HP */
+        border-radius: 15px !important; 
+        border: 4px solid #B8860B !important; 
+    }
+
+    /* TEKS LABEL HITAM TEBAL */
     [data-testid="stForm"] label p, 
     [data-testid="stForm"] .stMarkdown p { 
         color: #000000 !important; 
         font-weight: 900 !important; 
-        font-size: 15px !important;
+        font-size: 14px !important;
         text-shadow: none !important; 
-        margin-bottom: 5px !important;
     }
 
-    /* TEKS FILTER DI TAB CETAK */
-    .stRadio label p, .stSelectbox label p {
-        color: #000000 !important;
-        font-weight: 900 !important;
-        text-shadow: none !important;
-    }
-
-    /* GAYA TAB */
-    div[data-testid="stTabs"] { 
-        position: sticky; top: 0; z-index: 999; 
-        background-color: white !important; 
-        padding-top: 10px; 
-        border-bottom: 4px solid #B8860B !important; 
-        margin-bottom: 20px !important;
-    }
-    
-    .stTabs [data-baseweb="tab"] p { 
-        color: #1A2A3A !important; 
-        font-weight: 900 !important; 
-        font-size: 18px; 
-    }
-
-    /* TOMBOL SIMPAN */
-    button[kind="primaryFormSubmit"] {
-        background-color: #B8860B !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 10px !important;
-        border: none !important;
+    /* Responsif untuk kolom: Di HP jadi satu kolom ke bawah */
+    @media (max-width: 640px) {
+        [data-testid="stForm"] { padding: 1rem !important; }
+        .stTabs [data-baseweb="tab"] p { font-size: 14px !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -313,4 +316,5 @@ with tab3:
         </html>
         """
         components.html(fake_html, height=850, scrolling=True)
+
 
