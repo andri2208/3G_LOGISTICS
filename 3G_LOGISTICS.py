@@ -13,53 +13,76 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM UNTUK TAMPILAN WEB (Hanya mengatur UI Streamlit)
+# 2. CSS CUSTOM UNTUK TAMPILAN WEB PRO & MINIMALIS
 st.markdown("""
     <style>
-    /* Mengatur warna background web dan font */
-    .stApp { background-color: #FDFCF0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    /* Dasar Web */
+    .stApp { background-color: #FDFCF0; font-family: 'Inter', sans-serif; }
+    .block-container { padding-top: 1.5rem !important; }
     
-    /* Merapatkan jarak container atas */
-    .block-container { padding-top: 1.5rem !important; padding-bottom: 0rem !important; }
-    
-    /* Header Gambar di kiri */
-    .custom-header { text-align: left; margin-bottom: 10px; }
-    .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
+    /* Header */
+    .custom-header { text-align: left; margin-bottom: 20px; }
+    .custom-header img { width: 100%; max-width: 400px; height: auto; }
 
-    /* Merapikan Input Field agar lebih modern & ramping */
-    .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"] {
+    /* STYLING INPUT DATA JADI PRO */
+    .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"], .stNumberInput input {
         background-color: #FFFFFF !important;
-        border: 1px solid #BCC6CC !important;
-        border-radius: 5px !important;
-        height: 35px !important;
+        border: 1px solid #D1D5DB !important;
+        border-radius: 6px !important;
+        height: 40px !important;
+        font-size: 14px !important;
+        transition: all 0.3s ease;
     }
     
-    /* Label dipertegas dan dirapatkan */
-    .stWidgetLabel p { 
-        font-weight: 800 !important; 
-        color: #1A2A3A !important; 
-        font-size: 13px !important;
-        margin-bottom: -10px !important;
+    .stTextInput input:focus {
+        border-color: #1A2A3A !important;
+        box-shadow: 0 0 0 2px rgba(26, 42, 58, 0.1) !important;
     }
 
-    /* Merapikan Tab */
-    .stTabs [data-baseweb="tab"] { font-size: 16px !important; font-weight: bold !important; color: #1A2A3A; }
-    
-    /* Sembunyikan elemen bawaan yang mengganggu scannability */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stStatusWidget"] { display: none !important; }
-    
-    /* Tombol Simpan agar lebih tegas */
+    /* Label Input */
+    .stWidgetLabel p { 
+        font-weight: 700 !important; 
+        color: #374151 !important; 
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: -12px !important;
+    }
+
+    /* Tab Header */
+    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
+    .stTabs [data-baseweb="tab"] {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #9CA3AF !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #1A2A3A !important;
+        border-bottom: 3px solid #1A2A3A !important;
+    }
+
+    /* Tombol Simpan Pro */
     div.stButton > button {
         background-color: #1A2A3A !important;
         color: white !important;
-        font-weight: bold !important;
-        border-radius: 5px !important;
+        font-weight: 800 !important;
+        letter-spacing: 1px;
+        border-radius: 6px !important;
         width: 100%;
+        height: 50px;
         border: none;
+        margin-top: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
+    
+    div.stButton > button:hover {
+        background-color: #2c3e50 !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hide Streamlit Decor */
+    #MainMenu, footer, header {visibility: hidden;}
+    [data-testid="stStatusWidget"] { display: none !important; }
     </style>
     
     <div class="custom-header">
@@ -67,9 +90,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = 0
-
+# 3. LOGIC DATA
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1, show_spinner=False)
@@ -78,19 +99,16 @@ def get_data():
         response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
         if response.status_code == 200:
             all_data = response.json()
-            if not all_data: return []
             for item in all_data:
                 if 'status' not in item: item['status'] = "Belum Bayar"
             return all_data
         return []
-    except:
-        return []
+    except: return []
 
 def extract_number(value):
     if pd.isna(value) or value == "": return 0
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', '').replace('Kg', '').replace('kg', ''))
-    if match: return float(match[0])
-    return 0
+    return float(match[0]) if match else 0
 
 def terbilang(n):
     bil = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
@@ -104,9 +122,8 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- TABS ---
-tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
-tab1, tab2 = st.tabs(tab_list)
+# 4. TAMPILAN TABS
+tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
     data = get_data()
@@ -116,21 +133,11 @@ with tab1:
         df = pd.DataFrame(data)
         st.write("---")
         col_f1, col_f2 = st.columns([1, 1.5]) 
-        
         with col_f1:
             status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-        
         with col_f2:
-            if status_filter != "Semua":
-                df_filtered = df[df['status'] == status_filter]
-            else:
-                df_filtered = df
-
-            if not df_filtered.empty:
-                selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique()))
-            else:
-                st.warning("Data tidak ditemukan")
-                selected_cust = None
+            df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
+            selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique())) if not df_filtered.empty else None
         st.write("---")
         
         if selected_cust and not df_filtered.empty:
@@ -138,16 +145,12 @@ with tab1:
             b_val = extract_number(row['weight'])
             h_val = extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-            
             tgl_raw = str(row['date']).split('T')[0]
-            try:
-                tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
-            except:
-                tgl_indo = tgl_raw
-                
+            try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # --- INVOICE HTML ASLI (TIDAK DIRUBAH) ---
+            # INVOICE HTML (TIDAK DIRUBAH SAMA SEKALI)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -217,37 +220,51 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.subheader("➕ Input Pengiriman Baru")
+    st.markdown("<h3 style='text-align: center; color: #1A2A3A; margin-bottom: 25px;'>NEW DISPATCH ENTRY</h3>", unsafe_allow_html=True)
+    
     with st.form("input_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1: v_tgl = st.date_input("Tanggal", value=datetime.now())
-        with col2: v_cust = st.text_input("Nama Customer")
-        v_desc = st.text_input("Keterangan Barang")
-        col3, col4 = st.columns(2)
-        with col3: v_orig = st.text_input("Asal (Origin)")
-        with col4: v_dest = st.text_input("Tujuan (Destination)")
-        col5, col6, col7 = st.columns(3)
-        with col5: v_kol = st.text_input("Kolli")
-        with col6: v_harga = st.text_input("Harga/KG")
-        with col7: v_weight = st.text_input("Berat (KG)")
-        v_status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Lunas"])
-        submit = st.form_submit_button("🚀 SIMPAN & BERSIHKAN")
+        # BARIS 1
+        c1, c2 = st.columns(2)
+        with c1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN", value=datetime.now())
+        with c2: v_cust = st.text_input("🏢 NAMA CUSTOMER", placeholder="Contoh: PT. MAJU JAYA")
+
+        # BARIS 2
+        v_desc = st.text_input("📦 KETERANGAN BARANG", placeholder="Contoh: SPAREPART MESIN")
+
+        # BARIS 3
+        c3, c4 = st.columns(2)
+        with c3: v_orig = st.text_input("📍 ASAL (ORIGIN)", placeholder="SBY")
+        with c4: v_dest = st.text_input("🏁 TUJUAN (DESTINATION)", placeholder="PAPUA")
+
+        # BARIS 4
+        c5, c6, c7 = st.columns(3)
+        with c5: v_kol = st.text_input("📦 KOLLI", placeholder="0")
+        with c6: v_harga = st.text_input("💰 HARGA / KG", placeholder="0")
+        with c7: v_weight = st.text_input("⚖️ BERAT (KG)", placeholder="0")
+
+        # BARIS 5
+        v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
+
+        # TOMBOL
+        st.write("##") # Spasi
+        submit = st.form_submit_button("🚀 SIMPAN DATA KE DATABASE")
 
         if submit:
             if not v_cust or not v_harga:
-                st.error("Nama Customer dan Harga tidak boleh kosong!")
+                st.error("Nama Customer dan Harga wajib diisi!")
             else:
-                h_num = float(v_harga) if v_harga else 0
-                w_num = float(v_weight) if v_weight else 0
-                payload = {
-                    "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
-                    "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                    "harga": h_num, "weight": w_num, "total": h_num * w_num, "status": v_status
-                }
                 try:
+                    h_num = float(v_harga)
+                    w_num = float(v_weight) if v_weight else 0
+                    payload = {
+                        "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
+                        "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
+                        "harga": h_num, "weight": w_num, "total": h_num * w_num, "status": v_status
+                    }
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
-                        st.success(f"Data {v_cust.upper()} Berhasil Disimpan!")
-                        st.rerun() 
-                    else: st.error("Gagal simpan ke server.")
-                except: st.error("Koneksi Error.")
+                        st.success(f"Berhasil! Data {v_cust.upper()} telah tersimpan.")
+                        st.rerun()
+                    else: st.error("Gagal terhubung ke Google Sheets.")
+                except ValueError:
+                    st.error("Harga dan Berat harus berupa angka!")
