@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd  # <--- INI SUDAH SAYA PERBAIKI
+import pandas as pd
 import requests
 import json
 from datetime import datetime
@@ -9,7 +9,7 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (Sesuai permintaan Bapak)
+# 2. CSS FINAL
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
@@ -23,14 +23,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. AREA HEADER
+# 3. HEADER
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 
-# 4. TAMPILAN TABS
+# 4. TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# GANTI DENGAN URL DEPLOY TERBARU BAPAK
-API_URL = "https://script.google.com/macros/s/AKfycbzQYctEFdKCwonDhbn7fOVtXKTiI9i53HBa-q0BzNc8F9aevvo0et-NAM4p-GGHqREUvw/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbwI8Ep0hTn2zoDOuYMpjvD4G_coxfBRr1MzAtOgCcI-5ufcR4CllgZsA__ekfDb_BP_/exec"
 
 def get_data():
     try:
@@ -60,27 +59,28 @@ with tab1:
     if data:
         df = pd.DataFrame(data)
         st.write("###")
-        f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
-        with f_col1:
-            status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-            df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
-        with f_col2:
-            cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("**NAMA CUSTOMER:**", cust_list)
-        with f_col3:
-            if selected_cust:
-                sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
+        f1, f2, f3 = st.columns([1, 1.2, 1.5])
+        with f1:
+            st_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+            df_f = df[df['status'] == st_filter] if st_filter != "Semua" else df
+        with f2:
+            c_list = sorted(df_f['customer'].unique()) if not df_f.empty else []
+            s_cust = st.selectbox("**NAMA CUSTOMER:**", c_list)
+        with f3:
+            if s_cust:
+                sub_df = df_f[df_f['customer'] == s_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
+                s_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
 
-        if selected_cust and selected_label:
-            row = sub_df[sub_df['label'] == selected_label].iloc[-1]
-            b_val = extract_number(row['weight'])
-            h_val = extract_number(row['harga'])
+        if s_cust and s_label:
+            row = sub_df[sub_df['label'] == s_label].iloc[-1]
+            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
-            kata_terbilang = terbilang(t_val) + " Rupiah"
-
+            try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            except: tgl_indo = tgl_raw
+            
+            # --- TAMPILAN INVOICE ---
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -102,36 +102,40 @@ with tab1:
                 <div id="inv">
                     <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
                     <div class="title">INVOICE</div>
-                    <table class="info-table"><tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">DATE: {tgl_raw}</td></tr></table>
+                    <table class="info-table">
+                        <tr>
+                            <td>CUSTOMER: {row['customer']}</td>
+                            <td style="text-align:right;">NO: {row.get('inv_no', '-')}</td>
+                        </tr>
+                        <tr>
+                            <td>DATE: {tgl_indo}</td>
+                            <td style="text-align:right;">STATUS: {row['status'].upper()}</td>
+                        </tr>
+                    </table>
                     <table class="data-table">
                         <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
                         <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
                         <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </table>
-                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {kata_terbilang}</div>
-                  <table class="footer-table">
-    <tr>
-        <td style="width:65%; vertical-align:top;">
-            <b>TRANSFER TO :</b><br>
-            BCA <b>6720422334</b><br>
-            <b>ADITYA GAMA SAPUTRI</b><br>
-            <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
-        </td>
-        <td style="text-align:center; vertical-align:top;">
-            Sincerely,<br>
-            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br>
-            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
-        </td>
-    </tr>
-</table>
-
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:65%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>
+                                BCA <b>6720422334</b><br>
+                                <b>ADITYA GAMA SAPUTRI</b><br><br>
+                                <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                        </tr>
+                    </table>
                 </div>
                 <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
                 <script>
                     function savePDF() {{
                         const e = document.getElementById('inv');
-                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{row.get("inv_no", "3G")}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
                     }}
                 </script>
             </body>
@@ -151,8 +155,8 @@ with tab2:
         v_dest = r5.text_input("🏁 DESTINATION")
         v_kol = r6.text_input("📦 KOLLI")
         r7, r8, r9 = st.columns(3)
-        v_harga = r7.text_input("💰 HARGA (Angka saja)")
-        v_weight = r8.text_input("⚖️ BERAT (Angka saja)")
+        v_harga = r7.text_input("💰 HARGA")
+        v_weight = r8.text_input("⚖️ BERAT")
         v_status = r9.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
         if st.form_submit_button("🚀 SIMPAN SEKARANG"):
@@ -162,7 +166,3 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
-
-
-
-
