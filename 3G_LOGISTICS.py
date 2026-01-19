@@ -13,13 +13,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM (TEKS EXTRA TEBAL)
+# 2. CSS CUSTOM (EFEK HOVER & CURSOR)
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
-    .block-container { padding-top: 1rem !important; }
     
-    /* PANEL INPUT DATA */
+    /* INPUT & SELECTBOX STYLE */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
@@ -27,33 +26,27 @@ st.markdown("""
         border: 3px solid #B8860B !important;
     }
     
-    /* LABEL PUTIH EXTRA TEBAL */
+    /* LABEL EXTRA TEBAL */
     .stWidgetLabel p { 
         color: #FFFFFF !important; 
-        font-weight: 900 !important; /* Maksimal Tebal */
+        font-weight: 900 !important; 
         font-size: 15px !important; 
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: -10px !important;
     }
     
-    /* INPUT BOX DENGAN TEKS HITAM TEBAL */
+    /* CURSOR POINTER PADA DROPDOWN */
+    div[data-baseweb="select"], .stSelectbox {
+        cursor: pointer !important;
+    }
+
     .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
         background-color: #FFFFFF !important; 
         color: #000000 !important; 
-        font-weight: 900 !important; /* Maksimal Tebal */
+        font-weight: 900 !important; 
         font-size: 16px !important;
-        border-radius: 8px !important;
     }
 
-    /* DROPDOWN & FILTER TEKS TEBAL */
-    div[data-baseweb="select"] span, div[data-baseweb="input"] input {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        font-weight: 900 !important;
-    }
-
-    /* TOMBOL SIMPAN */
+    /* TOMBOL SIMPAN - WARNA ASLI EMAS */
     div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
         color: #000000 !important; 
@@ -62,12 +55,22 @@ st.markdown("""
         width: 100% !important; 
         height: 50px;
         border: 2px solid #000 !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease;
     }
-    
-    /* Header Radio Filter */
-    div[data-testid="stMarkdownContainer"] p {
-        font-weight: 900 !important;
-        color: #1A2A3A !important;
+
+    /* HOVER BERUBAH WARNA HIJAU */
+    div.stButton > button:hover {
+        background: #28a745 !important; /* Hijau */
+        color: #FFFFFF !important;
+        border: 2px solid #FFFFFF !important;
+        transform: scale(1.02);
+    }
+
+    /* EFEK SAAT KLIK (ACTIVE) */
+    div.stButton > button:active {
+        transform: scale(0.95);
+        background: #1e7e34 !important; /* Hijau lebih gelap */
     }
 
     #MainMenu, footer, header {visibility: hidden;}
@@ -114,12 +117,12 @@ with tab1:
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("**CUSTOMER:**", cust_list)
+            selected_cust = st.selectbox("**CUSTOMER:**", cust_list, key="cust_select")
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
+                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist(), key="trans_select")
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
@@ -130,7 +133,6 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE ASLI TETAP AMAN
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
