@@ -9,40 +9,73 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (RESPONSIVE & TEKS HITAM TEBAL)
+# 2. CSS FINAL (KODE ASLI BAPAK + FIX RESPONSIVE HP)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding: 1rem !important; }
+    .block-container { padding-top: 1.5rem !important; }
 
     /* PAKSA WARNA FORM JADI BIRU */
     [data-testid="stForm"] { 
         background-color: #719dc9 !important; 
-        padding: 1.5rem !important; 
-        border-radius: 15px !important; 
-        border: 4px solid #B8860B !important; 
+        padding: 2.5rem !important; 
+        border-radius: 20px !important; 
+        border: 5px solid #B8860B !important; 
     }
 
-    /* TEKS HITAM TEBAL */
-    [data-testid="stForm"] label p, .stRadio label p, .stSelectbox label p {
+    /* TEKS LABEL DI DALAM FORM: HITAM & TEBAL */
+    [data-testid="stForm"] label p, 
+    [data-testid="stForm"] .stMarkdown p { 
         color: #000000 !important; 
-        font-weight: 900 !important;
+        font-weight: 900 !important; 
+        font-size: 15px !important;
+        text-shadow: none !important; 
+        margin-bottom: 5px !important;
     }
 
-    /* GAYA TAB AGAR TIDAK KELEBARAN DI HP */
-    div[data-testid="stTabs"] { border-bottom: 3px solid #B8860B !important; }
-    .stTabs [data-baseweb="tab"] p { font-size: 14px !important; font-weight: 900 !important; }
+    /* TEKS FILTER DI TAB CETAK */
+    .stRadio label p, .stSelectbox label p {
+        color: #000000 !important;
+        font-weight: 900 !important;
+        text-shadow: none !important;
+    }
 
-    /* PERBAIKAN KOLOM DI HP */
+    /* GAYA TAB */
+    div[data-testid="stTabs"] { 
+        position: sticky; top: 0; z-index: 999; 
+        background-color: white !important; 
+        padding-top: 10px; 
+        border-bottom: 4px solid #B8860B !important; 
+        margin-bottom: 20px !important;
+    }
+    
+    .stTabs [data-baseweb="tab"] p { 
+        color: #1A2A3A !important; 
+        font-weight: 900 !important; 
+        font-size: 18px; 
+    }
+
+    /* TOMBOL SIMPAN */
+    button[kind="primaryFormSubmit"] {
+        background-color: #B8860B !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
+        border: none !important;
+    }
+
+    /* FIX HP: Supaya kolom form tidak menumpuk jelek */
     @media (max-width: 640px) {
-        [data-testid="stHorizontalBlock"] { flex-direction: column !important; gap: 0px !important; }
+        div[data-testid="stHorizontalBlock"] { flex-direction: column !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. HEADER & TABS
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=300)
-tab1, tab2, tab3 = st.tabs(["📄 CETAK", "➕ TAMBAH", "🎭 FAKE"])
+# 3. HEADER
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
+
+# 4. TABS (TAB 1 & 2 ASLI BAPAK, TAB 3 TAMBAHAN FAKE)
+tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
 
 API_URL = "https://script.google.com/macros/s/AKfycbwI8Ep0hTn2zoDOuYMpjvD4G_coxfBRr1MzAtOgCcI-5ufcR4CllgZsA__ekfDb_BP_/exec"
 
@@ -51,6 +84,11 @@ def get_data():
         response = requests.get(f"{API_URL}?t={datetime.now().timestamp()}")
         return response.json() if response.status_code == 200 else []
     except: return []
+
+def extract_number(value):
+    if value is None or value == "": return 0
+    match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
+    return float(match[0]) if match else 0
 
 def terbilang(n):
     bil = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
@@ -64,63 +102,147 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# --- TAB 1: CETAK INVOICE ---
 with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        s_cust = st.selectbox("**NAMA CUSTOMER:**", sorted(df['customer'].unique()) if not df.empty else [])
-        if s_cust:
-            sub_df = df[df['customer'] == s_cust].copy()
-            sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-            s_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
-            
+        f1, f2, f3 = st.columns([1, 1.2, 1.5])
+        with f1:
+            st_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+            df_f = df[df['status'] == st_filter] if st_filter != "Semua" else df
+        with f2:
+            c_list = sorted(df_f['customer'].unique()) if not df_f.empty else []
+            s_cust = st.selectbox("**NAMA CUSTOMER:**", c_list)
+        with f3:
+            if s_cust:
+                sub_df = df_f[df_f['customer'] == s_cust].copy()
+                sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
+                s_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
+
+        if s_cust and s_label:
             row = sub_df[sub_df['label'] == s_label].iloc[-1]
-            t_val = int(float(str(row['weight']).replace(',','')) * float(str(row['harga']).replace(',',''))) if row['weight'] else int(float(str(row['harga']).replace(',','')))
+            b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
+            t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
+            tgl_raw = str(row['date']).split('T')[0]
+            try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
+            except: tgl_indo = tgl_raw
             
             invoice_html = f"""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-            <div id="inv" style="background: white; padding: 15px; width: 95%; max-width: 800px; margin: auto; color: black; font-family: Arial; border: 1px solid #eee;">
-                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
-                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 10px 0; padding: 5px; font-weight: bold;">INVOICE</div>
-                <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px;">
-                    CUSTOMER: {row['customer']}<br>DATE: {row['date'].split('T')[0]}<br>STATUS: {row['status']}
-                </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
-                        <tr style="border: 1px solid black; background: #eee;"><th>Item</th><th>Qty</th><th>Total</th></tr>
-                        <tr style="border: 1px solid black;"><td>{row['description']}</td><td>{row['weight']}</td><td>Rp {t_val:,}</td></tr>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    body {{ background: #f0f0f0; padding: 10px; margin: 0; }}
+                    #inv {{ background: white; padding: 25px; width: 100%; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; box-sizing: border-box; }}
+                    .header-img {{ width: 100%; height: auto; }}
+                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                    .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+                    .btn-dl {{ width: 100%; max-width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+                </style>
+            </head>
+            <body>
+                <div id="inv">
+                    <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                    <div class="title">INVOICE</div>
+                    <table class="info-table">
+                        <tr><td>CUSTOMER: {row['customer']}</td><td style="text-align:right;">NO: {row.get('inv_no', '-')}</td></tr>
+                        <tr><td>DATE: {tgl_indo}</td><td style="text-align:right;">STATUS: {row['status'].upper()}</td></tr>
+                    </table>
+                    <table class="data-table">
+                        <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                        <tr><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
+                        <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                    </table>
+                    <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
+                    <table class="footer-table">
+                        <tr>
+                            <td style="width:65%; vertical-align:top;">
+                                <b>TRANSFER TO :</b><br>
+                                BCA <b>6720422334</b><br>
+                                <b>ADITYA GAMA SAPUTRI</b><br><br>
+                                <i>NB: Jika sudah transfer mohon konfirmasi ke<br>Finance: <b>082179799200</b></i>
+                            </td>
+                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                        </tr>
                     </table>
                 </div>
-                <div style="border: 1px solid black; padding: 5px; margin-top: 10px; font-size: 11px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+                <script>
+                    function savePDF() {{
+                        const e = document.getElementById('inv');
+                        html2pdf().set({{ margin: 0, filename: 'Inv_{row.get("inv_no", "3G")}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                    }}
+                </script>
+            </body>
+            </html>
+            """
+            components.html(invoice_html, height=850, scrolling=True)
+
+with tab2:
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900; margin-top: -10px;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    with st.form("input_form", clear_on_submit=True):
+        r1, r2, r3 = st.columns(3)
+        v_tgl, v_cust, v_desc = r1.date_input("📅 TANGGAL"), r2.text_input("🏢 CUSTOMER"), r3.text_input("📦 ITEM")
+        r4, r5, r6 = st.columns(3)
+        v_orig, v_dest, v_kol = r4.text_input("📍 ORIGIN"), r5.text_input("🏁 DESTINATION"), r6.text_input("📦 KOLLI")
+        r7, r8, r9 = st.columns(3)
+        v_harga, v_weight, v_status = r7.text_input("💰 HARGA"), r8.text_input("⚖️ BERAT"), r9.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        
+        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
+            if v_cust and v_harga:
+                payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": v_harga, "weight": v_weight, "status": v_status}
+                requests.post(API_URL, json=payload)
+                st.cache_data.clear()
+                st.success("DATA TERSIMPAN!"); st.rerun()
+
+# --- TAB 3: FAKE INVOICE (MENGIKUTI GAYA BAPAK) ---
+with tab3:
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900; margin-top: -10px;'>MANUAL FAKE INVOICE</h2>", unsafe_allow_html=True)
+    with st.form("fake_form"):
+        c1, c2, c3 = st.columns(3)
+        f_no = c1.text_input("📄 NO INVOICE", "3G/INV/2026/002")
+        f_cust = c2.text_input("🏢 CUSTOMER", "ZENTRUP")
+        f_tgl = c3.date_input("📅 TANGGAL")
+        c4, c5, c6 = st.columns(3)
+        f_item, f_orig, f_dest = c4.text_input("📦 ITEM"), c5.text_input("📍 ORIGIN"), c6.text_input("🏁 DEST")
+        c7, c8, c9 = st.columns(3)
+        f_kol, f_weight = c7.text_input("📦 KOLLI"), c8.text_input("⚖️ WEIGHT")
+        f_total = c9.number_input("💰 TOTAL BAYAR", value=4071500)
+        
+        if st.form_submit_button("✨ GENERATE FAKE INVOICE"):
+            terbilang_f = terbilang(f_total) + " Rupiah"
+            fake_html = f"""
+            <div id="fake-inv" style="background: white; padding: 25px; width: 100%; max-width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; box-sizing: border-box;">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="width:100%;">
+                <div style="text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px;">INVOICE</div>
+                <table style="width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold;">
+                    <tr><td>CUSTOMER: {f_cust.upper()}</td><td style="text-align:right;">NO: {f_no}</td></tr>
+                    <tr><td>DATE: {f_tgl.strftime('%d/%m/%Y')}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
+                </table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center;">
+                    <tr style="border: 1px solid black;"><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                    <tr><td style="border: 1px solid black;">{f_item.upper()}</td><td style="border: 1px solid black;">{f_orig.upper()}</td><td style="border: 1px solid black;">{f_dest.upper()}</td><td style="border: 1px solid black;">{f_kol}</td><td style="border: 1px solid black;"> </td><td style="border: 1px solid black;">{f_weight}</td><td style="border: 1px solid black; font-weight:bold;">Rp {f_total:,}</td></tr>
+                    <tr style="font-weight:bold;"><td colspan="6" style="border: 1px solid black; text-align:right;">TOTAL BAYAR</td><td style="border: 1px solid black;">Rp {f_total:,}</td></tr>
+                </table>
+                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang_f}</div>
+                <table style="width: 100%; margin-top: 30px; font-size: 12px;">
+                    <tr>
+                        <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b></td>
+                        <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                    </tr>
+                </table>
             </div>
-            <button style="width: 100%; margin-top: 10px; background: #49bf59; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;" onclick="savePDF()">📥 DOWNLOAD PDF</button>
+            <button style="width: 100%; max-width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="saveFake()">📥 DOWNLOAD FAKE PDF</button>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <script>
-                function savePDF() {{
-                    const e = document.getElementById('inv');
-                    html2pdf().set({{ margin: 0.1, filename: 'Inv.pdf', html2canvas: {{ scale: 2 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                function saveFake() {{
+                    const e = document.getElementById('fake-inv');
+                    html2pdf().set({{ margin: 0, filename: 'Fake_Inv.pdf', html2canvas: {{ scale: 3 }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
                 }}
             </script>
             """
-            components.html(invoice_html, height=600, scrolling=True)
-
-# --- TAB 2: TAMBAH DATA (ASLI BAPAK) ---
-with tab2:
-    with st.form("input_form", clear_on_submit=True):
-        v_tgl = st.date_input("📅 TANGGAL")
-        v_cust = st.text_input("🏢 CUSTOMER")
-        v_item = st.text_input("📦 ITEM")
-        # Kolom lainnya...
-        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
-            st.success("DATA TERSIMPAN!")
-
-# --- TAB 3: FAKE INVOICE (RESPONSIVE) ---
-with tab3:
-    st.markdown("<h3 style='text-align: center; color: black;'>INVOICE MANUAL</h3>", unsafe_allow_html=True)
-    with st.form("fake_form"):
-        fk_cust = st.text_input("🏢 NAMA CUSTOMER")
-        fk_total = st.number_input("💰 TOTAL BAYAR", value=1000000)
-        if st.form_submit_button("✨ GENERATE FAKE"):
-            terbilang_f = terbilang(fk_total) + " Rupiah"
-            # Tampilan HTML yang sama dengan Tab 1 agar responsive
-            st.info("Invoice Generated! Klik Download di bawah.")
+            components.html(fake_html, height=850, scrolling=True)
