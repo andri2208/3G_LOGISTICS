@@ -9,16 +9,35 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (MEMAKSA WARNA KELUAR)
+# 2. CSS FINAL (TEKS HITAM TEBAL, NO SHADOW)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Asli */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     .block-container { padding-top: 1.5rem !important; }
 
-    /* PAKSA WARNA BACKGROUND TAB & HALAMAN */
-    .stApp {
-        background-color: white !important;
+    /* PAKSA WARNA FORM JADI BIRU */
+    [data-testid="stForm"] { 
+        background-color: #719dc9 !important; 
+        padding: 2.5rem !important; 
+        border-radius: 20px !important; 
+        border: 5px solid #B8860B !important; 
+    }
+
+    /* TEKS LABEL DI DALAM FORM: HITAM & TEBAL */
+    [data-testid="stForm"] label p, 
+    [data-testid="stForm"] .stMarkdown p { 
+        color: #000000 !important; /* HITAM PEKAT */
+        font-weight: 900 !important; /* SUPER TEBAL */
+        font-size: 15px !important;
+        text-shadow: none !important; /* HAPUS SHADOW */
+        margin-bottom: 5px !important;
+    }
+
+    /* TEKS FILTER DI TAB CETAK (STATUS, CUSTOMER, DLL) */
+    .stRadio label p, .stSelectbox label p {
+        color: #000000 !important;
+        font-weight: 900 !important;
+        text-shadow: none !important;
     }
 
     /* GAYA TAB */
@@ -27,44 +46,22 @@ st.markdown("""
         background-color: white !important; 
         padding-top: 10px; 
         border-bottom: 4px solid #B8860B !important; 
-        margin-bottom: 25px !important;
+        margin-bottom: 20px !important;
     }
+    
     .stTabs [data-baseweb="tab"] p { 
         color: #1A2A3A !important; 
-        font-weight: 800 !important; 
-        font-size: 18px; 
-    }
-
-    /* PAKSA WARNA FORM JADI BIRU LAGI */
-    [data-testid="stForm"] { 
-        background-color: #719dc9 !important; /* WARNA BIRU */
-        padding: 2.5rem !important; 
-        border-radius: 20px !important; 
-        border: 5px solid #B8860B !important; /* BORDER EMAS TEBAL */
-        box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
-    }
-
-    /* WARNA TEKS LABEL DI DALAM FORM */
-    [data-testid="stForm"] .stMarkdown p, 
-    [data-testid="stForm"] label p { 
-        color: white !important; 
         font-weight: 900 !important; 
-        font-size: 14px !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        font-size: 18px; 
     }
 
     /* TOMBOL SIMPAN */
     button[kind="primaryFormSubmit"] {
         background-color: #B8860B !important;
         color: white !important;
-        border: 2px solid white !important;
         font-weight: bold !important;
-    }
-
-    /* ATUR JARAK FILTER AGAR TIDAK POLOS */
-    .stRadio label p, .stSelectbox label p {
-        color: #1A2A3A !important;
-        font-weight: bold !important;
+        border-radius: 10px !important;
+        border: none !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -211,5 +208,6 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
 
 
