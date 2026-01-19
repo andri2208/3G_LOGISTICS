@@ -109,14 +109,14 @@ with tab1:
                         <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
                     </table>
                     <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {kata_terbilang}</div>
-                    <table class="footer-table">
+                  <table class="footer-table">
     <tr>
         <td style="width:65%; vertical-align:top;">
             <b>TRANSFER TO :</b><br>
             BCA <b>6720422334</b><br>
             <b>ADITYA GAMA SAPUTRI</b><br><br>
             <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
-            Finance: <b>082179799200</b></i>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
         </td>
         <td style="text-align:center; vertical-align:top;">
             Sincerely,<br>
@@ -162,5 +162,6 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
 
 
