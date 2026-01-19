@@ -139,7 +139,7 @@ with tab1:
                     .data-table th {{ background-color: #f2f2f2; }}
                     .terbilang {{ border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px; font-style: italic; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
-                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: 700px; cursor: pointer; font-size: 16px; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: 700px; cursor: pointer; font-size: 16px; }}
                 </style>
             </head>
             <body>
@@ -179,7 +179,7 @@ with tab1:
                         </tr>
                     </table>
                 </div>
-                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
                 <script>
                     function savePDF() {{
                         const e = document.getElementById('inv');
@@ -192,7 +192,7 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin: 0;'>NEW DISPATCH ENTRY</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: #1A2A3A; margin: 0;'>NEW ENTRY</h4>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1: v_tgl = st.date_input("📅 TANGGAL PENGIRIMAN")
@@ -206,7 +206,7 @@ with tab2:
         with c6: v_harga = st.text_input("💰 HARGA PER KG")
         with c7: v_weight = st.text_input("⚖️ BERAT TOTAL")
         v_status = st.selectbox("💳 STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
-        submit = st.form_submit_button("🚀 SIMPAN DATA KE GOOGLE SHEETS")
+        submit = st.form_submit_button("🚀 SIMPAN DATA")
         if submit:
             if v_cust and v_harga:
                 try:
@@ -215,6 +215,7 @@ with tab2:
                     st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
                 except: st.error("CEK INPUT ANGKA!")
+
 
 
 
