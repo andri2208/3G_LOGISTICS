@@ -13,13 +13,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS CUSTOM
+# 2. CSS CUSTOM (Hanya untuk Panel Input & Filter)
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #F8FAFC; }
     [data-testid="stForm"] { background-color: #719dc9 !important; padding: 1.5rem !important; border-radius: 12px !important; border: 2px solid #B8860B !important; }
     .stWidgetLabel p { color: #FFFFFF !important; font-weight: 800 !important; font-size: 13px !important; text-transform: uppercase; margin-bottom: -10px !important; }
-    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] { background-color: #FFFFFF !important; color: #000000 !important; font-weight: 700 !important; }
+    
+    /* Warna Label di luar Form (Filter) agar tetap terbaca */
+    [data-testid="stHeader"] + div label p { color: #1A2A3A !important; }
+
+    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] { 
+        background-color: #FFFFFF !important; color: #000000 !important; font-weight: 700 !important; 
+    }
     div.stButton > button { background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important; color: #1A2A3A !important; font-weight: 900 !important; width: 100% !important; height: 45px; }
     #MainMenu, footer, header {visibility: hidden;}
     </style>
@@ -63,24 +69,28 @@ with tab1:
         df = pd.DataFrame(data)
         st.write("---")
         
-        # FILTER PERTAMA: STATUS & NAMA
-        c_inv1, c_inv2 = st.columns(2)
-        with c_inv1:
-            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-        with c_inv2:
-            df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
-            cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("1. Pilih Customer:", cust_list)
+        # BARIS FILTER (Dibuat Sejajar 3 Kolom)
+        f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         
-        # FILTER KEDUA: JIKA NAMA DOBEL, PILIH DATA BERDASARKAN TANGGAL/BARANG
-        if selected_cust:
-            sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
-            # Buat label pilihan: Tanggal - Barang
-            sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
+        with f_col1:
+            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
+            df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
             
-            selected_label = st.selectbox("2. Pilih Transaksi (Jika ada banyak):", sub_df['label'].tolist())
+        with f_col2:
+            cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
+            selected_cust = st.selectbox("Pilih Customer:", cust_list)
             
-            # Ambil satu baris yang spesifik dipilih
+        with f_col3:
+            if selected_cust:
+                sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
+                # Label: Tgl - Nama Barang
+                sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
+                selected_label = st.selectbox("Pilih Transaksi:", sub_df['label'].tolist())
+            else:
+                st.selectbox("Pilih Transaksi:", ["Pilih Customer Dulu"], disabled=True)
+
+        # TAMPILKAN INVOICE JIKA TRANSAKSI SUDAH DIPILIH
+        if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
             
             b_val = extract_number(row['weight'])
@@ -91,7 +101,7 @@ with tab1:
             except: tgl_indo = tgl_raw
             kata_terbilang = terbilang(t_val) + " Rupiah"
 
-            # INVOICE ASLI (NB LENGKAP)
+            # INVOICE ASLI (NB Konfirmasi Aman)
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
