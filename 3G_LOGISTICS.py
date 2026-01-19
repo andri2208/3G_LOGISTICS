@@ -13,44 +13,70 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS SAKTI: WARNA INPUT, TEKS TEBAL, & JARAK RAPAT
+# 2. CSS SAKTI: DESAIN PROFESIONAL & ELEGAN
 st.markdown("""
     <style>
-    /* Background Utama */
-    .stApp { background-color: #FDFCF0; }
+    /* Background & Font */
+    .stApp { background-color: #FDFCF0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     
     /* Header & Navigasi */
     header, footer, #MainMenu {visibility: hidden;}
     .block-container { padding-top: 1rem !important; }
     
-    /* TEKS LABEL TEBAL & HITAM */
+    /* TEKS LABEL PROFESIONAL */
     .stWidgetLabel p { 
-        font-weight: 900 !important; 
-        color: #000000 !important; 
-        font-size: 14px !important;
-        margin-bottom: -15px !important;
+        font-weight: 700 !important; 
+        color: #2C3E50 !important; 
+        font-size: 13px !important;
+        margin-bottom: -10px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    /* KOLOM INPUT: PUTIH, BORDER TEBAL, TEKS TEBAL */
+    /* KOLOM INPUT ELEGAN */
     .stTextInput input, .stDateInput div, .stSelectbox div[data-baseweb="select"] {
         background-color: #FFFFFF !important;
-        border: 2px solid #1A2A3A !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
-        color: #000000 !important;
-        height: 40px !important;
+        border: 1px solid #D5DBDB !important; /* Garis tipis modern */
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        color: #1C2833 !important;
+        height: 38px !important;
+        transition: all 0.3s ease;
     }
 
-    /* Merapatkan Jarak Antar Elemen */
-    .stVerticalBlock { gap: 0.5rem !important; }
-    .stRadio > div { margin-top: -20px; gap: 15px; }
-    .stSelectbox { margin-top: -10px; }
+    /* Efek Saat Input Diklik (Focus) */
+    .stTextInput input:focus, .stSelectbox div[data-baseweb="select"]:focus {
+        border-color: #3498DB !important;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3) !important;
+    }
+
+    /* Tombol Simpan PRO */
+    div.stButton > button {
+        background-color: #1A2A3A !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+        font-weight: bold !important;
+        padding: 0.5rem 2rem !important;
+        transition: 0.3s;
+        width: 100%;
+        height: 38px;
+    }
+    
+    div.stButton > button:hover {
+        background-color: #2C3E50 !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Rapat & Minimalis */
+    .stVerticalBlock { gap: 0.6rem !important; }
+    .stRadio > div { margin-top: -20px; gap: 20px; }
     
     /* Header Gambar */
-    .custom-header { text-align: left; margin-bottom: 10px; }
-    .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
+    .custom-header { text-align: left; margin-bottom: 5px; }
+    .custom-header img { width: 100%; max-width: 380px; height: auto; }
     
-    /* Menghilangkan Spinner Running */
+    /* Sembunyikan Running Widget */
     [data-testid="stStatusWidget"] { display: none !important; }
     </style>
     
@@ -59,7 +85,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# URL API GOOGLE SHEETS
+# URL API
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 @st.cache_data(ttl=1, show_spinner=False)
@@ -96,16 +122,14 @@ def terbilang(n):
 # --- TABS ---
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# --- TAB 1: CETAK INVOICE (MINIMALIS 1 BARIS) ---
+# --- TAB 1: CETAK INVOICE ---
 with tab1:
     raw_data = get_data()
     if not raw_data:
-        st.info("Menunggu data dari Google Sheets...")
+        st.info("Menghubungkan ke Database...")
     else:
         df = pd.DataFrame(raw_data)
         st.write("---")
-        
-        # Kolom Filter Sejajar
         col_f1, col_f2 = st.columns([1, 1.5]) 
         with col_f1:
             status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
@@ -115,7 +139,7 @@ with tab1:
                 selected_cust = st.selectbox("", sorted(df_filtered['customer'].unique()), label_visibility="collapsed")
             else:
                 selected_cust = None
-                st.caption("Data Kosong")
+                st.caption("Tidak ada data")
         
         st.write("---")
         
@@ -124,7 +148,6 @@ with tab1:
             b_val = extract_number(row.get('weight', 0))
             h_val = extract_number(row.get('harga', 0))
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
-            
             tgl_raw = str(row.get('date', '')).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
@@ -135,15 +158,15 @@ with tab1:
             <head>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
                 <style>
-                    body {{ background: #f0f0f0; padding: 10px; }}
-                    #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                    body {{ background: #f4f7f6; padding: 10px; font-family: sans-serif; }}
+                    #inv {{ background: white; padding: 30px; width: 750px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); color: black; }}
                     .header-img {{ width: 100%; height: auto; }}
-                    .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                    .title {{ text-align: center; border-top: 2px solid #000; border-bottom: 2px solid #000; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
                     .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
                     .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
-                    .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                    .data-table th, .data-table td {{ border: 1px solid black; padding: 8px; }}
                     .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; }}
-                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #1A2A3A; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+                    .btn-dl {{ width: 750px; display: block; margin: 20px auto; background: #273746; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }}
                 </style>
             </head>
             <body>
@@ -155,7 +178,7 @@ with tab1:
                     </table>
                     <table class="data-table">
                         <thead>
-                            <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                            <tr style="background:#f2f2f2;"><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
                         </thead>
                         <tbody>
                             <tr>
@@ -164,19 +187,19 @@ with tab1:
                             </tr>
                         </tbody>
                     </table>
-                    <div class="terbilang" style="border:1px solid black; padding:10px; margin-top:10px; font-style:italic;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
+                    <div style="border:1px solid black; padding:10px; margin-top:10px; font-size:12px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
                     <table class="footer-table">
                         <tr>
-                            <td style="width:65%;"><b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b></td>
-                            <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                            <td style="width:60%;"><b>PAYMENT INFO:</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b></td>
+                            <td style="text-align:center;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:100px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
                         </tr>
                     </table>
                 </div>
-                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF A5</button>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD INVOICE (PDF)</button>
                 <script>
                     function savePDF() {{
                         const e = document.getElementById('inv');
-                        html2pdf().set({{ margin: 0, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                        html2pdf().set({{ margin: 0.2, filename: 'Inv_{selected_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
                     }}
                 </script>
             </body>
@@ -184,35 +207,35 @@ with tab1:
             """
             components.html(invoice_html, height=850, scrolling=True)
 
-# --- TAB 2: TAMBAH DATA (WARNA & TEBAL) ---
+# --- TAB 2: TAMBAH DATA (DESIGN PRO) ---
 with tab2:
-    st.markdown("### ➕ INPUT PENGIRIMAN BARU")
+    st.markdown("### ➕ INPUT PENGIRIMAN")
     with st.form("input_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1: v_tgl = st.date_input("TANGGAL")
         with c2: v_cust = st.text_input("NAMA CUSTOMER")
         
-        v_desc = st.text_input("KETERANGAN BARANG")
+        v_desc = st.text_input("KETERANGAN BARANG / JENIS MUATAN")
         
         c3, c4 = st.columns(2)
-        with c3: v_orig = st.text_input("ASAL (ORIGIN)")
-        with col4 if 'col4' in locals() else c4: v_dest = st.text_input("TUJUAN (DESTINATION)")
+        with c3: v_orig = st.text_input("KOTA ASAL (ORIGIN)")
+        with c4: v_dest = st.text_input("KOTA TUJUAN (DESTINATION)")
         
         c5, c6, c7 = st.columns(3)
-        with c5: v_kol = st.text_input("KOLLI")
-        with c6: v_harga = st.text_input("HARGA / KG")
-        with c7: v_weight = st.text_input("BERAT (KG)")
+        with c5: v_kol = st.text_input("JUMLAH KOLLI")
+        with c6: v_harga = st.text_input("HARGA SATUAN (RP)")
+        with c7: v_weight = st.text_input("BERAT TOTAL (KG)")
         
         c8, c9 = st.columns([2, 1])
         with c8:
             v_status = st.selectbox("STATUS PEMBAYARAN", ["Belum Bayar", "Lunas"])
         with c9:
-            st.write("##")
-            submit = st.form_submit_button("💾 SIMPAN DATA")
+            st.markdown("<br>", unsafe_allow_html=True)
+            submit = st.form_submit_button("🚀 SIMPAN KE DATABASE")
 
         if submit:
             if not v_cust or not v_harga:
-                st.error("Data Belum Lengkap!")
+                st.error("Mohon isi Nama Customer dan Harga.")
             else:
                 h_num = float(v_harga) if v_harga else 0
                 w_num = float(v_weight) if v_weight else 0
@@ -224,7 +247,7 @@ with tab2:
                 try:
                     resp = requests.post(API_URL, json=payload)
                     if resp.status_code == 200:
-                        st.success("Berhasil Disimpan!")
+                        st.success("✅ Data Berhasil Disimpan!")
                         st.rerun()
                 except:
-                    st.error("Koneksi Gagal!")
+                    st.error("❌ Gagal terhubung ke server.")
