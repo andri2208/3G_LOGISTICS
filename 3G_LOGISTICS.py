@@ -7,14 +7,12 @@ import streamlit.components.v1 as components
 import re
 
 st.markdown("""
-    <style>
-    /* Mengurangi jarak antar elemen agar lebih rapat */
-    .stApp { margin-top: -50px; }
-    .css-1v0mb7p { gap: 0rem; }
-    .stRadio > div { padding-bottom: 0px; margin-bottom: -15px; }
-    .stSelectbox { margin-top: -10px; }
-    </style>
-    """, unsafe_allow_html=True)
+        <style>
+        /* Mengecilkan jarak antar elemen */
+        .stRadio > div { margin-top: -20px; }
+        .stSelectbox { margin-top: -20px; }
+        </style>
+        """, unsafe_allow_html=True)
 
 # 1. KONFIGURASI HALAMAN (Update Favicon)
 st.set_page_config(
@@ -123,26 +121,25 @@ with tab1:
          # Filter Status (Tambahan baru)
         # --- GANTI BAGIAN FILTER & PILIH CUSTOMER DENGAN INI ---
         st.write("---")
-        # Membuat 2 kolom agar filter dan dropdown sejajar ke samping (padat)
-        col_f1, col_f2 = st.columns([1, 1.5]) 
+        # Membuat 2 kolom sejajar
+    c1, c2 = st.columns([1, 2]) 
+    
+    with c1:
+        # Pilihan Status (Tanpa judul di atasnya agar rapat)
+        status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
+    
+    with c2:
+        # Logika filter data
+        df_f = df[df['status'] == status_filter] if status_filter != "Semua" else df
         
-        with col_f1:
-            status_filter = st.radio("Status:", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
-        
-        with col_f2:
-            # Filter data berdasarkan pilihan radio button
-            if status_filter != "Semua":
-                df_filtered = df[df['status'] == status_filter]
-            else:
-                df_filtered = df
+        if not df_f.empty:
+            # Dropdown Customer (Tanpa judul di atasnya agar rapat)
+            selected_cust = st.selectbox("", sorted(df_f['customer'].unique()), label_visibility="collapsed")
+        else:
+            selected_cust = None
+            st.caption("Data tidak ada")
 
-            if not df_filtered.empty:
-                selected_cust = st.selectbox("Pilih Customer:", sorted(df_filtered['customer'].unique()))
-            else:
-                st.warning("Data tidak ditemukan")
-                selected_cust = None
-        st.write("---")
-        # -------------------------------------------------------
+    st.write("---")
         
         if status_filter != "Semua":
             # Pastikan kolom 'status' sudah Bapak buat di Google Sheets
@@ -306,6 +303,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
