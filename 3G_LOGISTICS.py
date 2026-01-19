@@ -9,13 +9,12 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL (RESPONSIF, TEKS HITAM TEBAL, ANTI-BERTUMPUK)
+# 2. CSS FINAL (RESPONSIF & TEKS HITAM TEBAL)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     .block-container { padding-top: 1rem !important; }
 
-    /* --- PERBAIKAN TAB: GAYA TOMBOL KOTAK (ANTI BERTUMPUK) --- */
     div[data-baseweb="tab-list"] {
         flex-wrap: wrap !important;
         gap: 10px !important;
@@ -42,11 +41,8 @@ st.markdown("""
         font-size: 14px !important;
     }
 
-    .stTabs [aria-selected="true"] p {
-        color: white !important;
-    }
+    .stTabs [aria-selected="true"] p { color: white !important; }
 
-    /* --- FORM BIRU GAGAH --- */
     [data-testid="stForm"] { 
         background-color: #719dc9 !important; 
         padding: 1.5rem !important; 
@@ -54,24 +50,18 @@ st.markdown("""
         border: 5px solid #B8860B !important; 
     }
 
-    [data-testid="stForm"] label p, [data-testid="stForm"] .stMarkdown p { 
-        color: #000000 !important; 
-        font-weight: 900 !important; 
-        text-shadow: none !important;
-    }
+    [data-testid="stForm"] label p { color: #000000 !important; font-weight: 900 !important; }
 
-    /* Penyesuaian Kolom Form di HP */
     @media (max-width: 640px) {
         div[data-testid="stHorizontalBlock"] { flex-direction: column !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. API & FUNGSI DATA
 API_URL = "https://script.google.com/macros/s/AKfycbwI8Ep0hTn2zoDOuYMpjvD4G_coxfBRr1MzAtOgCcI-5ufcR4CllgZsA__ekfDb_BP_/exec"
 
 def get_data():
-    st.cache_data.clear() # Paksa hapus memori lama
+    st.cache_data.clear()
     try:
         response = requests.get(f"{API_URL}?t={datetime.now().timestamp()}")
         return response.json() if response.status_code == 200 else []
@@ -94,11 +84,10 @@ def extract_number(value):
     match = re.findall(r"[-+]?\d*\.\d+|\d+", str(value).replace(',', ''))
     return float(match[0]) if match else 0
 
-# 4. HEADER & TABS
 st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
 
-# --- TAB 1: CETAK INVOICE (AUTO UPDATE) ---
+# --- TAB 1: CETAK INVOICE (SESUAI DATA ASLI) ---
 with tab1:
     if st.button("🔄 REFRESH DATA"): st.rerun()
     data = get_data()
@@ -119,14 +108,16 @@ with tab1:
 
         if s_cust and s_label:
             row = sub_df[sub_df['label'] == s_label].iloc[-1]
-            t_val = 6071000 # TOTAL SESUAI PERMINTAAN
+            
+            # KEMBALI KE LOGIKA ASLI (TIDAK DIRUBAH)
+            b_val = extract_number(row['weight'])
+            h_val = extract_number(row['harga'])
+            total_asli = int(b_val * h_val) if b_val > 0 else int(h_val)
+            
             tgl_raw = str(row['date']).split('T')[0]
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             
-            pesan_wa = f"Halo {row['customer']}, Berikut Invoice 3G Logistics No: {row.get('inv_no', '-')}. Total: Rp {t_val:,}. Terima kasih."
-            link_wa = f"https://api.whatsapp.com/send?text={requests.utils.quote(pesan_wa)}"
-
             invoice_html = f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
             <div id="inv" style="background: white; padding: 20px; width: 700px; margin: auto; color: black; font-family: Arial;">
@@ -138,10 +129,10 @@ with tab1:
                 </table>
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
                     <tr style="border: 1px solid black;"><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
-                    <tr style="border: 1px solid black;"><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td> </td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {t_val:,}</td></tr>
-                    <tr style="font-weight:bold; border: 1px solid black;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {t_val:,}</td></tr>
+                    <tr style="border: 1px solid black;"><td>{row['description']}</td><td>{row['origin']}</td><td>{row['destination']}</td><td>{row['kolli']}</td><td>Rp {int(h_val):,}</td><td>{row['weight']}</td><td style="font-weight:bold;">Rp {total_asli:,}</td></tr>
+                    <tr style="font-weight:bold; border: 1px solid black;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {total_asli:,}</td></tr>
                 </table>
-                <div style="border: 1px solid black; padding: 5px; margin-top: 5px; font-size: 11px;"><b>Terbilang:</b> {terbilang(t_val)} Rupiah</div>
+                <div style="border: 1px solid black; padding: 5px; margin-top: 5px; font-size: 11px;"><b>Terbilang:</b> {terbilang(total_asli)} Rupiah</div>
                 <table style="width: 100%; margin-top: 20px; font-size: 11px;">
                     <tr>
                         <td style="width:60%;"><b>TRANSFER TO :</b><br>BCA 6720422334<br>ADITYA GAMA SAPUTRI</td>
@@ -149,10 +140,7 @@ with tab1:
                     </tr>
                 </table>
             </div>
-            <div style="display: flex; gap: 10px; justify-content: center; width: 700px; margin: 10px auto;">
-                <button style="flex: 1; background: #49bf59; color: white; padding: 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD PDF</button>
-                <a href="{link_wa}" target="_blank" style="flex: 1; text-decoration: none;"><button style="width: 100%; background: #25D366; color: white; padding: 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;">💬 KIRIM WA</button></a>
-            </div>
+            <button style="width: 700px; display: block; margin: 10px auto; background: #49bf59; color: white; padding: 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD PDF</button>
             <script>
                 function savePDF() {{
                     const e = document.getElementById('inv');
@@ -167,38 +155,26 @@ with tab2:
     st.markdown("<h3 style='text-align: center; color: black;'>TAMBAH DATA PENGIRIMAN</h3>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         c1, c2, c3 = st.columns(3)
-        v_tgl = c1.date_input("TANGGAL")
-        v_cust = c2.text_input("CUSTOMER")
-        v_desc = c3.text_input("ITEM")
+        v_tgl, v_cust, v_desc = c1.date_input("TANGGAL"), c2.text_input("CUSTOMER"), c3.text_input("ITEM")
         c4, c5, c6 = st.columns(3)
-        v_orig = c4.text_input("ORIGIN")
-        v_dest = c5.text_input("DESTINATION")
-        v_kol = c6.text_input("KOLLI")
+        v_orig, v_dest, v_kol = c4.text_input("ORIGIN"), c5.text_input("DESTINATION"), c6.text_input("KOLLI")
         c7, c8, c9 = st.columns(3)
-        v_harga = c7.text_input("HARGA")
-        v_weight = c8.text_input("WEIGHT")
-        v_status = c9.selectbox("STATUS", ["Belum Bayar", "Lunas"])
+        v_harga, v_weight, v_status = c7.text_input("HARGA"), c8.text_input("WEIGHT"), c9.selectbox("STATUS", ["Belum Bayar", "Lunas"])
         if st.form_submit_button("🚀 SIMPAN DATA"):
             payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": v_harga, "weight": v_weight, "status": v_status}
             requests.post(API_URL, json=payload)
             st.success("DATA TERSIMPAN!"); st.rerun()
 
-# --- TAB 3: FAKE INVOICE (HARGA KOSONG, TOTAL MANUAL) ---
+# --- TAB 3: FAKE INVOICE (KHUSUS UNTUK TEMBAKAN HARGA KOSONG) ---
 with tab3:
     st.markdown("<h3 style='text-align: center; color: black;'>INVOICE MANUAL (FAKE)</h3>", unsafe_allow_html=True)
     with st.form("fake_form"):
         f1, f2, f3 = st.columns(3)
-        fk_no = f1.text_input("NOMOR INVOICE", "3G/INV/2026/000")
-        fk_cust = f2.text_input("NAMA CUSTOMER")
-        fk_tgl = f3.date_input("TANGGAL", datetime.now())
+        fk_no, fk_cust, fk_tgl = f1.text_input("NOMOR INVOICE", "3G/INV/2026/000"), f2.text_input("NAMA CUSTOMER"), f3.date_input("TANGGAL", datetime.now())
         f4, f5, f6 = st.columns(3)
-        fk_item = f4.text_input("ITEM")
-        fk_orig = f5.text_input("ORIGIN")
-        fk_dest = f6.text_input("DESTINATION")
+        fk_item, fk_orig, fk_dest = f4.text_input("ITEM"), f5.text_input("ORIGIN"), f6.text_input("DESTINATION")
         f7, f8, f9 = st.columns(3)
-        fk_kol = f7.text_input("KOLLI")
-        fk_weight = f8.text_input("WEIGHT")
-        fk_total = f9.number_input("TOTAL BAYAR (Rp)", value=6071000)
+        fk_kol, fk_weight, fk_total = f7.text_input("KOLLI"), f8.text_input("WEIGHT"), f9.number_input("TOTAL BAYAR (Rp)", value=6071000)
         if st.form_submit_button("✨ CETAK FAKE INVOICE"):
             terbilang_f = terbilang(fk_total) + " Rupiah"
             fake_html = f"""
