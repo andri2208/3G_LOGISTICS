@@ -13,35 +13,37 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS UNTUK HEADER & TAB STICKY (Satu Baris)
+# 2. CSS CUSTOM: STICKY HEADER & TAB DENGAN JARAK RAPAT
 st.markdown("""
     <style>
-    /* 1. MENGATUR HEADER & TAB AGAR STICKY DI ATAS */
-    header[data-testid="stHeader"] {
-        display: none; /* Sembunyikan header asli streamlit */
-    }
+    /* Sembunyikan Header Bawaan Streamlit */
+    header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* Area Sticky Custom */
-    .sticky-header {
-        position: fixed;
+    /* 1. CONTAINER UTAMA UNTUK HEADER & TAB (STICKY) */
+    .stApp {
+        position: relative;
+    }
+
+    [data-testid="stVerticalBlock"] > div:first-child {
+        position: sticky;
         top: 0;
-        left: 0;
-        width: 100%;
+        z-index: 999;
         background-color: white;
-        z-index: 1000;
-        padding: 10px 20px;
-        border-bottom: 3px solid #B8860B;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding-bottom: 5px; /* Kontrol jarak bawah tab */
     }
 
-    /* Penyesuaian jarak konten agar tidak tertutup sticky header */
-    .main .block-container {
-        padding-top: 120px !important;
+    /* 2. STYLE UNTUK TAB AGAR RAPAT KE HEADER */
+    .stTabs {
+        background-color: white;
+        padding-top: 0px !important;
+        margin-top: -10px !important; /* Menarik Tab ke atas agar rapat dengan logo */
     }
 
-    /* 2. TAB MENU STYLE */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 20px;
+        background-color: white;
+    }
+
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
@@ -49,7 +51,7 @@ st.markdown("""
     }
 
     /* 3. PAKSA KURSOR JADI JARI */
-    button, [role="button"], [data-baseweb="select"], .stSelectbox, input {
+    button, [role="button"], [data-baseweb="select"], .stSelectbox, input, .stTabs [data-baseweb="tab"] {
         cursor: pointer !important;
     }
 
@@ -68,7 +70,7 @@ st.markdown("""
         color: white !important;
     }
 
-    /* 5. STYLE FORM INPUT */
+    /* 5. STYLE FORM INPUT (BIRU LOGISTICS) */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 2rem !important;
@@ -81,20 +83,22 @@ st.markdown("""
         font-weight: 900 !important; 
     }
 
-    /* Sembunyikan menu bawaan yang mengganggu */
+    /* Hilangkan Menu Samping */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. TAMPILKAN HEADER LOGO (STICKY MANUAL)
-st.markdown("""
-    <div class="sticky-header">
-        <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" style="height: 50px; margin-right: 30px;">
-        <p style="margin: 0; font-weight: 900; color: #1A2A3A; font-size: 20px; border-left: 2px solid #ccc; padding-left: 20px;">3G LOGISTICS SYSTEM</p>
-    </div>
-    """, unsafe_allow_html=True)
+# 3. TAMPILAN HEADER (STICKY KARENA DI ATAS SENDIRI)
+col_h1, col_h2 = st.columns([1, 2])
+with col_h1:
+    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=400)
+with col_h2:
+    st.markdown("<h2 style='margin-top: 25px; color: #1A2A3A; font-family: sans-serif; border-left: 3px solid #ccc; padding-left: 20px;'>3G LOGISTICS SYSTEM</h2>", unsafe_allow_html=True)
 
-# 4. LOGIC DATA
+# 4. TAMPILAN TABS (MENEMPEL DI BAWAH HEADER)
+tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
+
+# --- LOGIC DATA ---
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -119,9 +123,6 @@ def terbilang(n):
     elif n < 1000000: return terbilang(n // 1000) + " Ribu " + terbilang(n % 1000)
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
-
-# 5. TAMPILAN TABS (Sekarang akan menempel di bawah header sticky)
-tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
     data = get_data()
