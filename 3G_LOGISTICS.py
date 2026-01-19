@@ -13,57 +13,66 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS RADIKAL (UNTUK MEMAKSA CURSOR & WARNA)
+# 2. CSS CUSTOM (DIPERBAIKI AGAR TAB TIDAK RUSAK)
 st.markdown("""
     <style>
-    /* MEMAKSA CURSOR JADI JARI PADA SEMUA ELEMEN INTERAKTIF */
-    button, [role="button"], [data-baseweb="select"], .stSelectbox, select, input {
+    /* 1. KEMBALIKAN WARNA TEKS TAB AGAR KELIHATAN */
+    .stTabs [data-baseweb="tab"] p {
+        color: #1A2A3A !important;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+    }
+    
+    /* 2. CURSOR JARI PADA PILIHAN & TOMBOL */
+    div[data-baseweb="select"], .stSelectbox, button, [role="button"] {
         cursor: pointer !important;
     }
 
-    /* MEMAKSA TOMBOL SIMPAN BERUBAH HIJAU SAAT HOVER */
-    button[kind="primaryFormSubmit"], button {
+    /* 3. KHUSUS TOMBOL SIMPAN (HOVER HIJAU) */
+    div.stButton > button {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        transition: background-color 0.3s ease, transform 0.2s !important;
+        color: #000000 !important; 
+        font-weight: 900 !important; 
+        font-size: 18px !important;
+        width: 100% !important; 
+        height: 50px !important;
         border: 2px solid #000 !important;
-        font-weight: 900 !important;
+        transition: 0.3s !important;
     }
 
-    button[kind="primaryFormSubmit"]:hover, button:hover {
-        background: #28a745 !important; /* HIJAU POSITIF */
-        background-color: #28a745 !important;
-        color: white !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+    div.stButton > button:hover {
+        background: #28a745 !important; /* HIJAU SAAT DISENTUH */
+        color: #FFFFFF !important;
+        border: 2px solid #FFFFFF !important;
     }
 
-    /* FORM STYLE */
+    /* 4. GAYA FORM INPUT */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
         padding: 1.5rem !important;
-        border-radius: 15px !important;
-        border: 4px solid #B8860B !important;
+        border-radius: 12px !important;
+        border: 3px solid #B8860B !important;
     }
-
-    /* TEKS EXTRA TEBAL */
-    .stWidgetLabel p, label {
-        color: #FFFFFF !important;
-        font-weight: 900 !important;
+    
+    .stWidgetLabel p { 
+        color: #FFFFFF !important; 
+        font-weight: 900 !important; 
+        font-size: 15px !important; 
+        text-transform: uppercase;
+    }
+    
+    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
+        background-color: #FFFFFF !important; 
+        color: #000000 !important; 
+        font-weight: 900 !important; 
         font-size: 16px !important;
-        text-shadow: 1px 1px 2px #000;
     }
 
-    input, [data-baseweb="select"] {
-        font-weight: 900 !important;
-        color: #000 !important;
-    }
-
-    /* SEMBUNYIKAN MENU STREAMLIT */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. LOGIC DATA
+# 3. LOGIC DATA (Sama seperti sebelumnya)
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -96,19 +105,19 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.markdown("### **PENCARIAN DATA**")
+        st.write("---")
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
             status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
             df_filtered = df[df['status'] == status_filter] if status_filter != "Semua" else df
         with f_col2:
             cust_list = sorted(df_filtered['customer'].unique()) if not df_filtered.empty else []
-            selected_cust = st.selectbox("**NAMA CUSTOMER:**", cust_list)
+            selected_cust = st.selectbox("**CUSTOMER:**", cust_list)
         with f_col3:
             if selected_cust:
                 sub_df = df_filtered[df_filtered['customer'] == selected_cust].copy()
                 sub_df['label'] = sub_df['date'].astype(str).str.split('T').str[0] + " | " + sub_df['description']
-                selected_label = st.selectbox("**PILIH TRANSAKSI:**", sub_df['label'].tolist())
+                selected_label = st.selectbox("**TRANSAKSI:**", sub_df['label'].tolist())
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
@@ -194,6 +203,6 @@ with tab2:
                     payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
                     requests.post(API_URL, json=payload)
                     st.cache_data.clear()
-                    st.success("DATA TERSIMPAN!")
+                    st.success("DATA BERHASIL DISIMPAN!")
                     st.rerun()
-                except: st.error("INPUT ERROR")
+                except: st.error("CEK INPUT ANGKA!")
