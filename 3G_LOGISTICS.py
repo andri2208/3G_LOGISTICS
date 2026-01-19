@@ -9,16 +9,33 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics Pro", page_icon="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/FAVICON.png", layout="wide")
 
-# 2. CSS FINAL
+# 2. CSS FINAL (DIPERBAIKI AGAR TIDAK RENGGANG)
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 2rem !important; }
-    [data-testid="stImage"] { margin-bottom: 10px !important; margin-top: -10px !important; }
-    div[data-testid="stTabs"] { position: sticky; top: 0; z-index: 999; background: white; padding-top: 15px; border-bottom: 3px solid #B8860B; }
+    .block-container { padding-top: 1rem !important; }
+    
+    /* Logo Header */
+    [data-testid="stImage"] { margin-bottom: 0px !important; margin-top: -10px !important; }
+    
+    /* Tab Sticky & Rapat */
+    div[data-testid="stTabs"] { 
+        position: sticky; top: 0; z-index: 999; 
+        background: white; padding-top: 5px; 
+        border-bottom: 3px solid #B8860B; 
+    }
     .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; font-size: 18px; }
-    [data-testid="stForm"] { background: #719dc9 !important; padding: 3rem !important; border-radius: 20px !important; border: 4px solid #B8860B !important; margin-top: 20px !important; }
-    .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
+
+    /* Menghilangkan jarak berlebih di bawah Tab */
+    [data-testid="stVerticalBlock"] > div:first-child { margin-top: -15px !important; }
+    
+    /* Form Style */
+    [data-testid="stForm"] { 
+        background: #719dc9 !important; padding: 2rem !important; 
+        border-radius: 20px !important; border: 4px solid #B8860B !important; 
+    }
+    .stWidgetLabel p { color: white !important; font-weight: 900 !important; margin-bottom: -15px !important; }
+    
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -58,7 +75,7 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.write("###")
+        # Jarak dipersempit di sini
         f1, f2, f3 = st.columns([1, 1.2, 1.5])
         with f1:
             st_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
@@ -80,7 +97,6 @@ with tab1:
             try: tgl_indo = datetime.strptime(tgl_raw, '%Y-%m-%d').strftime('%d/%m/%Y')
             except: tgl_indo = tgl_raw
             
-            # --- TAMPILAN INVOICE ---
             invoice_html = f"""
             <!DOCTYPE html>
             <html>
@@ -144,7 +160,7 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: white; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900; margin-top: -10px;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         r1, r2, r3 = st.columns(3)
         v_tgl = r1.date_input("📅 TANGGAL")
