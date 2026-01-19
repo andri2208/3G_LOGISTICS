@@ -13,38 +13,72 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS STABIL (Rapat, Sticky, Rapi)
+# 2. CSS FINAL (STABIL & TIDAK MEPET)
 st.markdown("""
     <style>
+    /* Sembunyikan Header Asli Streamlit */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-    .block-container { padding-top: 2rem !important; }
-    [data-testid="stImage"] { margin-bottom: 10px !important; margin-top: -10px !important; }
     
-    div[data-testid="stTabs"] {
-        position: sticky; top: 0; z-index: 999;
-        background-color: white; padding-top: 15px;
-        padding-bottom: 10px; border-bottom: 3px solid #B8860B;
+    /* Atur Jarak Atas Aplikasi agar tidak menempel ke browser */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 0rem !important;
     }
 
-    .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; font-size: 18px; }
+    /* LOGO: Kita beri jarak bawah yang normal (tidak negatif lagi) */
+    [data-testid="stImage"] {
+        margin-bottom: 10px !important;
+        margin-top: -10px !important;
+    }
 
+    /* TAB STICKY: Dibuat lebih tinggi sedikit agar tidak menabrak logo */
+    div[data-testid="stTabs"] {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background-color: white;
+        padding-top: 15px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #B8860B;
+    }
+
+    /* STYLE TEKS TAB */
+    .stTabs [data-baseweb="tab"] p {
+        color: #1A2A3A !important;
+        font-weight: 800 !important;
+        font-size: 18px;
+    }
+
+    /* FORM: Diberi jarak yang pas agar tidak gepeng */
     [data-testid="stForm"] {
-        background-color: #719dc9 !important; padding: 2.5rem !important;
-        border-radius: 20px !important; border: 4px solid #B8860B !important;
+        background-color: #719dc9 !important;
+        padding: 3rem !important;
+        border-radius: 20px !important;
+        border: 4px solid #B8860B !important;
+        margin-top: 20px !important;
+    }
+
+    /* Atur agar input di dalam form punya ruang */
+    [data-testid="stForm"] .stMarkdown p {
+        margin-bottom: 5px !important;
     }
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
+
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. AREA HEADER
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
+# 3. AREA HEADER (Logo diletakkan di container agar stabil)
+header_container = st.container()
+with header_container:
+    st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=420)
 
 # 4. TAMPILAN TABS
-tab1, tab2 = st.tabs(["📄 CETAK & UBAH INVOICE", "➕ TAMBAH DATA"])
+tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-API_URL = "https://script.google.com/macros/s/AKfycbz5ma-E5oRjgMNDncVUBsl74Qcw6UWoEAZtSC72orLkInrO50rZCJJb9z7QXqoQs3E8/exec"
+# --- LOGIC DATA ---
+API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
     try:
@@ -73,7 +107,7 @@ with tab1:
     data = get_data()
     if data:
         df = pd.DataFrame(data)
-        st.write("###")
+        st.write("###") # Kasih ruang dikit
         f_col1, f_col2, f_col3 = st.columns([1, 1.2, 1.5])
         with f_col1:
             status_filter = st.radio("**STATUS:**", ["Semua", "Belum Bayar", "Lunas"], horizontal=True)
@@ -89,26 +123,6 @@ with tab1:
 
         if selected_cust and selected_label:
             row = sub_df[sub_df['label'] == selected_label].iloc[-1]
-            
-            # --- PANEL EDIT (TIDAK MERUBAH INVOICE) ---
-            with st.expander("🛠️ KLIK DI SINI UNTUK UBAH DATA (EDIT MODE)"):
-                with st.form("edit_data_form"):
-                    c1, c2 = st.columns(2)
-                    e_desc = c1.text_input("ITEM", value=row['description'])
-                    e_orig = c1.text_input("ORIGIN", value=row['origin'])
-                    e_dest = c1.text_input("DEST", value=row['destination'])
-                    e_kol = c1.text_input("KOLLI", value=row['kolli'])
-                    e_harga = c2.number_input("HARGA", value=float(extract_number(row['harga'])))
-                    e_weight = c2.number_input("WEIGHT", value=float(extract_number(row['weight'])))
-                    e_status = c2.selectbox("STATUS", ["Belum Bayar", "Lunas"], index=0 if row['status']=="Belum Bayar" else 1)
-                    if st.form_submit_button("💾 SIMPAN PERUBAHAN"):
-                        payload = {"action": "edit", "date": row['date'], "customer": row['customer'], "description": e_desc.upper(), "origin": e_orig.upper(), "destination": e_dest.upper(), "kolli": e_kol, "harga": e_harga, "weight": e_weight, "status": e_status}
-                        requests.post(API_URL, json=payload)
-                        st.cache_data.clear()
-                        st.success("Data Diperbarui!")
-                        st.rerun()
-
-            # --- DESAIN INVOICE ASLI (LENGKAP) ---
             b_val, h_val = extract_number(row['weight']), extract_number(row['harga'])
             t_val = int(b_val * h_val) if b_val > 0 else int(h_val)
             tgl_raw = str(row['date']).split('T')[0]
@@ -167,26 +181,29 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: white; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         r1c1, r1c2, r1c3 = st.columns(3)
-        v_tgl = r1c1.date_input("📅 TANGGAL")
-        v_cust = r1c2.text_input("🏢 CUSTOMER")
-        v_desc = r1c3.text_input("📦 ITEM")
+        with r1c1: v_tgl = st.date_input("📅 TANGGAL")
+        with r1c2: v_cust = st.text_input("🏢 CUSTOMER")
+        with r1c3: v_desc = st.text_input("📦 ITEM")
         r2c1, r2c2, r2c3 = st.columns(3)
-        v_orig = r2c1.text_input("📍 ORIGIN")
-        v_dest = r2c2.text_input("🏁 DESTINATION")
-        v_kol = r2c3.text_input("📦 KOLLI")
+        with r2c1: v_orig = st.text_input("📍 ORIGIN")
+        with r2c2: v_dest = st.text_input("🏁 DESTINATION")
+        with r2c3: v_kol = st.text_input("📦 KOLLI")
         r3c1, r3c2, r3c3 = st.columns(3)
-        v_harga = r3c1.number_input("💰 HARGA", value=0.0)
-        v_weight = r3c2.number_input("⚖️ BERAT", value=0.0)
-        v_status = r3c3.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
+        with r3c1: v_harga = st.text_input("💰 HARGA")
+        with r3c2: v_weight = st.text_input("⚖️ BERAT")
+        with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        if st.form_submit_button("🚀 SIMPAN SEKARANG"):
-            payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": v_harga, "weight": v_weight, "status": v_status}
-            requests.post(API_URL, json=payload)
-            st.cache_data.clear()
-            st.success("DATA TERSIMPAN!")
-            st.rerun()
-
+        submit = st.form_submit_button("🚀 SIMPAN SEKARANG")
+        if submit:
+            if v_cust and v_harga:
+                try:
+                    payload = {"date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(), "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol, "harga": float(v_harga), "weight": float(v_weight), "total": float(v_harga) * float(v_weight), "status": v_status}
+                    requests.post(API_URL, json=payload)
+                    st.cache_data.clear()
+                    st.success("DATA TERSIMPAN!")
+                    st.rerun()
+                except: st.error("ERROR!")
 
