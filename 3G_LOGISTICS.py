@@ -9,18 +9,20 @@ import re
 # 1. KONFIGURASI HALAMAN
 st.set_page_config(page_title="3G Logistics", layout="wide")
 
-# Masukkan URL hasil Deploy terbaru di sini
-API_URL = "https://script.google.com/macros/s/AKfycby3wvU4wURslcvwHRi7VVi7PYsdxT21yCtibIGsNr72YKJMH6xUGUTmxKC0oIQRn4zs5Q/exec" 
+# GANTI DENGAN URL BARU HASIL DEPLOY TADI
+API_URL = "https://script.google.com/macros/s/AKfycby3wvU4wURslcvwHRi7VVi7PYsdxT21yCtibIGsNr72YKJMH6xUGUTmxKC0oIQRn4zs5Q/exec"
 
 @st.cache_data(ttl=1)
 def get_data():
     try:
-        # Menambahkan parameter timestamp agar data tidak nyangkut di cache browser
-        r = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
-        if r.status_code == 200:
-            return r.json()
-        return []
-    except:
+        # Menambahkan nocache agar data selalu ditarik yang paling baru
+        response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Gagal menarik data! Status: {response.status_code}")
+            return []
+    except Exception as e:
         return []
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
@@ -201,6 +203,7 @@ with tab2:
                     st.error(f"Gagal! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
 
 
 
