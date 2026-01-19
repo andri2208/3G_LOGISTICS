@@ -20,16 +20,14 @@ if "active_tab" not in st.session_state:
 # GANTI DENGAN URL BARU HASIL DEPLOY TADI
 API_URL = "https://script.google.com/macros/s/AKfycby3wvU4wURslcvwHRi7VVi7PYsdxT21yCtibIGsNr72YKJMH6xUGUTmxKC0oIQRn4zs5Q/exec"
 
-@st.cache_data(ttl=1)
+@st.cache_data(ttl=1, show_spinner=False) # Tambahkan show_spinner=False
 def get_data():
     try:
-        # Menambahkan nocache agar data selalu ditarik yang paling baru
         response = requests.get(f"{API_URL}?nocache={datetime.now().timestamp()}", timeout=15)
         if response.status_code == 200:
             return response.json()
-        else:
-            return []
-    except Exception as e:
+        return []
+    except:
         return []
 
 # --- CSS: HEADER AMAN & TAMPILAN BERSIH ---
@@ -234,6 +232,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
