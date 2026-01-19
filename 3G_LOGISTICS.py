@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pd
 import requests
 import json
 from datetime import datetime
@@ -13,36 +13,41 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS FINAL: HAPUS HEADER BAWAAN, RAPATKAN JARAK, & STICKY TABS
+# 2. CSS STABIL (MENGATASI TAMPILAN BERANTAKAN)
 st.markdown("""
     <style>
-    /* Sembunyikan Header Bawaan Streamlit */
+    /* Sembunyikan Header Asli */
     header[data-testid="stHeader"] { visibility: hidden; height: 0; }
     
-    /* MENGATUR JARAK ANTARA LOGO DAN TAB (SANGAT RAPAT) */
-    .stApp [data-testid="stVerticalBlock"] > div:first-child {
-        margin-bottom: -45px !important; /* Tarik konten bawah ke atas agar rapat ke logo */
+    /* FIX: Hilangkan padding berlebih di bagian atas aplikasi */
+    .block-container {
+        padding-top: 2rem !important;
     }
 
-    /* BUAT TAB MENJADI STICKY (NEMPEL DI ATAS) */
+    /* KUNCI JARAK LOGO (Sesuai keinginan Bapak) */
+    [data-testid="stImage"] {
+        margin-bottom: -30px !important;
+    }
+
+    /* BUAT TAB STICKY YANG STABIL */
     div[data-testid="stTabs"] {
         position: sticky;
         top: 0;
         z-index: 999;
         background-color: white;
-        padding-top: 10px;
+        padding-top: 5px;
         padding-bottom: 5px;
         border-bottom: 2px solid #B8860B;
     }
 
-    /* WARNA & STYLE TEKS TAB */
+    /* TEKS TAB */
     .stTabs [data-baseweb="tab"] p {
         color: #1A2A3A !important;
         font-weight: 800 !important;
         font-size: 16px;
     }
 
-    /* PAKSA KURSOR JADI JARI */
+    /* KURSOR JARI */
     button, [role="button"], [data-baseweb="select"], .stSelectbox, input, .stTabs [data-baseweb="tab"] {
         cursor: pointer !important;
     }
@@ -53,7 +58,6 @@ st.markdown("""
         color: black !important;
         font-weight: 900 !important;
         border: 2px solid black !important;
-        transition: 0.3s;
     }
 
     button[kind="primaryFormSubmit"]:hover {
@@ -62,29 +66,28 @@ st.markdown("""
         color: white !important;
     }
 
-    /* STYLE FORM INPUT */
+    /* FORM STYLE (Agar tidak bertumpuk) */
     [data-testid="stForm"] {
         background-color: #719dc9 !important;
-        padding: 2rem !important;
+        padding: 2.5rem !important;
         border-radius: 15px !important;
         border: 4px solid #B8860B !important;
+        margin-top: 20px !important;
     }
 
     .stWidgetLabel p { color: white !important; font-weight: 900 !important; }
 
-    /* Sembunyikan Menu & Footer */
     #MainMenu, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. TAMPILKAN LOGO SAJA (TANPA TEKS)
-# Logo diletakkan di paling atas
-st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=450)
+# 3. AREA HEADER (Hanya Logo)
+st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png", width=400)
 
-# 4. TAMPILAN TABS (STICKY)
+# 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
-# --- LOGIC DATA ---
+# --- BAGIAN DATA & LOGIC (Tetap Sama) ---
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
