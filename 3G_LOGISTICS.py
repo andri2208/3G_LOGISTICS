@@ -181,6 +181,7 @@ with tab2:
         v_kg = c7.text_input("WEIGHT")
         v_hrg = c8.text_input("HARGA")
         
+       # --- BAGIAN TOMBOL SIMPAN DI TAB 2 ---
         if st.form_submit_button("💾 SIMPAN DATA"):
             h_num = extract_number(v_hrg)
             w_num = extract_number(v_kg)
@@ -195,15 +196,24 @@ with tab2:
                 "harga": h_num, "weight": weight_final, "total": total_db
             }
             try:
-                r = requests.post(API_URL, data=json.dumps(payload))
-                if r.status_code == 200:
-                    st.success(f"Berhasil Disimpan ke Cloud! Mengalihkan...")
+                # Menampilkan spinner agar user tahu proses sedang berjalan
+                with st.spinner('Sedang mengirim data ke Google Sheets...'):
+                    r = requests.post(API_URL, data=json.dumps(payload))
                     
-                    # --- TAMBAHAN 3: REFRESH DAN PINDAH TAB ---
-                    st.cache_data.clear()            # Hapus memori lama
-                    st.session_state.active_tab = 0  # Setel agar tab Invoice yang terbuka
-                    st.rerun()                       # Paksa aplikasi muat ulang
+                if r.status_code == 200:
+                    # NOTIFIKASI BERHASIL
+                    st.success(f"✅ DATA {v_cust.upper()} BERHASIL DISIMPAN!")
+                    
+                    # Beri jeda 1 detik agar user sempat membaca notifikasi
+                    import time
+                    time.sleep(1.5) 
+                    
+                    # Refresh dan Pindah Tab
+                    st.cache_data.clear()
+                    st.session_state.active_tab = 0 
+                    st.rerun()
                 else:
-                    st.error(f"Gagal! Status: {r.status_code}")
+                    st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
