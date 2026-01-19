@@ -44,7 +44,7 @@ st.image("https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER
 # 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK & UBAH INVOICE", "➕ TAMBAH DATA"])
 
-API_URL = "ISI_DENGAN_URL_WEB_APP_BAPAK"
+API_URL = "https://script.google.com/macros/s/AKfycbwRe6CS9qBnlKyTQ422zH_WozMPv3O2X-FlzYWeqXh-gXOH62L8RboutIuWRmlgCEvFPQ/exec"
 
 def get_data():
     try:
@@ -188,3 +188,4 @@ with tab2:
             st.cache_data.clear()
             st.success("DATA TERSIMPAN!")
             st.rerun()
+
