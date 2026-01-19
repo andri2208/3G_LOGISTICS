@@ -221,10 +221,18 @@ with tab2:
             total_db = int(w_num * h_num) if w_num > 0 else int(h_num)
             
             payload = {
-                "date": str(v_tgl), "customer": v_cust.upper(), "description": v_desc.upper(),
-                "origin": v_orig.upper(), "destination": v_dest.upper(), "kolli": v_kol,
-                "harga": h_num, "weight": weight_final, "total": total_db
+                "date": str(v_tgl), 
+                "customer": v_cust.upper(), 
+                "description": v_desc.upper(),
+                "origin": v_orig.upper(), 
+                "destination": v_dest.upper(), 
+                "kolli": v_kol,
+                "harga": h_num, 
+                "weight": weight_final, 
+                "total": total_db,
+                "status": "Belum Bayar"  # <--- TAMBAHKAN INI DI PAYLOAD PYTHON
             }
+            
             try:
                 # Menampilkan spinner agar user tahu proses sedang berjalan
                 with st.spinner('Sedang mengirim data...'):
@@ -246,6 +254,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
