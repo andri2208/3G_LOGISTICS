@@ -110,14 +110,22 @@ with tab1:
                     </table>
                     <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {kata_terbilang}</div>
                     <table class="footer-table">
-                        <tr>
-                            <td style="width:65%; vertical-align:top;">
-                                <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br>
-                                NB: Jika sudah transfer mohon konfirmasi ke Finance: <b>082179799200</b>
-                            </td>
-                            <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
-                        </tr>
-                    </table>
+    <tr>
+        <td style="width:65%; vertical-align:top;">
+            <b>TRANSFER TO :</b><br>
+            BCA <b>6720422334</b><br>
+            <b>ADITYA GAMA SAPUTRI</b><br><br>
+            <i>NB: Jika sudah transfer mohon konfirmasi ke<br>
+            Finance: <b>082179799200</b></i>
+        </td>
+        <td style="text-align:center; vertical-align:top;">
+            Sincerely,<br>
+            <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br>
+            <b><u>KELVINITO JAYADI</u></b><br>DIREKTUR
+        </td>
+    </tr>
+</table>
+
                 </div>
                 <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
                 <script>
@@ -154,4 +162,5 @@ with tab2:
                 st.cache_data.clear()
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
+
 
