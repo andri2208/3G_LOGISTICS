@@ -1,6 +1,5 @@
 import streamlit as st
-import pd as pd
-import pandas as pd
+import pandas as pd  # <--- Ini yang benar, Pak
 import requests
 import json
 from datetime import datetime
@@ -271,3 +270,4 @@ with tab2:
                         st.rerun()
                     else: st.error("Gagal simpan ke server.")
                 except: st.error("Koneksi Error.")
+
