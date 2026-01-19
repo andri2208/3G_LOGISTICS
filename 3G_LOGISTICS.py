@@ -225,7 +225,7 @@ with tab3:
         fk_kolli = fcol7.text_input("KOLLI")
         fk_weight = fcol8.text_input("BERAT (WEIGHT)")
         fk_total = fcol9.number_input("TOTAL BAYAR (Rp)", value=6071000, step=1000)
-        submit_fake = st.form_submit_button("✨ GENERATE FAKE INVOICE")
+        submit_fake = st.form_submit_button("✨ GENERATE INVOICE")
 
     if submit_fake:
         tgl_f = fk_tgl.strftime('%d/%m/%Y')
@@ -289,7 +289,7 @@ with tab3:
                 </div>
             </div>
             <div class="btn-container">
-                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD FAKE PDF (FIX HP)</button>
+                <button class="btn-dl" onclick="savePDF()">📥 DOWNLOAD PDF</button>
             </div>
             <script>
                 function savePDF() {{
@@ -313,3 +313,4 @@ with tab3:
         </html>
         """
         components.html(fake_html, height=850, scrolling=True)
+
