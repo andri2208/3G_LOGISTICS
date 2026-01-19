@@ -209,5 +209,96 @@ with tab2:
                 st.success("DATA TERSIMPAN!")
                 st.rerun()
 
+# Tambahkan Tab 3 di bagian definisi tabs
+tab1, tab2, tab3 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA", "🎭 FAKE INVOICE"])
+
+# --- KODE UNTUK TAB 3 (FAKE INVOICE) ---
+with tab3:
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>CETAK INVOICE MANUAL (FAKE)</h2>", unsafe_allow_html=True)
+    st.info("Input di sini TIDAK AKAN tersimpan ke database. Hanya untuk cetak cepat.")
+    
+    with st.form("fake_form"):
+        fcol1, fcol2, fcol3 = st.columns(3)
+        fk_no = fcol1.text_input("NOMOR INVOICE", "3G/INV/2026/000")
+        fk_cust = fcol2.text_input("NAMA CUSTOMER")
+        fk_tgl = fcol3.date_input("TANGGAL", datetime.now())
+        
+        fcol4, fcol5, fcol6 = st.columns(3)
+        fk_item = fcol4.text_input("ITEM / DESKRIPSI")
+        fk_orig = fcol5.text_input("ORIGIN")
+        fk_dest = fcol6.text_input("DESTINATION")
+        
+        fcol7, fcol8, fcol9 = st.columns(3)
+        fk_kolli = fcol7.text_input("KOLLI")
+        fk_weight = fcol8.text_input("BERAT (WEIGHT)")
+        fk_total = fcol9.number_input("TOTAL BAYAR (Rp)", value=6071000, step=1000)
+        
+        submit_fake = st.form_submit_button("✨ GENERATE FAKE INVOICE")
+
+    if submit_fake:
+        tgl_f = fk_tgl.strftime('%d/%m/%Y')
+        terbilang_f = terbilang(fk_total) + " Rupiah"
+        
+        fake_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <style>
+                body {{ background: #f0f0f0; padding: 10px; }}
+                #inv {{ background: white; padding: 25px; width: 750px; margin: auto; border: 1px solid #ccc; color: black; font-family: Arial; }}
+                .header-img {{ width: 100%; height: auto; }}
+                .title {{ text-align: center; border-top: 2px solid black; border-bottom: 2px solid black; margin: 15px 0; padding: 5px; font-weight: bold; font-size: 20px; }}
+                .info-table {{ width: 100%; margin-bottom: 10px; font-size: 14px; font-weight: bold; }}
+                .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }}
+                .data-table th, .data-table td {{ border: 1px solid black; padding: 10px; }}
+                .footer-table {{ width: 100%; margin-top: 30px; font-size: 12px; line-height: 1.5; }}
+            </style>
+        </head>
+        <body>
+            <div id="inv">
+                <img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/HEADER.png" class="header-img">
+                <div class="title">INVOICE</div>
+                <table class="info-table">
+                    <tr><td>CUSTOMER: {fk_cust.upper()}</td><td style="text-align:right;">NO: {fk_no}</td></tr>
+                    <tr><td>DATE: {tgl_f}</td><td style="text-align:right;">STATUS: BELUM BAYAR</td></tr>
+                </table>
+                <table class="data-table">
+                    <tr><th>Description</th><th>Origin</th><th>Dest</th><th>KOLLI</th><th>HARGA</th><th>WEIGHT</th><th>TOTAL</th></tr>
+                    <tr>
+                        <td>{fk_item.upper()}</td>
+                        <td>{fk_orig.upper()}</td>
+                        <td>{fk_dest.upper()}</td>
+                        <td>{fk_kolli}</td>
+                        <td> </td>
+                        <td>{fk_weight}</td>
+                        <td style="font-weight:bold;">Rp {fk_total:,}</td>
+                    </tr>
+                    <tr style="font-weight:bold;"><td colspan="6" style="text-align:right;">TOTAL BAYAR</td><td>Rp {fk_total:,}</td></tr>
+                </table>
+                <div style="border: 1px solid black; padding: 10px; margin-top: 10px; font-size: 12px;"><b>Terbilang:</b> {terbilang_f}</div>
+                <table class="footer-table">
+                    <tr>
+                        <td style="width:65%; vertical-align:top;">
+                            <b>TRANSFER TO :</b><br>BCA <b>6720422334</b><br><b>ADITYA GAMA SAPUTRI</b><br><br>
+                            <i>NB: Jika sudah transfer mohon konfirmasi ke<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finance: <b>082179799200</b></i>
+                        </td>
+                        <td style="text-align:center; vertical-align:top;">Sincerely,<br><img src="https://raw.githubusercontent.com/andri2208/3G_LOGISTICS/master/STEMPEL.png" style="width:110px;"><br><b><u>KELVINITO JAYADI</u></b><br>DIREKTUR</td>
+                    </tr>
+                </table>
+            </div>
+            <button style="width: 750px; display: block; margin: 20px auto; background: #49bf59; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="savePDF()">📥 DOWNLOAD FAKE PDF</button>
+            <script>
+                function savePDF() {{
+                    const e = document.getElementById('inv');
+                    html2pdf().set({{ margin: 0, filename: 'Fake_Inv_{fk_cust}.pdf', image: {{ type: 'jpeg', quality: 0.98 }}, html2canvas: {{ scale: 3, useCORS: true }}, jsPDF: {{ unit: 'in', format: 'a5', orientation: 'landscape' }} }}).from(e).save();
+                }}
+            </script>
+        </body>
+        </html>
+        """
+        components.html(fake_html, height=850, scrolling=True)
+
+
 
 
