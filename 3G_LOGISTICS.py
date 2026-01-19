@@ -6,14 +6,6 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import re
 
-st.markdown("""
-        <style>
-        /* Mengecilkan jarak antar elemen */
-        .stRadio > div { margin-top: -20px; }
-        .stSelectbox { margin-top: -20px; }
-        </style>
-        """, unsafe_allow_html=True)
-
 # 1. KONFIGURASI HALAMAN (Update Favicon)
 st.set_page_config(
     page_title="3G Logistics", 
@@ -111,48 +103,55 @@ tab_list = ["📄 CETAK INVOICE", "➕ TAMBAH DATA"]
 tab1, tab2 = st.tabs(tab_list)
 
 with tab1:
-    # 1. Judul Halaman
-    st.subheader("📑 Data Pengiriman & Invoice")
+    # 1. Pastikan Data Terambil (Mencegah NameError)
+    # Ganti 'get_data()' dengan nama fungsi ambil data Bapak jika berbeda
+    df = get_data() 
 
-    # 2. Kode 'Ajaib' supaya jaraknya mepet/rapat (Minimalis)
+    # 2. CSS SAKTI (Untuk Tampilan Paling Rapat & Tanpa Judul)
     st.markdown("""
         <style>
-        .stRadio > div { margin-top: -25px; gap: 10px; }
-        .stSelectbox { margin-top: -25px; }
-        div[data-testid="stBlock"] { padding: 0px; }
+        .stRadio > div { margin-top: -20px; }
+        .stSelectbox { margin-top: -20px; }
+        /* Menghilangkan jarak putih besar di atas */
+        .block-container { padding-top: 1rem; }
         </style>
         """, unsafe_allow_html=True)
 
-    st.write("---") # Garis pembatas atas
+    st.write("---")
 
-    # 3. Baris Filter (Dibuat sejajar dalam satu baris)
-    c1, c2 = st.columns([1, 1.5]) 
-    
-    with c1:
-        # Filter Status (Tanpa tulisan judul di atasnya)
-        status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], horizontal=True, label_visibility="collapsed")
-    
-    with c2:
-        # Logika menyaring data
+    # 3. Filter & Pilih (Satu Baris, Tanpa Label Teks yang Bikin Lebar)
+    col_a, col_b = st.columns([1, 2])
+
+    with col_a:
+        # horizontal radio tanpa label atas
+        status_filter = st.radio("", ["Semua", "Belum Bayar", "Lunas"], 
+                                 horizontal=True, label_visibility="collapsed")
+
+    with col_b:
+        # Filter data berdasarkan status
         if status_filter != "Semua":
-            df_filtered = df[df['status'] == status_filter]
+            df_final = df[df['status'] == status_filter] if 'status' in df.columns else df
         else:
-            df_filtered = df
+            df_final = df
 
-        if not df_filtered.empty:
-            # Dropdown Pilih Customer (Tanpa tulisan judul di atasnya)
-            selected_cust = st.selectbox("", sorted(df_filtered['customer'].unique()), label_visibility="collapsed")
+        if not df_final.empty:
+            # Dropdown tanpa label "PILIH CUSTOMER" agar minimalis
+            selected_cust = st.selectbox("", sorted(df_final['customer'].unique()), 
+                                         label_visibility="collapsed")
         else:
             selected_cust = None
-            st.info("Tidak ada data")
+            st.caption("Data Kosong")
 
-    st.write("---") # Garis pembatas bawah
+    st.write("---")
 
-    # 4. Tampilan Data Setelah Dipilih
+    # 4. Tampilkan Invoice jika customer dipilih
     if selected_cust:
-        customer_data = df_filtered[df_filtered['customer'] == selected_cust]
-        st.write(f"Menampilkan data untuk: **{selected_cust}**")
-        st.dataframe(customer_data) # Menampilkan tabel data yang difilter
+        # Filter data spesifik customer yang dipilih
+        data_invoice = df_final[df_final['customer'] == selected_cust]
+        
+        # --- LANJUTKAN KODE TAMPILAN INVOICE BAPAK DI SINI ---
+        st.success(f"Invoice untuk: {selected_cust}")
+        st.dataframe(data_invoice) # Contoh tampilan tabel
             
 with tab2:
     st.subheader("➕ Input Pengiriman Baru")
@@ -224,6 +223,7 @@ with tab2:
                         st.error("Gagal simpan ke server.")
                 except:
                     st.error("Koneksi Error.")
+
 
 
 
