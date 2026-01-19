@@ -13,67 +13,67 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. CSS UNTUK TAMPILAN (TAB TETAP AMAN)
+# 2. CSS BRUTAL (Targeting langsung ke elemen HTML dasar)
 st.markdown("""
     <style>
-    /* Tab tetap gelap supaya kelihatan */
-    .stTabs [data-baseweb="tab"] p { color: #1A2A3A !important; font-weight: 800 !important; }
-    
-    /* Panel Input */
-    [data-testid="stForm"] {
-        background-color: #719dc9 !important;
-        padding: 1.5rem !important;
-        border-radius: 12px !important;
-        border: 3px solid #B8860B !important;
-    }
-    .stWidgetLabel p { color: #FFFFFF !important; font-weight: 900 !important; }
-    
-    /* Inputan */
-    .stTextInput input, .stDateInput div[data-baseweb="input"], .stSelectbox div[data-baseweb="select"] {
-        background-color: #FFFFFF !important; color: #000000 !important; font-weight: 900 !important;
+    /* 1. PAKSA SEMUA TAB TETAP GELAP & KELIHATAN */
+    .stTabs [data-baseweb="tab"] p {
+        color: #1A2A3A !important;
+        font-weight: 800 !important;
     }
 
-    /* Tombol Simpan Awal */
+    /* 2. PAKSA KURSOR JADI JARI PADA SEMUA YANG BISA DIKLIK */
+    /* Kami incar semua div, span, dan input di dalam form */
+    [data-testid="stForm"] *, 
+    [data-baseweb="select"] *, 
+    .stSelectbox *, 
+    button {
+        cursor: pointer !important;
+    }
+
+    /* 3. PAKSA TOMBOL SIMPAN JADI HIJAU SAAT HOVER */
+    /* Menggunakan selector atribut untuk akurasi 100% */
     button[kind="primaryFormSubmit"] {
         background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%) !important;
-        color: #000 !important; font-weight: 900 !important; height: 50px !important;
-        border: 2px solid #000 !important;
+        color: black !important;
+        font-weight: 900 !important;
+        border: 2px solid black !important;
+        transition: 0.2s !important;
     }
-    
+
+    button[kind="primaryFormSubmit"]:hover {
+        background: #28a745 !important; /* HIJAU */
+        background-color: #28a745 !important;
+        color: white !important;
+        border-color: white !important;
+    }
+
+    /* 4. STYLE FORM (BIRU LOGISTICS) */
+    [data-testid="stForm"] {
+        background-color: #719dc9 !important;
+        padding: 2rem !important;
+        border-radius: 15px !important;
+        border: 4px solid #B8860B !important;
+    }
+
+    /* 5. TEKS INPUT EXTRA TEBAL */
+    .stWidgetLabel p {
+        color: white !important;
+        font-weight: 900 !important;
+        font-size: 15px !important;
+    }
+
+    input, [data-baseweb="select"] {
+        font-weight: 900 !important;
+        color: black !important;
+    }
+
+    /* Hilangkan Header & Footer */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. JAVASCRIPT PAMUNGKAS (FORCE CURSOR & HOVER)
-# Script ini akan memaksa browser merubah kursor & warna tombol secara brutal
-st.components.v1.html("""
-    <script>
-    function forceStyle() {
-        // 1. Paksa semua Dropdown & Input jadi Jari
-        const inputs = window.parent.document.querySelectorAll('div[data-baseweb="select"], input, .stSelectbox, role=["button"]');
-        inputs.forEach(el => { el.style.cursor = 'pointer'; });
-
-        // 2. Paksa Tombol Simpan berubah Hijau saat Hover
-        const btn = window.parent.document.querySelector('button[kind="primaryFormSubmit"]');
-        if (btn) {
-            btn.style.cursor = 'pointer';
-            btn.onmouseover = function() { 
-                this.style.backgroundColor = '#28a745'; 
-                this.style.background = '#28a745';
-                this.style.color = 'white';
-            };
-            btn.onmouseout = function() { 
-                this.style.background = 'linear-gradient(135deg, #B8860B 0%, #FFD700 100%)';
-                this.style.color = 'black';
-            };
-        }
-    }
-    // Jalankan setiap 1 detik agar tidak tertimpa sistem Streamlit
-    setInterval(forceStyle, 1000);
-    </script>
-    """, height=0)
-
-# 4. DATA LOGIC (Sama seperti sebelumnya)
+# 3. LOGIC DATA
 API_URL = "https://script.google.com/macros/s/AKfycbwh5n3RxYYWqX4HV9_DEkOtSPAomWM8x073OME-JttLHeYfuwSha06AAs5fuayvHEludw/exec"
 
 def get_data():
@@ -99,7 +99,7 @@ def terbilang(n):
     elif n < 1000000000: return terbilang(n // 1000000) + " Juta " + terbilang(n % 1000000)
     return ""
 
-# 5. TAMPILAN TABS
+# 4. TAMPILAN TABS
 tab1, tab2 = st.tabs(["📄 CETAK INVOICE", "➕ TAMBAH DATA"])
 
 with tab1:
@@ -180,7 +180,7 @@ with tab1:
             components.html(invoice_html, height=850, scrolling=True)
 
 with tab2:
-    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>INPUT DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1A2A3A; font-weight: 900;'>TAMBAH DATA PENGIRIMAN</h2>", unsafe_allow_html=True)
     with st.form("input_form", clear_on_submit=True):
         r1c1, r1c2, r1c3 = st.columns(3)
         with r1c1: v_tgl = st.date_input("📅 TANGGAL")
@@ -195,7 +195,9 @@ with tab2:
         with r3c2: v_weight = st.text_input("⚖️ BERAT")
         with r3c3: v_status = st.selectbox("💳 STATUS", ["Belum Bayar", "Lunas"])
         
-        submit = st.form_submit_button("🚀 SIMPAN DATA")
+        # TOMBOL SIMPAN
+        submit = st.form_submit_button("🚀 SIMPAN SEKARANG")
+        
         if submit:
             if v_cust and v_harga:
                 try:
@@ -204,4 +206,4 @@ with tab2:
                     st.cache_data.clear()
                     st.success("DATA TERSIMPAN!")
                     st.rerun()
-                except: st.error("INPUT SALAH")
+                except: st.error("ERROR!")
