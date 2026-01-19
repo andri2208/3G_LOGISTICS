@@ -46,6 +46,20 @@ st.markdown("""
         border-radius: 8px !important;
     }
     .stTabs [data-baseweb="tab"] { font-size: 18px !important; font-weight: bold !important; }
+    /* Menyembunyikan indikator running di pojok kanan atas */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* MENGHILANGKAN TULISAN RUNNING GET_DATA */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+    
+    /* CSS Bapak yang sebelumnya tetap dipertahankan di bawah ini */
+    .stApp { background-color: #FDFCF0; }
+    .custom-header { text-align: left; margin-bottom: 20px; }
+    .custom-header img { width: 100%; max-width: 400px; height: auto; border-radius: 8px; }
     </style>
     
     <div class="custom-header">
@@ -220,6 +234,7 @@ with tab2:
                     st.error(f"❌ GAGAL MENYIMPAN! Status: {r.status_code}")
             except Exception as e:
                 st.error(f"⚠️ Terjadi Kesalahan: {str(e)}")
+
 
 
 
