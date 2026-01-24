@@ -76,40 +76,33 @@ def generate_pdf(data):
     pdf.set_font("Helvetica", 'BI', 9)
     pdf.cell(190, 8, f"Terbilang: {terbilang}", 1, 1, 'C')
 
-     # TANDA TANGAN
+    # Footer Bank & Tanda Tangan
     pdf.ln(5)
-    curr_y = pdf.get_y()
-    pdf.set_font("Helvetica", 'B', 8)
-    pdf.cell(100, 5, "TRANSFER TO :", 0, 1)
-    pdf.set_font("Helvetica", size=8)
-    pdf.cell(100, 4, "Bank Central Asia / 6720422334", 0, 1)
-    pdf.cell(100, 4, "A/N ADITYA GAMA SAPUTRI", 0, 1)
-    
-    pdf.set_y(curr_y)
-    pdf.cell(130, 5, "", 0)
-    pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
-    
-    if os.path.exists("ttd.png"):
-        pdf.image("ttd.png", 145, pdf.get_y(), w=35)
-    
-    pdf.ln(15)
-    pdf.cell(130, 5, "", 0)
-    pdf.set_font("Helvetica", 'BU', 9)
-    pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
-    pdf.cell(130, 5, "", 0)
-    pdf.set_font("Helvetica", 'B', 8)
-    pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
-
-    return pdf.output(dest='S').encode('latin-1')
-
-    # Footer Bank
-    pdf.ln(5)
+    y_footer = pdf.get_y()
     pdf.set_font("Helvetica", 'B', 9)
     pdf.cell(100, 5, "TRANSFER TO :", 0, 1)
     pdf.set_font("Helvetica", '', 9)
     pdf.cell(100, 5, "Bank Central Asia / 6720422334 / A/N ADITYA GAMA SAPUTRI", 0, 1)
     pdf.set_font("Helvetica", 'I', 8)
     pdf.cell(100, 5, "NB : Jika sudah transfer mohon konfirmasi ke Finance 082179799200", 0, 1)
+
+    # Bagian Tanda Tangan (Disebelah Kanan)
+    pdf.set_y(y_footer)
+    pdf.cell(130, 5, "", 0)
+    pdf.set_font("Helvetica", '', 9)
+    pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
+    
+    # Menampilkan Gambar Tanda Tangan
+    if os.path.exists("ttd.png"):
+        pdf.image("ttd.png", x=145, y=pdf.get_y(), w=40)
+    
+    pdf.ln(15)
+    pdf.cell(130, 5, "", 0)
+    pdf.set_font("Helvetica", 'BU', 10)
+    pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
+    pdf.cell(130, 5, "", 0)
+    pdf.set_font("Helvetica", 'B', 9)
+    pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
 
@@ -165,4 +158,5 @@ with tab2:
             st.success("✅ Berhasil disimpan!")
             st.cache_data.clear()
             st.rerun()
+
 
