@@ -36,7 +36,7 @@ def generate_pdf(data):
 
     if os.path.exists("logo.png"):
         pdf.image("logo.png", 10, 10, w=150)
-    pdf.ln(35)
+    pdf.ln(20)
 
     pdf.set_fill_color(200, 200, 200)
     pdf.set_font("Helvetica", 'B', 10)
@@ -150,3 +150,4 @@ with tab2:
             st.success("✅ Berhasil disimpan! Silakan cek di tab Cetak.")
             st.cache_data.clear()
             st.rerun()
+
