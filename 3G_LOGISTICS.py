@@ -76,6 +76,32 @@ def generate_pdf(data):
     pdf.set_font("Helvetica", 'BI', 9)
     pdf.cell(190, 8, f"Terbilang: {terbilang}", 1, 1, 'C')
 
+     # TANDA TANGAN
+    pdf.ln(5)
+    curr_y = pdf.get_y()
+    pdf.set_font("Helvetica", 'B', 8)
+    pdf.cell(100, 5, "TRANSFER TO :", 0, 1)
+    pdf.set_font("Helvetica", size=8)
+    pdf.cell(100, 4, "Bank Central Asia / 6720422334", 0, 1)
+    pdf.cell(100, 4, "A/N ADITYA GAMA SAPUTRI", 0, 1)
+    
+    pdf.set_y(curr_y)
+    pdf.cell(130, 5, "", 0)
+    pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
+    
+    if os.path.exists("ttd.png"):
+        pdf.image("ttd.png", 145, pdf.get_y(), w=35)
+    
+    pdf.ln(15)
+    pdf.cell(130, 5, "", 0)
+    pdf.set_font("Helvetica", 'BU', 9)
+    pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
+    pdf.cell(130, 5, "", 0)
+    pdf.set_font("Helvetica", 'B', 8)
+    pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
+
+    return pdf.output(dest='S').encode('latin-1')
+
     # Footer Bank
     pdf.ln(5)
     pdf.set_font("Helvetica", 'B', 9)
@@ -139,3 +165,4 @@ with tab2:
             st.success("✅ Berhasil disimpan!")
             st.cache_data.clear()
             st.rerun()
+
