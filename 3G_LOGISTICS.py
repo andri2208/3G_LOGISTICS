@@ -36,7 +36,7 @@ def generate_pdf(data):
     # Logo
     if os.path.exists("logo.png"):
         pdf.image("logo.png", 10, 10, w=150)
-    pdf.ln(35)
+    pdf.ln(20)
 
     pdf.set_fill_color(200, 200, 200)
     pdf.set_font("Helvetica", 'B', 10)
@@ -108,7 +108,7 @@ def generate_pdf(data):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- MAIN UI ---
-st.title("🚚 Logistik App 3G Online")
+st.title("🚚 3G LOGISTICS")
 df = load_data()
 
 tab1, tab2 = st.tabs(["🔍 Cek & Cetak Invoice", "➕ Input Data Baru"])
@@ -145,7 +145,7 @@ with tab2:
             harga = st.number_input("Harga Satuan", min_value=0)
             weight = st.number_input("Weight", min_value=0)
         
-        submitted = st.form_submit_button("Simpan ke Cloud")
+        submitted = st.form_submit_button("Simpan")
 
         if submitted:
             # Menggunakan variabel 'new_row' secara konsisten
@@ -165,3 +165,4 @@ with tab2:
             st.success(f"✅ Data {resi_auto} Berhasil Disimpan!")
             st.cache_data.clear()
             st.rerun()
+
