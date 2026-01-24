@@ -40,7 +40,7 @@ def generate_pdf(data):
     # Logo
     if os.path.exists("logo.png"):
         pdf.image("logo.png", 10, 10, w=150)
-    pdf.ln(35)
+    pdf.ln(15)
 
     # Header Invoice
     pdf.set_fill_color(200, 200, 200)
@@ -174,3 +174,4 @@ with tab2:
             st.cache_data.clear()
             st.balloons()
             st.rerun()
+
