@@ -100,7 +100,7 @@ def generate_pdf(data):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- MAIN UI ---
-st.title("🚚 Logistik App 3G - Database Google Sheets")
+st.title("3G Logistik")
 df = load_data()
 
 tab1, tab2 = st.tabs(["🔍 Cek & Cetak Invoice", "➕ Input Data Baru"])
@@ -137,7 +137,7 @@ with tab2:
             harga = st.number_input("Harga Satuan", min_value=0)
             weight = st.number_input("Weight", min_value=0)
         
-        if st.form_submit_button("Simpan Permanen ke Google Sheets"):
+        if st.form_submit_button("Simpan"):
             new_row = pd.DataFrame([{
                 'No_Resi': resi_auto, 'No_Inv': inv_auto, 'Customer': customer,
                 'Tanggal': tgl.strftime("%d/%m/%Y"), 'Date_Load': date_load,
@@ -150,4 +150,5 @@ with tab2:
             st.success("✅ Berhasil disimpan! Silakan cek di tab Cetak.")
             st.cache_data.clear()
             st.rerun()
+
 
