@@ -86,10 +86,16 @@ def generate_pdf(data):
     pdf.set_fill_color(220, 220, 220); pdf.set_font("Helvetica", 'BI', 9)
     pdf.cell(190, 8, f"Terbilang: {terbilang}", 1, 1, 'C', True)
 
-    # Footer Bank & TTD
-    pdf.ln(5); curr_y = pdf.get_y()
-    pdf.set_font("Helvetica", 'B', 8)
-    pdf.cell(100, 5, "TRANSFER TO : BCA / 6720422334 / ADITYA GAMA SAPUTRI", 0, 1)
+   # INFO PEMBAYARAN (Sesuai Gambar Terbaru)
+    pdf.ln(5)
+    pdf.set_font("Helvetica", 'B', 9)
+    pdf.cell(100, 5, "TRANSFER TO :", 0, 1)
+    pdf.set_font("Helvetica", '', 9)
+    pdf.cell(100, 5, "Bank Central Asia", 0, 1)
+    pdf.cell(100, 5, "6720422334", 0, 1)
+    pdf.cell(100, 5, "A/N ADITYA GAMA SAPUTRI", 0, 1)
+    pdf.set_font("Helvetica", 'I', 8)
+    pdf.cell(100, 5, "NB : Jika sudah transfer mohon konfirmasi ke Finance 082179799200", 0, 1)
     
     pdf.set_y(curr_y)
     pdf.cell(130, 5, "", 0); pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
@@ -174,4 +180,5 @@ with tab2:
             st.cache_data.clear()
             st.balloons()
             st.rerun()
+
 
