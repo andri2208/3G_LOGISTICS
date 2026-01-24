@@ -15,7 +15,7 @@ URL_SHEET = "https://docs.google.com/spreadsheets/d/1CREhsdJ2VO-X09Wbf1nI2frm-pC
 # --- KONEKSI DATABASE ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=2) # Refresh sangat cepat untuk update data
+@st.cache_data(ttl=2)
 def load_data():
     try:
         return conn.read(spreadsheet=URL_SHEET)
@@ -28,7 +28,6 @@ def generate_auto_no(prefix, df):
     count = len(df) + 1
     return f"3G/{prefix}/{date_str}/{count:03d}"
 
-# --- FUNGSI GENERATE PDF ---
 def generate_pdf(data):
     pdf = FPDF()
     pdf.add_page()
@@ -68,7 +67,7 @@ def generate_pdf(data):
     pdf.cell(20, 10, str(data['Weight']), 1, 0, 'C')
     pdf.cell(20, 10, f"{float(data['Total']):,.0f}".replace(",", "."), 1, 1, 'R')
 
-    # Total & Terbilang
+    # Total
     pdf.set_fill_color(160, 160, 160); pdf.set_font("Helvetica", 'B', 8)
     pdf.cell(170, 7, "YANG HARUS DI BAYAR", 1, 0, 'C', True)
     pdf.cell(20, 7, f"Rp {float(data['Total']):,.0f}".replace(",", "."), 1, 1, 'R', True)
@@ -77,53 +76,37 @@ def generate_pdf(data):
     pdf.set_font("Helvetica", 'BI', 9)
     pdf.cell(190, 8, f"Terbilang: {terbilang}", 1, 1, 'C')
 
-    # INFO PEMBAYARAN (Sesuai Gambar Terbaru)
+    # Footer Bank
     pdf.ln(5)
     pdf.set_font("Helvetica", 'B', 9)
     pdf.cell(100, 5, "TRANSFER TO :", 0, 1)
     pdf.set_font("Helvetica", '', 9)
-    pdf.cell(100, 5, "Bank Central Asia", 0, 1)
-    pdf.cell(100, 5, "6720422334", 0, 1)
-    pdf.cell(100, 5, "A/N ADITYA GAMA SAPUTRI", 0, 1)
+    pdf.cell(100, 5, "Bank Central Asia / 6720422334 / A/N ADITYA GAMA SAPUTRI", 0, 1)
     pdf.set_font("Helvetica", 'I', 8)
     pdf.cell(100, 5, "NB : Jika sudah transfer mohon konfirmasi ke Finance 082179799200", 0, 1)
-
-    # Tanda Tangan
-    pdf.set_y(pdf.get_y() - 25)
-    pdf.cell(130, 5, "", 0); pdf.cell(60, 5, "Sincerely,", 0, 1, 'C')
-    if os.path.exists("ttd.png"):
-        pdf.image("ttd.png", 145, pdf.get_y(), w=35)
-    pdf.ln(15)
-    pdf.cell(130, 5, "", 0); pdf.set_font("Helvetica", 'BU', 9); pdf.cell(60, 5, "KELVINITO JAYADI", 0, 1, 'C')
-    pdf.cell(130, 5, "", 0); pdf.set_font("Helvetica", 'B', 8); pdf.cell(60, 5, "DIREKTUR", 0, 1, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
 
 # --- MAIN UI ---
-st.title("3G Logistik")
+st.title("🚚 3G LOGISTICS")
 df = load_data()
 
 tab1, tab2 = st.tabs(["🔍 Cek & Cetak Invoice", "➕ Input Data Baru"])
 
 with tab1:
-    st.subheader("Cari Data di Cloud")
     if not df.empty:
         list_resi = df['No_Resi'].dropna().astype(str).unique().tolist()[::-1]
         selected = st.selectbox("Pilih Nomor Resi:", options=list_resi, index=None)
         if selected:
             row = df[df['No_Resi'].astype(str) == selected].iloc[0]
-            st.info(f"**Customer:** {row['Customer']} | **Total:** Rp {float(row['Total']):,.0f}".replace(",", "."))
-            st.download_button("📥 Download PDF", generate_pdf(row), f"Invoice_{selected}.pdf", use_container_width=True)
-    else:
-        st.warning("Data belum tersedia di Google Sheets.")
+            st.download_button("📥 Download PDF", generate_pdf(row), f"Inv_{selected}.pdf", use_container_width=True)
 
 with tab2:
-    st.subheader("Tambah Data Baru")
     inv_auto = generate_auto_no("INV", df)
     resi_auto = generate_auto_no("RES", df)
 
     with st.form("input_form", clear_on_submit=True):
-        st.write(f"**Nomor Baru:** {inv_auto} / {resi_auto}")
+        st.write(f"**Nomor Baru:** {inv_auto}")
         c1, c2 = st.columns(2)
         with c1:
             customer = st.text_input("Nama Customer")
@@ -137,18 +120,22 @@ with tab2:
             harga = st.number_input("Harga Satuan", min_value=0)
             weight = st.number_input("Weight", min_value=0)
         
-        if st.form_submit_button("Simpan"):
+        submitted = st.form_submit_button("Simpan")
+
+        if submitted:
+            # Perbaikan di sini: Nama variabel disamakan menjadi 'new_row'
             new_row = pd.DataFrame([{
                 'No_Resi': resi_auto, 'No_Inv': inv_auto, 'Customer': customer,
                 'Tanggal': tgl.strftime("%d/%m/%Y"), 'Date_Load': date_load,
                 'Description': desc, 'Origin': origin, 'Destination': dest,
                 'Kolli': kolli, 'Harga': harga, 'Weight': weight, 'Total': harga * weight
             }])
-            # Update data ke Cloud
-            updated_df = pd.concat([df, new_data], ignore_index=True) if 'df' in locals() else new_row
+            
+            # Gabungkan data
+            updated_df = pd.concat([df, new_row], ignore_index=True)
+            
+            # Update ke GSheets
             conn.update(spreadsheet=URL_SHEET, data=updated_df)
-            st.success("✅ Berhasil disimpan! Silakan cek di tab Cetak.")
+            st.success("✅ Berhasil disimpan!")
             st.cache_data.clear()
             st.rerun()
-
-
