@@ -33,9 +33,10 @@ def generate_pdf(data):
     pdf.add_page()
     pdf.rect(5, 5, 200, 287)
 
+    # Logo
     if os.path.exists("logo.png"):
         pdf.image("logo.png", 10, 10, w=150)
-    pdf.ln(20)
+    pdf.ln(35)
 
     pdf.set_fill_color(200, 200, 200)
     pdf.set_font("Helvetica", 'B', 10)
@@ -67,7 +68,7 @@ def generate_pdf(data):
     pdf.cell(20, 10, str(data['Weight']), 1, 0, 'C')
     pdf.cell(20, 10, f"{float(data['Total']):,.0f}".replace(",", "."), 1, 1, 'R')
 
-    # Total
+    # Total & Terbilang
     pdf.set_fill_color(160, 160, 160); pdf.set_font("Helvetica", 'B', 8)
     pdf.cell(170, 7, "YANG HARUS DI BAYAR", 1, 0, 'C', True)
     pdf.cell(20, 7, f"Rp {float(data['Total']):,.0f}".replace(",", "."), 1, 1, 'R', True)
@@ -107,25 +108,30 @@ def generate_pdf(data):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- MAIN UI ---
-st.title("🚚 3G LOGISTICS")
+st.title("🚚 Logistik App 3G Online")
 df = load_data()
 
 tab1, tab2 = st.tabs(["🔍 Cek & Cetak Invoice", "➕ Input Data Baru"])
 
 with tab1:
+    st.subheader("Pilih Data dari Database")
     if not df.empty:
-        list_resi = df['No_Resi'].dropna().astype(str).unique().tolist()[::-1]
-        selected = st.selectbox("Pilih Nomor Resi:", options=list_resi, index=None)
+        df_clean = df.dropna(subset=['No_Resi'])
+        list_resi = df_clean['No_Resi'].astype(str).unique().tolist()[::-1]
+        selected = st.selectbox("Cari Nomor Resi:", options=list_resi, index=None)
+        
         if selected:
             row = df[df['No_Resi'].astype(str) == selected].iloc[0]
-            st.download_button("📥 Download PDF", generate_pdf(row), f"Inv_{selected}.pdf", use_container_width=True)
+            st.info(f"**Customer:** {row['Customer']} | **Total:** Rp {float(row['Total']):,.0f}".replace(",", "."))
+            st.download_button("📥 Download PDF", generate_pdf(row), f"Invoice_{selected}.pdf", use_container_width=True)
 
 with tab2:
+    st.subheader("Form Input Database")
     inv_auto = generate_auto_no("INV", df)
     resi_auto = generate_auto_no("RES", df)
 
     with st.form("input_form", clear_on_submit=True):
-        st.write(f"**Nomor Baru:** {inv_auto}")
+        st.write(f"**Nomor Baru:** {inv_auto} / {resi_auto}")
         c1, c2 = st.columns(2)
         with c1:
             customer = st.text_input("Nama Customer")
@@ -139,10 +145,10 @@ with tab2:
             harga = st.number_input("Harga Satuan", min_value=0)
             weight = st.number_input("Weight", min_value=0)
         
-        submitted = st.form_submit_button("Simpan")
+        submitted = st.form_submit_button("Simpan ke Cloud")
 
         if submitted:
-            # Perbaikan di sini: Nama variabel disamakan menjadi 'new_row'
+            # Menggunakan variabel 'new_row' secara konsisten
             new_row = pd.DataFrame([{
                 'No_Resi': resi_auto, 'No_Inv': inv_auto, 'Customer': customer,
                 'Tanggal': tgl.strftime("%d/%m/%Y"), 'Date_Load': date_load,
@@ -150,13 +156,12 @@ with tab2:
                 'Kolli': kolli, 'Harga': harga, 'Weight': weight, 'Total': harga * weight
             }])
             
-            # Gabungkan data
+            # Gabungkan dengan data lama
             updated_df = pd.concat([df, new_row], ignore_index=True)
             
-            # Update ke GSheets
+            # Update ke Google Sheets
             conn.update(spreadsheet=URL_SHEET, data=updated_df)
-            st.success("✅ Berhasil disimpan!")
+            
+            st.success(f"✅ Data {resi_auto} Berhasil Disimpan!")
             st.cache_data.clear()
             st.rerun()
-
-
